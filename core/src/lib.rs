@@ -61,7 +61,23 @@ impl Summoner {
             .map_err(SummonerRequestError::RequestFailed)
             .map(|list| list.into_iter().map(MatchId))
     }
+
+    pub async fn leagues(
+        &self,
+        client: &Client,
+    ) -> Result<impl Iterator<Item = League>, SummonerRequestError> {
+        client
+            .0
+            .league_v4()
+            .get_league_entries_for_summoner(PlatformRoute::BR1, &self.0.id)
+            .await
+            .map_err(SummonerRequestError::RequestFailed)
+            .map(|leagues| leagues.into_iter().map(League))
+    }
 }
+
+#[derive(Debug)]
+pub struct League(riven::models::league_v4::LeagueEntry);
 
 #[derive(Debug)]
 pub enum Queue {
