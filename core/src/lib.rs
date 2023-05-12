@@ -145,6 +145,32 @@ pub enum MatchRequestError {
     RequestFailed(#[from] riven::RiotApiError),
 }
 
+#[derive(Debug, Clone)]
+pub struct MatchEvent(riven::models::match_v5::MatchTimelineInfoFrameEvent);
+
+impl MatchEvent {
+    pub async fn from_id(client: &Client, id: MatchId) -> Result<Vec<Self>, MatchRequestError> {
+        client
+            .0
+            .match_v5()
+            .get_timeline(RegionalRoute::AMERICAS, &id.0)
+            .await
+            .map_err(MatchRequestError::RequestFailed)
+            .and_then(|timeline| {
+                timeline
+                    .map(|tl| {
+                        tl.info
+                            .frames
+                            .into_iter()
+                            .flat_map(|frame| frame.events.into_iter())
+                            .map(MatchEvent)
+                            .collect::<Vec<_>>()
+                    })
+                    .ok_or(MatchRequestError::NotFound)
+            })
+    }
+}
+
 #[derive(Debug)]
 pub struct Match(riven::models::match_v5::Match);
 
@@ -161,6 +187,27 @@ impl Match {
             .await
             .map_err(MatchRequestError::RequestFailed)
             .and_then(|game| game.map(Match).ok_or(MatchRequestError::NotFound))
+    }
+
+    pub async fn events(&self, client: &Client) -> Result<Vec<MatchEvent>, MatchRequestError> {
+        client
+            .0
+            .match_v5()
+            .get_timeline(RegionalRoute::AMERICAS, &self.0.metadata.match_id)
+            .await
+            .map_err(MatchRequestError::RequestFailed)
+            .and_then(|timeline| {
+                timeline
+                    .map(|tl| {
+                        tl.info
+                            .frames
+                            .into_iter()
+                            .flat_map(|frame| frame.events.into_iter())
+                            .map(MatchEvent)
+                            .collect::<Vec<_>>()
+                    })
+                    .ok_or(MatchRequestError::NotFound)
+            })
     }
 
     pub fn participant(&self, puuid: &str) -> Option<&riven::models::match_v5::Participant> {
