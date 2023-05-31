@@ -96,15 +96,23 @@ mod widget {
             if seconds < 60 {
                 format!("{} seconds ago", seconds)
             } else if minutes < 60 {
-                format!("{} minutes ago", minutes)
+                format!(
+                    "{} minute{} ago",
+                    minutes,
+                    if minutes == 1 { "" } else { "s" }
+                )
             } else if hours < 24 {
-                format!("{} hours ago", hours)
+                format!("{} hour{} ago", hours, if minutes == 1 { "" } else { "s" })
             } else if days < 7 {
-                format!("{} days ago", days)
+                format!("{} day{} ago", days, if minutes == 1 { "" } else { "s" })
             } else if weeks < 4 {
-                format!("{} weeks ago", weeks)
+                format!("{} week{} ago", weeks, if minutes == 1 { "" } else { "s" })
             } else if months < 12 {
-                format!("{} months ago", months)
+                format!(
+                    "{} month{} ago",
+                    months,
+                    if minutes == 1 { "" } else { "s" }
+                )
             } else {
                 format!("{} years ago", years)
             }
