@@ -52,7 +52,7 @@ mod widget {
 
     #[derive(Default, Debug, Clone, Copy)]
     pub struct Game {
-        open: bool,
+        is_expanded: bool,
     }
 
     #[derive(Debug, Clone, Copy)]
@@ -63,30 +63,36 @@ mod widget {
     impl Game {
         pub fn update(&mut self, message: Message) {
             match message {
-                Message::ExpandPressed => self.open = !self.open,
+                Message::ExpandPressed => self.is_expanded = !self.is_expanded,
             }
         }
 
         pub fn view(&self) -> Element<Message> {
             let match_stats = {
-                let points_icon: Element<Message> = small_icon().into();
-                let result_points = row![points_icon, text("31 LP").size(16)]
-                    .spacing(2)
-                    .align_items(Alignment::Center);
+                // TODO: track and display points gained/lost
+                // let points_icon: Element<Message> = small_icon().into();
+                // let result_points = row![points_icon, text("31 LP").size(16)]
+                //     .spacing(2)
+                //     .align_items(Alignment::Center);
 
                 column![
                     column![
+                        text("Victory").style(theme::blue_text()).size(16),
                         text("Ranked Flex").size(12),
                         text("a day ago").style(theme::sub_text()).size(10),
                     ],
-                    result_points,
-                    row![
-                        text("WIN").style(theme::blue_text()).size(12),
-                        text("28:33").size(12).style(theme::sub_text())
+                    column![
+                        row![
+                            very_small_icon(),
+                            text("Mid").style(theme::sub_text()).size(10),
+                        ]
+                        .align_items(Alignment::Center)
+                        .spacing(2),
+                        text("28:33").size(10).style(theme::sub_text()),
                     ]
-                    .align_items(Alignment::End)
-                    .spacing(4),
+                    .padding([4, 0, 0, 0])
                 ]
+                .align_items(Alignment::Start)
                 .spacing(2)
                 .padding(4)
             };
@@ -106,35 +112,48 @@ mod widget {
             };
 
             let player_stats = {
-                let kda: Element<Message> = row![
+                let kda = row![
                     text("1").size(12),
                     text("/").style(theme::gray_text()).size(12),
                     text("6").style(theme::red_text()).size(12),
                     text("/").style(theme::gray_text()).size(12),
                     text("12").size(12)
-                    ]
-                    .align_items(Alignment::Center)
-                    .spacing(3)
-                    .padding(4)
-                    .into();
-                
+                ]
+                .align_items(Alignment::Center)
+                .spacing(3);
+
                 // TODO: add rank score icon and justify content
                 let other_stats = column![
-                    text("2.17 KDA").size(10).style(theme::sub_text()),
-                    text("203 CS (5.3)").size(10).style(theme::sub_text()),
-                    text("17 vision").size(10).style(theme::sub_text()),
+                    row![
+                        very_small_icon(),
+                        text("2.17 KDA").size(10).style(theme::sub_text())
+                    ]
+                    .spacing(4)
+                    .align_items(Alignment::Center),
+                    row![
+                        very_small_icon(),
+                        text("203 CS (5.3)").size(10).style(theme::sub_text())
+                    ]
+                    .spacing(4)
+                    .align_items(Alignment::Center),
+                    row![
+                        very_small_icon(),
+                        text("17 vision").size(10).style(theme::sub_text())
+                    ]
+                    .spacing(4)
+                    .align_items(Alignment::Center),
                 ]
-                .align_items(Alignment::Center);
+                .align_items(Alignment::Start);
 
                 column![kda, other_stats,].align_items(Alignment::Center)
             };
 
             let player_items = {
                 row![
-                    column![medium_icon(), medium_icon()].spacing(2),
-                    column![medium_icon(), medium_icon()].spacing(2),
-                    column![medium_icon(), medium_icon()].spacing(2),
-                    medium_icon(),
+                    column![medium_large_icon(), medium_large_icon()].spacing(2),
+                    column![medium_large_icon(), medium_large_icon()].spacing(2),
+                    column![medium_large_icon(), medium_large_icon()].spacing(2),
+                    medium_large_icon(),
                 ]
                 .spacing(2)
             };
@@ -191,7 +210,7 @@ mod widget {
             let expand_button = button(expand_content)
                 .height(Length::Fill)
                 .on_press(Message::ExpandPressed)
-                .style(theme::expander_button(self.open));
+                .style(theme::expander_button(self.is_expanded));
 
             let overview = container(row![
                 row![
@@ -202,13 +221,13 @@ mod widget {
                     other_players,
                 ]
                 .spacing(32)
-                .padding(8)
+                .padding(4)
                 .align_items(Alignment::Center),
                 expand_button.padding(0),
             ])
             .max_height(100.0);
 
-            let game = if self.open {
+            let game = if self.is_expanded {
                 let match_details = container(Space::new(0.0, 400.0));
 
                 row![left_border(), column![overview, match_details,]]
@@ -240,6 +259,13 @@ mod widget {
             .size(8.0)
     }
 
+    fn very_small_icon<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
+        container(Space::new(8.0, 8.0))
+            .style(theme::icon_container())
+            .max_width(8.0)
+            .max_height(8.0)
+    }
+
     fn small_icon<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
         container(Space::new(10.0, 10.0))
             .style(theme::icon_container())
@@ -248,17 +274,24 @@ mod widget {
     }
 
     fn medium_icon<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
-        container(Space::new(16.0, 16.0))
+        container(Space::new(12.0, 12.0))
             .style(theme::icon_container())
-            .max_width(16.0)
-            .max_height(16.0)
+            .max_width(12.0)
+            .max_height(12.0)
+    }
+
+    fn medium_large_icon<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
+        container(Space::new(18.0, 18.0))
+            .style(theme::icon_container())
+            .max_width(18.0)
+            .max_height(18.0)
     }
 
     fn large_icon<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
-        container(Space::new(64.0, 64.0))
+        container(Space::new(48.0, 48.0))
             .style(theme::icon_container())
-            .max_width(64.0)
-            .max_height(64.0)
+            .max_width(48.0)
+            .max_height(48.0)
     }
 }
 
