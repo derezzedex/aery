@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 aery_core = { path = "../core" }
 iced = { git = "https://github.com/iced-rs/iced" }
+time = "0.3"

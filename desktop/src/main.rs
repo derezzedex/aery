@@ -22,7 +22,7 @@ impl Application for Aery {
     fn new(_flags: ()) -> (Self, Command<Message>) {
         (
             Self {
-                game: widget::Game::default(),
+                game: widget::Game::new(),
             },
             Command::none(),
         )
@@ -50,8 +50,132 @@ mod widget {
     use iced::widget::{button, column, container, row, text, Space};
     use iced::{alignment, Alignment, Element, Length};
 
-    #[derive(Default, Debug, Clone, Copy)]
+    #[derive(Debug, Clone)]
+    enum Queue {
+        RankedFlex,
+    }
+
+    impl ToString for Queue {
+        fn to_string(&self) -> String {
+            match self {
+                Queue::RankedFlex => "Ranked Flex",
+            }
+            .to_string()
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    enum Role {
+        Mid,
+    }
+
+    impl ToString for Role {
+        fn to_string(&self) -> String {
+            match self {
+                Role::Mid => "Mid",
+            }
+            .to_string()
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    struct Time(time::OffsetDateTime);
+
+    impl ToString for Time {
+        fn to_string(&self) -> String {
+            let now = time::OffsetDateTime::now_utc();
+            let duration = now - self.0;
+            let seconds = duration.whole_seconds();
+            let minutes = seconds / 60;
+            let hours = minutes / 60;
+            let days = hours / 24;
+            let weeks = days / 7;
+            let months = days / 30;
+            let years = days / 365;
+
+            if seconds < 60 {
+                format!("{} seconds ago", seconds)
+            } else if minutes < 60 {
+                format!("{} minutes ago", minutes)
+            } else if hours < 24 {
+                format!("{} hours ago", hours)
+            } else if days < 7 {
+                format!("{} days ago", days)
+            } else if weeks < 4 {
+                format!("{} weeks ago", weeks)
+            } else if months < 12 {
+                format!("{} months ago", months)
+            } else {
+                format!("{} years ago", years)
+            }
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    struct Duration(time::Duration);
+
+    impl ToString for Duration {
+        fn to_string(&self) -> String {
+            let minutes = self.0.whole_minutes();
+            let seconds = self.0.whole_seconds();
+
+            format!("{minutes}:{seconds}")
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    struct Champion(u16);
+
+    #[derive(Debug, Clone, Copy)]
+    struct Item(u16);
+
+    #[derive(Debug, Clone)]
+    struct Inventory([Option<Item>; 6]);
+
+    #[derive(Debug, Clone)]
+    struct Summoner(String);
+
+    impl ToString for Summoner {
+        fn to_string(&self) -> String {
+            self.0.clone()
+        }
+    }
+
+    mod formatting {
+        pub fn win(win: bool) -> String {
+            if win { "Victory" } else { "Defeat" }.to_string()
+        }
+
+        pub fn kda(kills: u16, deaths: u16, assists: u16) -> String {
+            let kda = (kills as f32 + assists as f32) / deaths as f32;
+            format!("{kda:.2} KDA")
+        }
+
+        pub fn creep_score(creep_score: u16, minutes: u16) -> String {
+            let cs_per_minute = creep_score as f32 / minutes as f32;
+
+            format!("{creep_score} CS ({cs_per_minute:.1})")
+        }
+
+        pub fn vision_score(vision_score: u16) -> String {
+            format!("{vision_score} vision")
+        }
+    }
+
+    #[derive(Debug, Clone)]
     pub struct Game {
+        win: bool,
+        queue: Queue,
+        time: Time,
+        duration: Duration,
+        role: Option<Role>,
+        player_kills: u16,
+        player_deaths: u16,
+        player_assists: u16,
+        player_creep_score: u16,
+        player_vision_score: u16,
+        summoners: Vec<Summoner>,
+
         is_expanded: bool,
     }
 
@@ -61,6 +185,27 @@ mod widget {
     }
 
     impl Game {
+        pub fn new() -> Self {
+            Game {
+                win: true,
+                queue: Queue::RankedFlex,
+                time: Time(time::OffsetDateTime::now_utc().saturating_sub(time::Duration::days(1))),
+                duration: Duration(
+                    time::Duration::minutes(28).saturating_add(time::Duration::seconds(33)),
+                ),
+                role: Some(Role::Mid),
+                player_kills: 1,
+                player_deaths: 6,
+                player_assists: 12,
+                player_creep_score: 151,
+                player_vision_score: 18,
+                summoners: (0..10)
+                    .map(|i| Summoner(format!("Summoner {}", i)))
+                    .collect(),
+
+                is_expanded: false,
+            }
+        }
         pub fn update(&mut self, message: Message) {
             match message {
                 Message::ExpandPressed => self.is_expanded = !self.is_expanded,
@@ -75,22 +220,33 @@ mod widget {
                 //     .spacing(2)
                 //     .align_items(Alignment::Center);
 
-                column![
-                    column![
-                        text("Victory").style(theme::blue_text()).size(16),
-                        text("Ranked Flex").size(12),
-                        text("a day ago").style(theme::sub_text()).size(10),
-                    ],
+                let role: Element<_> = if let Some(role) = &self.role {
                     column![
                         row![
                             very_small_icon(),
-                            text("Mid").style(theme::sub_text()).size(10),
+                            text(role.to_string()).style(theme::sub_text()).size(10),
                         ]
                         .align_items(Alignment::Center)
                         .spacing(2),
                         text("28:33").size(10).style(theme::sub_text()),
                     ]
                     .padding([4, 0, 0, 0])
+                    .into()
+                } else {
+                    Space::new(0, 0).into()
+                };
+
+                column![
+                    column![
+                        text(formatting::win(self.win))
+                            .style(theme::blue_text())
+                            .size(16),
+                        text(self.queue.to_string()).size(12),
+                        text(self.time.to_string())
+                            .style(theme::sub_text())
+                            .size(10),
+                    ],
+                    role
                 ]
                 .align_items(Alignment::Start)
                 .spacing(2)
@@ -113,32 +269,44 @@ mod widget {
 
             let player_stats = {
                 let kda = row![
-                    text("1").size(12),
+                    text(self.player_kills).size(12),
                     text("/").style(theme::gray_text()).size(12),
-                    text("6").style(theme::red_text()).size(12),
+                    text(self.player_deaths).style(theme::red_text()).size(12),
                     text("/").style(theme::gray_text()).size(12),
-                    text("12").size(12)
+                    text(self.player_assists).size(12)
                 ]
                 .align_items(Alignment::Center)
                 .spacing(3);
 
-                // TODO: add rank score icon and justify content
                 let other_stats = column![
                     row![
                         very_small_icon(),
-                        text("2.17 KDA").size(10).style(theme::sub_text())
+                        text(formatting::kda(
+                            self.player_kills,
+                            self.player_deaths,
+                            self.player_assists
+                        ))
+                        .size(10)
+                        .style(theme::sub_text())
                     ]
                     .spacing(4)
                     .align_items(Alignment::Center),
                     row![
                         very_small_icon(),
-                        text("203 CS (5.3)").size(10).style(theme::sub_text())
+                        text(formatting::creep_score(
+                            self.player_creep_score,
+                            self.duration.0.whole_minutes() as u16
+                        ))
+                        .size(10)
+                        .style(theme::sub_text())
                     ]
                     .spacing(4)
                     .align_items(Alignment::Center),
                     row![
                         very_small_icon(),
-                        text("17 vision").size(10).style(theme::sub_text())
+                        text(formatting::vision_score(self.player_vision_score))
+                            .size(10)
+                            .style(theme::sub_text())
                     ]
                     .spacing(4)
                     .align_items(Alignment::Center),
@@ -158,44 +326,26 @@ mod widget {
                 .spacing(2)
             };
 
+            let mut left_players: Vec<Element<_>> = self
+                .summoners
+                .iter()
+                .map(|summoner| {
+                    let summoner_icon = small_icon();
+                    let summoner_name = small_text(summoner.to_string());
+
+                    row![summoner_icon, summoner_name]
+                        .align_items(Alignment::Center)
+                        .spacing(4)
+                        .into()
+                })
+                .collect();
+
+            let right_players = left_players.split_off(5);
+
             let other_players = {
                 row![
-                    column![
-                        row![small_icon(), small_text("Summoner1")]
-                            .align_items(Alignment::Center)
-                            .spacing(4),
-                        row![small_icon(), small_text("Summoner4")]
-                            .align_items(Alignment::Center)
-                            .spacing(4),
-                        row![small_icon(), small_text("Summoner3")]
-                            .align_items(Alignment::Center)
-                            .spacing(4),
-                        row![small_icon(), small_text("Summoner4")]
-                            .align_items(Alignment::Center)
-                            .spacing(4),
-                        row![small_icon(), small_text("Summoner5")]
-                            .align_items(Alignment::Center)
-                            .spacing(4)
-                    ]
-                    .spacing(2),
-                    column![
-                        row![small_icon(), small_text("Summoner6")]
-                            .align_items(Alignment::Center)
-                            .spacing(4),
-                        row![small_icon(), small_text("Summoner7")]
-                            .align_items(Alignment::Center)
-                            .spacing(4),
-                        row![small_icon(), small_text("Summoner8")]
-                            .align_items(Alignment::Center)
-                            .spacing(4),
-                        row![small_icon(), small_text("Summoner9")]
-                            .align_items(Alignment::Center)
-                            .spacing(4),
-                        row![small_icon(), small_text("Summoner10")]
-                            .align_items(Alignment::Center)
-                            .spacing(4)
-                    ]
-                    .spacing(2),
+                    column(left_players).spacing(2),
+                    column(right_players).spacing(2),
                 ]
                 .spacing(8)
             };
