@@ -1,16 +1,17 @@
 use iced::{Application, Command, Element, Settings};
+use widget::game::{self, Game};
 
 pub fn main() -> iced::Result {
     Aery::run(Settings::default())
 }
 
 struct Aery {
-    game: widget::Game,
+    game: Game,
 }
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
-    Game(widget::Message),
+    Game(game::Message),
 }
 
 impl Application for Aery {
@@ -22,7 +23,7 @@ impl Application for Aery {
     fn new(_flags: ()) -> (Self, Command<Message>) {
         (
             Self {
-                game: widget::Game::new(),
+                game: Game::new(),
             },
             Command::none(),
         )
@@ -47,8 +48,8 @@ impl Application for Aery {
 
 mod widget {
     use crate::theme;
-    use iced::widget::{button, column, container, row, text, Space};
-    use iced::{alignment, Alignment, Element, Length};
+    use iced::widget::{container, Space};
+    use iced::Length;
 
     #[derive(Debug, Clone)]
     enum Queue {
@@ -170,238 +171,245 @@ mod widget {
         }
     }
 
-    #[derive(Debug, Clone)]
-    pub struct Game {
-        win: bool,
-        queue: Queue,
-        time: Time,
-        duration: Duration,
-        role: Option<Role>,
-        player_kills: u16,
-        player_deaths: u16,
-        player_assists: u16,
-        player_creep_score: u16,
-        player_vision_score: u16,
-        summoners: Vec<Summoner>,
+    pub mod game {
+        use super::*;        
+        use crate::theme;
+        use iced::widget::{button, column, container, row, text, Space};
+        use iced::{alignment, Alignment, Element, Length};
 
-        is_expanded: bool,
-    }
-
-    #[derive(Debug, Clone, Copy)]
-    pub enum Message {
-        ExpandPressed,
-    }
-
-    impl Game {
-        pub fn new() -> Self {
-            Game {
-                win: true,
-                queue: Queue::RankedFlex,
-                time: Time(time::OffsetDateTime::now_utc().saturating_sub(time::Duration::days(1))),
-                duration: Duration(
-                    time::Duration::minutes(28).saturating_add(time::Duration::seconds(33)),
-                ),
-                role: Some(Role::Mid),
-                player_kills: 1,
-                player_deaths: 6,
-                player_assists: 12,
-                player_creep_score: 151,
-                player_vision_score: 18,
-                summoners: (0..10)
-                    .map(|i| Summoner(format!("Summoner {}", i)))
-                    .collect(),
-
-                is_expanded: false,
-            }
+        #[derive(Debug, Clone)]
+        pub struct Game {
+            win: bool,
+            queue: Queue,
+            time: Time,
+            duration: Duration,
+            role: Option<Role>,
+            player_kills: u16,
+            player_deaths: u16,
+            player_assists: u16,
+            player_creep_score: u16,
+            player_vision_score: u16,
+            summoners: Vec<Summoner>,
+    
+            is_expanded: bool,
         }
-        pub fn update(&mut self, message: Message) {
-            match message {
-                Message::ExpandPressed => self.is_expanded = !self.is_expanded,
-            }
+    
+        #[derive(Debug, Clone, Copy)]
+        pub enum Message {
+            ExpandPressed,
         }
-
-        pub fn view(&self) -> Element<Message> {
-            let match_stats = {
-                // TODO: track and display points gained/lost
-                // let points_icon: Element<Message> = small_icon().into();
-                // let result_points = row![points_icon, text("31 LP").size(16)]
-                //     .spacing(2)
-                //     .align_items(Alignment::Center);
-
-                let role: Element<_> = if let Some(role) = &self.role {
+    
+        impl Game {
+            pub fn new() -> Self {
+                Game {
+                    win: true,
+                    queue: Queue::RankedFlex,
+                    time: Time(time::OffsetDateTime::now_utc().saturating_sub(time::Duration::days(1))),
+                    duration: Duration(
+                        time::Duration::minutes(28).saturating_add(time::Duration::seconds(33)),
+                    ),
+                    role: Some(Role::Mid),
+                    player_kills: 1,
+                    player_deaths: 6,
+                    player_assists: 12,
+                    player_creep_score: 151,
+                    player_vision_score: 18,
+                    summoners: (0..10)
+                        .map(|i| Summoner(format!("Summoner {}", i)))
+                        .collect(),
+    
+                    is_expanded: false,
+                }
+            }
+            pub fn update(&mut self, message: Message) {
+                match message {
+                    Message::ExpandPressed => self.is_expanded = !self.is_expanded,
+                }
+            }
+    
+            pub fn view(&self) -> Element<Message> {
+                let match_stats = {
+                    // TODO: track and display points gained/lost
+                    // let points_icon: Element<Message> = small_icon().into();
+                    // let result_points = row![points_icon, text("31 LP").size(16)]
+                    //     .spacing(2)
+                    //     .align_items(Alignment::Center);
+    
+                    let role: Element<_> = if let Some(role) = &self.role {
+                        column![
+                            row![
+                                very_small_icon(),
+                                text(role.to_string()).style(theme::sub_text()).size(10),
+                            ]
+                            .align_items(Alignment::Center)
+                            .spacing(2),
+                            text("28:33").size(10).style(theme::sub_text()),
+                        ]
+                        .padding([4, 0, 0, 0])
+                        .into()
+                    } else {
+                        Space::new(0, 0).into()
+                    };
+    
                     column![
+                        column![
+                            text(formatting::win(self.win))
+                                .style(theme::blue_text())
+                                .size(16),
+                            text(self.queue.to_string()).size(12),
+                            text(self.time.to_string())
+                                .style(theme::sub_text())
+                                .size(10),
+                        ],
+                        role
+                    ]
+                    .align_items(Alignment::Start)
+                    .spacing(2)
+                    .padding(4)
+                };
+    
+                let champion_info = {
+                    let champion_icon = large_icon();
+    
+                    let champion_spells = row![medium_icon(), medium_icon(),].spacing(2);
+    
+                    let champion_runes = row![medium_icon(), medium_icon(),].spacing(2);
+    
+                    row![
+                        champion_icon,
+                        column![champion_spells, champion_runes].spacing(2),
+                    ]
+                    .spacing(2)
+                };
+    
+                let player_stats = {
+                    let kda = row![
+                        text(self.player_kills).size(12),
+                        text("/").style(theme::gray_text()).size(12),
+                        text(self.player_deaths).style(theme::red_text()).size(12),
+                        text("/").style(theme::gray_text()).size(12),
+                        text(self.player_assists).size(12)
+                    ]
+                    .align_items(Alignment::Center)
+                    .spacing(3);
+    
+                    let other_stats = column![
                         row![
                             very_small_icon(),
-                            text(role.to_string()).style(theme::sub_text()).size(10),
-                        ]
-                        .align_items(Alignment::Center)
-                        .spacing(2),
-                        text("28:33").size(10).style(theme::sub_text()),
-                    ]
-                    .padding([4, 0, 0, 0])
-                    .into()
-                } else {
-                    Space::new(0, 0).into()
-                };
-
-                column![
-                    column![
-                        text(formatting::win(self.win))
-                            .style(theme::blue_text())
-                            .size(16),
-                        text(self.queue.to_string()).size(12),
-                        text(self.time.to_string())
-                            .style(theme::sub_text())
-                            .size(10),
-                    ],
-                    role
-                ]
-                .align_items(Alignment::Start)
-                .spacing(2)
-                .padding(4)
-            };
-
-            let champion_info = {
-                let champion_icon = large_icon();
-
-                let champion_spells = row![medium_icon(), medium_icon(),].spacing(2);
-
-                let champion_runes = row![medium_icon(), medium_icon(),].spacing(2);
-
-                row![
-                    champion_icon,
-                    column![champion_spells, champion_runes].spacing(2),
-                ]
-                .spacing(2)
-            };
-
-            let player_stats = {
-                let kda = row![
-                    text(self.player_kills).size(12),
-                    text("/").style(theme::gray_text()).size(12),
-                    text(self.player_deaths).style(theme::red_text()).size(12),
-                    text("/").style(theme::gray_text()).size(12),
-                    text(self.player_assists).size(12)
-                ]
-                .align_items(Alignment::Center)
-                .spacing(3);
-
-                let other_stats = column![
-                    row![
-                        very_small_icon(),
-                        text(formatting::kda(
-                            self.player_kills,
-                            self.player_deaths,
-                            self.player_assists
-                        ))
-                        .size(10)
-                        .style(theme::sub_text())
-                    ]
-                    .spacing(4)
-                    .align_items(Alignment::Center),
-                    row![
-                        very_small_icon(),
-                        text(formatting::creep_score(
-                            self.player_creep_score,
-                            self.duration.0.whole_minutes() as u16
-                        ))
-                        .size(10)
-                        .style(theme::sub_text())
-                    ]
-                    .spacing(4)
-                    .align_items(Alignment::Center),
-                    row![
-                        very_small_icon(),
-                        text(formatting::vision_score(self.player_vision_score))
+                            text(formatting::kda(
+                                self.player_kills,
+                                self.player_deaths,
+                                self.player_assists
+                            ))
                             .size(10)
                             .style(theme::sub_text())
-                    ]
-                    .spacing(4)
-                    .align_items(Alignment::Center),
-                ]
-                .align_items(Alignment::Start);
-
-                column![kda, other_stats,].align_items(Alignment::Center)
-            };
-
-            let player_items = {
-                row![
-                    column![medium_large_icon(), medium_large_icon()].spacing(2),
-                    column![medium_large_icon(), medium_large_icon()].spacing(2),
-                    column![medium_large_icon(), medium_large_icon()].spacing(2),
-                    medium_large_icon(),
-                ]
-                .spacing(2)
-            };
-
-            let mut left_players: Vec<Element<_>> = self
-                .summoners
-                .iter()
-                .map(|summoner| {
-                    let summoner_icon = small_icon();
-                    let summoner_name = small_text(summoner.to_string());
-
-                    row![summoner_icon, summoner_name]
-                        .align_items(Alignment::Center)
+                        ]
                         .spacing(4)
-                        .into()
-                })
-                .collect();
-
-            let right_players = left_players.split_off(5);
-
-            let other_players = {
-                row![
-                    column(left_players).spacing(2),
-                    column(right_players).spacing(2),
-                ]
-                .spacing(8)
-            };
-
-            let expand_content = container(small_icon())
-                .center_x()
-                .align_y(alignment::Vertical::Bottom)
-                .height(Length::Fill)
-                .width(24)
-                .padding(2);
-
-            let expand_button = button(expand_content)
-                .height(Length::Fill)
-                .on_press(Message::ExpandPressed)
-                .style(theme::expander_button(self.is_expanded));
-
-            let overview = container(row![
-                row![
-                    match_stats,
-                    champion_info,
-                    player_stats,
-                    player_items,
-                    other_players,
-                ]
-                .spacing(32)
-                .padding(4)
-                .align_items(Alignment::Center),
-                expand_button.padding(0),
-            ])
-            .max_height(100.0);
-
-            let game = if self.is_expanded {
-                let match_details = container(Space::new(0.0, 400.0));
-
-                row![left_border(), column![overview, match_details,]]
-            } else {
-                row![left_border().max_height(100.0), column![overview]]
-            };
-
-            let content = container(game).style(theme::dark_container());
-
-            container(content)
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .center_x()
-                .align_y(alignment::Vertical::Top)
-                .padding(16)
-                .into()
+                        .align_items(Alignment::Center),
+                        row![
+                            very_small_icon(),
+                            text(formatting::creep_score(
+                                self.player_creep_score,
+                                self.duration.0.whole_minutes() as u16
+                            ))
+                            .size(10)
+                            .style(theme::sub_text())
+                        ]
+                        .spacing(4)
+                        .align_items(Alignment::Center),
+                        row![
+                            very_small_icon(),
+                            text(formatting::vision_score(self.player_vision_score))
+                                .size(10)
+                                .style(theme::sub_text())
+                        ]
+                        .spacing(4)
+                        .align_items(Alignment::Center),
+                    ]
+                    .align_items(Alignment::Start);
+    
+                    column![kda, other_stats,].align_items(Alignment::Center)
+                };
+    
+                let player_items = {
+                    row![
+                        column![medium_large_icon(), medium_large_icon()].spacing(2),
+                        column![medium_large_icon(), medium_large_icon()].spacing(2),
+                        column![medium_large_icon(), medium_large_icon()].spacing(2),
+                        medium_large_icon(),
+                    ]
+                    .spacing(2)
+                };
+    
+                let mut left_players: Vec<Element<_>> = self
+                    .summoners
+                    .iter()
+                    .map(|summoner| {
+                        let summoner_icon = small_icon();
+                        let summoner_name = small_text(summoner.to_string());
+    
+                        row![summoner_icon, summoner_name]
+                            .align_items(Alignment::Center)
+                            .spacing(4)
+                            .into()
+                    })
+                    .collect();
+    
+                let right_players = left_players.split_off(5);
+    
+                let other_players = {
+                    row![
+                        column(left_players).spacing(2),
+                        column(right_players).spacing(2),
+                    ]
+                    .spacing(8)
+                };
+    
+                let expand_content = container(small_icon())
+                    .center_x()
+                    .align_y(alignment::Vertical::Bottom)
+                    .height(Length::Fill)
+                    .width(24)
+                    .padding(2);
+    
+                let expand_button = button(expand_content)
+                    .height(Length::Fill)
+                    .on_press(Message::ExpandPressed)
+                    .style(theme::expander_button(self.is_expanded));
+    
+                let overview = container(row![
+                    row![
+                        match_stats,
+                        champion_info,
+                        player_stats,
+                        player_items,
+                        other_players,
+                    ]
+                    .spacing(32)
+                    .padding(4)
+                    .align_items(Alignment::Center),
+                    expand_button.padding(0),
+                ])
+                .max_height(100.0);
+    
+                let game = if self.is_expanded {
+                    let match_details = container(Space::new(0.0, 400.0));
+    
+                    row![left_border(), column![overview, match_details,]]
+                } else {
+                    row![left_border().max_height(100.0), column![overview]]
+                };
+    
+                let content = container(game).style(theme::dark_container());
+    
+                container(content)
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .center_x()
+                    .align_y(alignment::Vertical::Top)
+                    .padding(16)
+                    .into()
+            }
         }
     }
 
