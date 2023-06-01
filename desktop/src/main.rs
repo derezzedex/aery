@@ -1,17 +1,17 @@
 use iced::{Application, Command, Element, Settings};
-use widget::game::{self, Game};
+use widget::timeline::{self, Timeline};
 
 pub fn main() -> iced::Result {
     Aery::run(Settings::default())
 }
 
 struct Aery {
-    game: Game,
+    timeline: Timeline,
 }
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
-    Game(game::Message),
+    Timeline(timeline::Message),
 }
 
 impl Application for Aery {
@@ -23,7 +23,7 @@ impl Application for Aery {
     fn new(_flags: ()) -> (Self, Command<Message>) {
         (
             Self {
-                game: Game::new(),
+                timeline: Timeline::new(),
             },
             Command::none(),
         )
@@ -35,14 +35,14 @@ impl Application for Aery {
 
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
-            Message::Game(message) => self.game.update(message),
+            Message::Timeline(message) => self.timeline.update(message),
         }
 
         Command::none()
     }
 
     fn view(&self) -> Element<Message> {
-        self.game.view().map(Message::Game)
+        self.timeline.view().map(Message::Timeline)
     }
 }
 
@@ -171,8 +171,66 @@ mod widget {
         }
     }
 
+    pub mod timeline {
+        use super::game::{self, Game};
+        use super::theme;
+        use iced::widget::{column, container, scrollable};
+        use iced::{Alignment, Element, Length};
+
+        #[derive(Debug, Clone, Copy)]
+        pub enum Message {
+            Game(usize, game::Message),
+        }
+
+        #[derive(Debug, Clone)]
+        pub struct Timeline {
+            games: Vec<Game>,
+        }
+
+        impl Timeline {
+            pub fn new() -> Self {
+                Timeline {
+                    games: (0..5)
+                        .into_iter()
+                        .map(|_| [Game::new(true), Game::new(false)])
+                        .flatten()
+                        .collect(),
+                }
+            }
+
+            pub fn update(&mut self, message: Message) {
+                match message {
+                    Message::Game(index, message) => unsafe {
+                        self.games.get_unchecked_mut(index).update(message);
+                    },
+                }
+            }
+
+            pub fn view(&self) -> Element<Message> {
+                let games = self
+                    .games
+                    .iter()
+                    .enumerate()
+                    .map(|(i, game)| game.view().map(move |message| Message::Game(i, message)))
+                    .collect();
+
+                let content = column(games)
+                    .spacing(4)
+                    .padding(16)
+                    .align_items(Alignment::Start);
+
+                container(scrollable(content))
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .center_x()
+                    .style(theme::timeline_container())
+                    .into()
+            }
+        }
+    }
+
     pub mod game {
-        use super::*;        
+        use super::*;
         use crate::theme;
         use iced::widget::{button, column, container, row, text, Space};
         use iced::{alignment, Alignment, Element, Length};
@@ -190,21 +248,23 @@ mod widget {
             player_creep_score: u16,
             player_vision_score: u16,
             summoners: Vec<Summoner>,
-    
+
             is_expanded: bool,
         }
-    
+
         #[derive(Debug, Clone, Copy)]
         pub enum Message {
             ExpandPressed,
         }
-    
+
         impl Game {
-            pub fn new() -> Self {
+            pub fn new(win: bool) -> Self {
                 Game {
-                    win: true,
+                    win,
                     queue: Queue::RankedFlex,
-                    time: Time(time::OffsetDateTime::now_utc().saturating_sub(time::Duration::days(1))),
+                    time: Time(
+                        time::OffsetDateTime::now_utc().saturating_sub(time::Duration::days(1)),
+                    ),
                     duration: Duration(
                         time::Duration::minutes(28).saturating_add(time::Duration::seconds(33)),
                     ),
@@ -217,7 +277,7 @@ mod widget {
                     summoners: (0..10)
                         .map(|i| Summoner(format!("Summoner {}", i)))
                         .collect(),
-    
+
                     is_expanded: false,
                 }
             }
@@ -226,7 +286,7 @@ mod widget {
                     Message::ExpandPressed => self.is_expanded = !self.is_expanded,
                 }
             }
-    
+
             pub fn view(&self) -> Element<Message> {
                 let match_stats = {
                     // TODO: track and display points gained/lost
@@ -234,7 +294,7 @@ mod widget {
                     // let result_points = row![points_icon, text("31 LP").size(16)]
                     //     .spacing(2)
                     //     .align_items(Alignment::Center);
-    
+
                     let role: Element<_> = if let Some(role) = &self.role {
                         column![
                             row![
@@ -250,11 +310,15 @@ mod widget {
                     } else {
                         Space::new(0, 0).into()
                     };
-    
+
                     column![
                         column![
                             text(formatting::win(self.win))
-                                .style(theme::blue_text())
+                                .style(if self.win {
+                                    theme::blue_text()
+                                } else {
+                                    theme::red_text()
+                                })
                                 .size(16),
                             text(self.queue.to_string()).size(12),
                             text(self.time.to_string())
@@ -267,21 +331,21 @@ mod widget {
                     .spacing(2)
                     .padding(4)
                 };
-    
+
                 let champion_info = {
                     let champion_icon = large_icon();
-    
+
                     let champion_spells = row![medium_icon(), medium_icon(),].spacing(2);
-    
+
                     let champion_runes = row![medium_icon(), medium_icon(),].spacing(2);
-    
+
                     row![
                         champion_icon,
                         column![champion_spells, champion_runes].spacing(2),
                     ]
                     .spacing(2)
                 };
-    
+
                 let player_stats = {
                     let kda = row![
                         text(self.player_kills).size(12),
@@ -292,7 +356,7 @@ mod widget {
                     ]
                     .align_items(Alignment::Center)
                     .spacing(3);
-    
+
                     let other_stats = column![
                         row![
                             very_small_icon(),
@@ -327,10 +391,10 @@ mod widget {
                         .align_items(Alignment::Center),
                     ]
                     .align_items(Alignment::Start);
-    
+
                     column![kda, other_stats,].align_items(Alignment::Center)
                 };
-    
+
                 let player_items = {
                     row![
                         column![medium_large_icon(), medium_large_icon()].spacing(2),
@@ -340,23 +404,23 @@ mod widget {
                     ]
                     .spacing(2)
                 };
-    
+
                 let mut left_players: Vec<Element<_>> = self
                     .summoners
                     .iter()
                     .map(|summoner| {
                         let summoner_icon = small_icon();
                         let summoner_name = small_text(summoner.to_string());
-    
+
                         row![summoner_icon, summoner_name]
                             .align_items(Alignment::Center)
                             .spacing(4)
                             .into()
                     })
                     .collect();
-    
+
                 let right_players = left_players.split_off(5);
-    
+
                 let other_players = {
                     row![
                         column(left_players).spacing(2),
@@ -364,19 +428,19 @@ mod widget {
                     ]
                     .spacing(8)
                 };
-    
+
                 let expand_content = container(small_icon())
                     .center_x()
                     .align_y(alignment::Vertical::Bottom)
                     .height(Length::Fill)
                     .width(24)
                     .padding(2);
-    
+
                 let expand_button = button(expand_content)
                     .height(Length::Fill)
                     .on_press(Message::ExpandPressed)
                     .style(theme::expander_button(self.is_expanded));
-    
+
                 let overview = container(row![
                     row![
                         match_stats,
@@ -391,31 +455,26 @@ mod widget {
                     expand_button.padding(0),
                 ])
                 .max_height(100.0);
-    
+
                 let game = if self.is_expanded {
                     let match_details = container(Space::new(0.0, 400.0));
-    
-                    row![left_border(), column![overview, match_details,]]
+
+                    row![
+                        left_border(self.win).max_height(600.0),
+                        column![overview, match_details,]
+                    ]
                 } else {
-                    row![left_border().max_height(100.0), column![overview]]
+                    row![left_border(self.win).max_height(100.0), column![overview]]
                 };
-    
-                let content = container(game).style(theme::dark_container());
-    
-                container(content)
-                    .width(Length::Fill)
-                    .height(Length::Fill)
-                    .center_x()
-                    .align_y(alignment::Vertical::Top)
-                    .padding(16)
-                    .into()
+
+                container(game).style(theme::dark_container()).into()
             }
         }
     }
 
-    fn left_border<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
+    fn left_border<'a, Message: 'a>(win: bool) -> iced::widget::Container<'a, Message> {
         container(Space::new(6.0, 0.0))
-            .style(theme::left_border_container())
+            .style(theme::left_border_container(win))
             .height(Length::Fill)
     }
 
@@ -470,11 +529,20 @@ mod theme {
     pub enum Container {
         Dark,
         Icon,
-        LeftBorder,
+        LeftBorder(bool),
+        Timeline,
     }
 
+    pub const DARKER_BACKGROUND: Color = Color::from_rgb(0.05, 0.05, 0.05);
     pub const DARK_BACKGROUND: Color = Color::from_rgb(0.1, 0.1, 0.1);
     pub const LIGHT_BACKGROUND: Color = Color::from_rgb(0.95, 0.95, 0.95);
+
+    pub const RED: Color = Color::from_rgb(1.0, 0.34, 0.2);
+    pub const BLUE: Color = Color::from_rgb(0.0, 0.58, 1.0);
+
+    pub fn timeline_container() -> theme::Container {
+        theme::Container::Custom(Box::new(Container::Timeline))
+    }
 
     pub fn dark_container() -> theme::Container {
         theme::Container::Custom(Box::new(Container::Dark))
@@ -484,8 +552,8 @@ mod theme {
         theme::Container::Custom(Box::new(Container::Icon))
     }
 
-    pub fn left_border_container() -> theme::Container {
-        theme::Container::Custom(Box::new(Container::LeftBorder))
+    pub fn left_border_container(win: bool) -> theme::Container {
+        theme::Container::Custom(Box::new(Container::LeftBorder(win)))
     }
 
     pub fn gray_text() -> Color {
@@ -493,7 +561,7 @@ mod theme {
     }
 
     pub fn red_text() -> Color {
-        Color::from_rgb(1.0, 0.34, 0.2)
+        RED
     }
 
     pub fn sub_text() -> Color {
@@ -501,7 +569,7 @@ mod theme {
     }
 
     pub fn blue_text() -> Color {
-        Color::from_rgb(0.0, 0.58, 1.0)
+        BLUE
     }
 
     impl widget::container::StyleSheet for Container {
@@ -509,20 +577,27 @@ mod theme {
 
         fn appearance(&self, _theme: &iced::Theme) -> widget::container::Appearance {
             let background_color = match self {
+                Container::Timeline => DARKER_BACKGROUND,
                 Container::Dark => DARK_BACKGROUND,
                 Container::Icon => LIGHT_BACKGROUND,
-                Container::LeftBorder => Color::from_rgb(0.0, 0.58, 1.0),
+                Container::LeftBorder(win) => {
+                    if *win {
+                        BLUE
+                    } else {
+                        RED
+                    }
+                }
             };
 
             let text_color = match self {
-                Container::Dark | Container::LeftBorder => Color::WHITE,
+                Container::Dark | Container::LeftBorder(_) | Container::Timeline => Color::WHITE,
                 Container::Icon => Color::BLACK,
             };
 
             let border_radius = match self {
                 Container::Dark => 4.0.into(),
-                Container::Icon => 0.0.into(),
-                Container::LeftBorder => [4.0, 0.0, 0.0, 4.0].into(),
+                Container::Timeline | Container::Icon => 0.0.into(),
+                Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
             };
 
             widget::container::Appearance {
