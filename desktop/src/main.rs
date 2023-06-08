@@ -295,7 +295,7 @@ mod widget {
                             .style(theme::gray_text())
                             .size(10)
                     ]
-                    .padding(6)
+                    .padding([2, 6, 0, 6])
                     .align_items(Alignment::Center)
                     .spacing(4);
 
@@ -448,7 +448,13 @@ mod widget {
                     .padding(8)
                     .center_y();
 
-                    let content = column![title_bar, horizontal_rule(2), body];
+                    let content = column![
+                        title_bar,
+                        container(horizontal_rule(2).style(theme::rule(theme::gray_text())))
+                            .width(iced::Length::Fill)
+                            .padding([0, 4, 0, 4]),
+                        body
+                    ];
 
                     container(content)
                         .width(iced::Length::Fill)
@@ -905,6 +911,25 @@ mod theme {
                 background: Background::Color(RED),
                 bar: Background::Color(BLUE),
                 border_radius: 2.0.into(),
+            }
+        }
+    }
+
+    pub fn rule(color: Color) -> theme::Rule {
+        theme::Rule::Custom(Box::new(Rule(color)))
+    }
+
+    struct Rule(Color);
+
+    impl widget::rule::StyleSheet for Rule {
+        type Style = iced::Theme;
+
+        fn appearance(&self, _theme: &iced::Theme) -> widget::rule::Appearance {
+            widget::rule::Appearance {
+                color: self.0,
+                width: 1,
+                radius: 0.0.into(),
+                fill_mode: widget::rule::FillMode::Full,
             }
         }
     }
