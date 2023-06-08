@@ -2,7 +2,10 @@ use iced::{Application, Command, Element, Settings};
 use widget::timeline::{self, Timeline};
 
 pub fn main() -> iced::Result {
-    Aery::run(Settings::default())
+    Aery::run(Settings {
+        antialiasing: true,
+        ..Default::default()
+    })
 }
 
 struct Aery {
@@ -172,6 +175,8 @@ mod widget {
     }
 
     pub mod timeline {
+        use self::summary::Summary;
+
         use super::game::{self, Game};
         use super::theme;
         use iced::widget::{column, container, scrollable};
@@ -184,12 +189,14 @@ mod widget {
 
         #[derive(Debug, Clone)]
         pub struct Timeline {
+            summary: Summary,
             games: Vec<Game>,
         }
 
         impl Timeline {
             pub fn new() -> Self {
                 Timeline {
+                    summary: Summary::new(),
                     games: (0..5)
                         .into_iter()
                         .map(|_| [Game::new(true), Game::new(false)])
@@ -215,16 +222,239 @@ mod widget {
                     .collect();
 
                 let content = column(games)
+                    .width(Length::Fill)
+                    .padding([0, 12, 0, 0])
                     .spacing(4)
-                    .padding(16)
-                    .align_items(Alignment::Start);
+                    .align_items(Alignment::Center);
 
-                container(scrollable(content))
+                let summary = self.summary.view();
+                let timeline = column![
+                    summary,
+                    scrollable(content)
+                        .width(Length::Fill)
+                        .height(Length::FillPortion(9))
+                ]
+                .max_width(640)
+                .align_items(Alignment::Center)
+                .spacing(4);
+
+                let el: Element<_> = container(timeline)
                     .width(Length::Fill)
                     .height(Length::Fill)
                     .center_x()
                     .style(theme::timeline_container())
-                    .into()
+                    .into();
+
+                el
+            }
+        }
+
+        pub mod summary {
+            use super::theme;
+            use super::Message;
+            use crate::text;
+            use crate::widget::medium_large_icon;
+            use crate::widget::very_small_icon;
+            use iced::alignment;
+            use iced::widget::Space;
+            use iced::widget::{column, container, horizontal_rule, progress_bar, row, text};
+            use iced::{Alignment, Element};
+
+            trait Fit {
+                fn fit(self, size: u16) -> Self;
+            }
+
+            impl<'a> Fit for iced::widget::Text<'a> {
+                fn fit(self, size: u16) -> iced::widget::Text<'a> {
+                    self.size(size)
+                        .line_height(1.1)
+                        .vertical_alignment(alignment::Vertical::Center)
+                }
+            }
+
+            #[derive(Debug, Clone)]
+            pub struct Summary;
+
+            impl Summary {
+                pub fn new() -> Summary {
+                    Summary
+                }
+
+                pub fn view(&self) -> Element<Message> {
+                    let wins = 6;
+                    let losses = 4;
+                    let ratio = (wins as f32 / (wins + losses) as f32) * 100.0;
+                    let is_positive_ratio = ratio > 50.0;
+                    let kill_ratio = 2.7;
+                    let death_ratio = 6.7;
+                    let assist_ratio = 7.0;
+
+                    let title_bar = row![
+                        text("RECENT SUMMARY").size(12),
+                        text!("last {total} games", total = wins + losses)
+                            .style(theme::gray_text())
+                            .size(10)
+                    ]
+                    .padding(6)
+                    .align_items(Alignment::Center)
+                    .spacing(4);
+
+                    let summary_ratio = {
+                        let ratio_text = row![
+                            row![
+                                row![
+                                    text!("{wins}").fit(12),
+                                    text("W").fit(12).style(theme::gray_text())
+                                ]
+                                .spacing(1),
+                                row![
+                                    text!("{losses}").fit(12),
+                                    text("L").fit(12).style(theme::gray_text())
+                                ]
+                            ]
+                            .spacing(4),
+                            text("·").fit(18).style(theme::sub_text()),
+                            text!("{ratio:.1}%")
+                                .fit(12)
+                                .style(theme::win_color(is_positive_ratio)),
+                        ]
+                        .align_items(Alignment::Center)
+                        .spacing(4);
+
+                        let ratio_bar = progress_bar(0.0..=100.0, ratio)
+                            .width(80.0)
+                            .height(4.0)
+                            .style(theme::ratio_bar());
+
+                        column![
+                            text("Winrate").fit(10).style(theme::gray_text()),
+                            ratio_text,
+                            ratio_bar,
+                        ]
+                        .spacing(4)
+                    };
+
+                    let summary_lane = {
+                        let lane_icon = medium_large_icon();
+
+                        let lane_info = column![
+                            row![
+                                row![
+                                    row![
+                                        text!("{wins}").fit(12),
+                                        text("W").fit(12).style(theme::gray_text())
+                                    ]
+                                    .spacing(1),
+                                    row![
+                                        text!("{losses}").fit(12),
+                                        text("L").fit(12).style(theme::gray_text())
+                                    ]
+                                ]
+                                .spacing(4),
+                                text("·").fit(18).style(theme::sub_text()),
+                                text!("{ratio:.1}%")
+                                    .fit(12)
+                                    .style(theme::win_color(is_positive_ratio)),
+                            ]
+                            .align_items(Alignment::Center)
+                            .spacing(4),
+                            row![
+                                text!("{kill_ratio:.1}").size(10),
+                                text("/").size(10).style(theme::gray_text()),
+                                text!("{death_ratio:.1}").size(10),
+                                text("/").size(10).style(theme::gray_text()),
+                                text!("{assist_ratio:.1}").size(10),
+                                row![
+                                    text("(").size(10).style(theme::red_text()),
+                                    text!("{:.1} KDA", death_ratio + assist_ratio / kill_ratio)
+                                        .size(10)
+                                        .style(theme::red_text()),
+                                    text(")").size(10).style(theme::red_text())
+                                ],
+                            ]
+                            .spacing(2)
+                            .align_items(Alignment::Start),
+                        ];
+
+                        column![
+                            text("Lane").size(10).height(13).style(theme::gray_text()),
+                            row![lane_icon, lane_info]
+                                .align_items(Alignment::Center)
+                                .spacing(4)
+                        ]
+                        .spacing(2)
+                    };
+
+                    let summary_champions = {
+                        // TODO: change to champion id
+                        let champions = vec![
+                            ("Twisted Fate", 2, 1, 1.15),
+                            ("Orianna", 3, 0, 2.0),
+                            ("Annie", 2, 2, 3.0),
+                            ("Sion", 0, 3, 0.5),
+                        ];
+
+                        let content: Vec<Element<Message>> = champions
+                            .into_iter()
+                            .map(|(_name, wins, losses, kda)| {
+                                let icon = container(Space::new(24.0, 24.0))
+                                    .style(theme::icon_container())
+                                    .max_width(24.0)
+                                    .max_height(24.0);
+                                let winrate = wins as f32 * 100.0 / (wins + losses) as f32;
+
+                                row![
+                                    icon,
+                                    // TODO: fix strange alignment between bottom and top text
+                                    column![
+                                        row![
+                                            text!("{:.1}%", winrate)
+                                                .size(10)
+                                                .style(theme::win_color(winrate > 50.0)),
+                                            text!("({wins}W {losses}L)")
+                                                .size(10)
+                                                .style(theme::gray_text())
+                                        ]
+                                        .align_items(Alignment::Center)
+                                        .spacing(2),
+                                        row![
+                                            very_small_icon(),
+                                            text!("{:.2} KDA", kda)
+                                                .size(10)
+                                                .style(theme::gray_text())
+                                        ]
+                                        .spacing(2)
+                                        .align_items(Alignment::Center),
+                                    ]
+                                ]
+                                .align_items(Alignment::Center)
+                                .spacing(4)
+                                .into()
+                            })
+                            .collect();
+
+                        column![
+                            text("Champions").size(10).style(theme::gray_text()),
+                            row(content).spacing(8).align_items(Alignment::Center)
+                        ]
+                        .spacing(8)
+                    };
+
+                    let body = container(
+                        row![summary_ratio, summary_lane, summary_champions]
+                            .spacing(16)
+                            .align_items(Alignment::Start),
+                    )
+                    .padding(8)
+                    .center_y();
+
+                    let content = column![title_bar, horizontal_rule(2), body];
+
+                    container(content)
+                        .width(iced::Length::Fill)
+                        .style(theme::dark_container())
+                        .into()
+                }
             }
         }
     }
@@ -449,6 +679,7 @@ mod widget {
                         player_items,
                         other_players,
                     ]
+                    .width(Length::Fill)
                     .spacing(32)
                     .padding(4)
                     .align_items(Alignment::Center),
@@ -467,8 +698,18 @@ mod widget {
                     row![left_border(self.win).max_height(100.0), column![overview]]
                 };
 
-                container(game).style(theme::dark_container()).into()
+                container(game)
+                    .width(Length::Fill)
+                    .style(theme::dark_container())
+                    .into()
             }
+        }
+    }
+
+    #[macro_export]
+    macro_rules! text {
+        ($($arg:tt)*) => {
+            iced::widget::Text::new(format!($($arg)*))
         }
     }
 
@@ -556,6 +797,18 @@ mod theme {
         theme::Container::Custom(Box::new(Container::LeftBorder(win)))
     }
 
+    pub fn ratio_bar() -> theme::ProgressBar {
+        theme::ProgressBar::Custom(Box::new(RatioBar))
+    }
+
+    pub fn win_color(win: bool) -> Color {
+        if win {
+            BLUE
+        } else {
+            RED
+        }
+    }
+
     pub fn gray_text() -> Color {
         Color::from_rgb(0.5, 0.5, 0.5)
     }
@@ -580,13 +833,7 @@ mod theme {
                 Container::Timeline => DARKER_BACKGROUND,
                 Container::Dark => DARK_BACKGROUND,
                 Container::Icon => LIGHT_BACKGROUND,
-                Container::LeftBorder(win) => {
-                    if *win {
-                        BLUE
-                    } else {
-                        RED
-                    }
-                }
+                Container::LeftBorder(win) => win_color(*win),
             };
 
             let text_color = match self {
@@ -644,6 +891,20 @@ mod theme {
             widget::button::Appearance {
                 background: Some(iced::Background::Color(background_color)),
                 ..self.active(_theme)
+            }
+        }
+    }
+
+    struct RatioBar;
+
+    impl widget::progress_bar::StyleSheet for RatioBar {
+        type Style = iced::Theme;
+
+        fn appearance(&self, _theme: &iced::Theme) -> widget::progress_bar::Appearance {
+            widget::progress_bar::Appearance {
+                background: Background::Color(RED),
+                bar: Background::Color(BLUE),
+                border_radius: 2.0.into(),
             }
         }
     }
