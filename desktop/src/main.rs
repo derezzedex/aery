@@ -253,6 +253,7 @@ mod widget {
             use super::theme;
             use super::Message;
             use crate::text;
+            use crate::widget;
             use crate::widget::medium_large_icon;
             use crate::widget::very_small_icon;
             use iced::alignment;
@@ -290,7 +291,7 @@ mod widget {
                     let assist_ratio = 7.0;
 
                     let title_bar = row![
-                        text("RECENT SUMMARY").size(12),
+                        widget::bold("Recent summary").size(12),
                         text!("last {total} games", total = wins + losses)
                             .style(theme::gray_text())
                             .size(10)
@@ -468,6 +469,7 @@ mod widget {
     pub mod game {
         use super::*;
         use crate::theme;
+        use crate::widget;
         use iced::widget::{button, column, container, row, text, Space};
         use iced::{alignment, Alignment, Element, Length};
 
@@ -549,7 +551,7 @@ mod widget {
 
                     column![
                         column![
-                            text(formatting::win(self.win))
+                            widget::bold(formatting::win(self.win))
                                 .style(if self.win {
                                     theme::blue_text()
                                 } else {
@@ -717,6 +719,13 @@ mod widget {
         ($($arg:tt)*) => {
             iced::widget::Text::new(format!($($arg)*))
         }
+    }
+
+    fn bold<'a>(text: impl ToString) -> iced::widget::Text<'a> {
+        iced::widget::Text::new(text.to_string()).font(iced::Font {
+            weight: iced::font::Weight::Semibold,
+            ..Default::default()
+        })
     }
 
     fn left_border<'a, Message: 'a>(win: bool) -> iced::widget::Container<'a, Message> {
