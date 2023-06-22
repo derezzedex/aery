@@ -446,6 +446,7 @@ mod widget {
                 let timeline = column![
                     summary,
                     scrollable(content)
+                        .style(theme::scrollable())
                         .width(Length::Fill)
                         .height(Length::FillPortion(9))
                 ]
@@ -1076,6 +1077,10 @@ mod theme {
         theme::Button::Custom(Box::new(Button::Update))
     }
 
+    pub fn scrollable() -> theme::Scrollable {
+        theme::Scrollable::Custom(Box::new(Scrollable))
+    }
+
     impl widget::container::StyleSheet for Container {
         type Style = iced::Theme;
 
@@ -1217,6 +1222,50 @@ mod theme {
                 width: 1,
                 radius: 0.0.into(),
                 fill_mode: widget::rule::FillMode::Full,
+            }
+        }
+    }
+
+    struct Scrollable;
+
+    impl widget::scrollable::StyleSheet for Scrollable {
+        type Style = iced::Theme;
+
+        fn active(&self, _theme: &iced::Theme) -> widget::scrollable::Scrollbar {
+            widget::scrollable::Scrollbar {
+                background: Some(Background::Color(Color::from_rgb(0.1, 0.1, 0.1))),
+                scroller: widget::scrollable::Scroller {
+                    color: Color::from_rgb(0.2, 0.2, 0.2),
+                    border_radius: 2.0.into(),
+                    border_width: 0.0,
+                    border_color: Color::TRANSPARENT,
+                },
+                border_radius: 2.0.into(),
+                border_width: 0.0,
+                border_color: Color::TRANSPARENT,
+            }
+        }
+
+        fn hovered(
+            &self,
+            style: &Self::Style,
+            is_mouse_over_scrollbar: bool,
+        ) -> widget::scrollable::Scrollbar {
+            if is_mouse_over_scrollbar {
+                widget::scrollable::Scrollbar {
+                    background: Some(Background::Color(Color::from_rgb(0.1, 0.1, 0.1))),
+                    border_radius: 2.0.into(),
+                    border_width: 0.0,
+                    border_color: Color::TRANSPARENT,
+                    scroller: widget::scrollable::Scroller {
+                        color: Color::from_rgba(0.4, 0.4, 0.4, 0.9),
+                        border_radius: 2.0.into(),
+                        border_width: 0.0,
+                        border_color: Color::TRANSPARENT,
+                    },
+                }
+            } else {
+                self.active(style)
             }
         }
     }
