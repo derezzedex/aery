@@ -1,4 +1,7 @@
-use iced::{widget::{container, column}, Application, Command, Element, Settings};
+use iced::{
+    widget::{column, container},
+    Application, Command, Element, Settings,
+};
 use widget::summoner::{self, Summoner};
 use widget::timeline::{self, Timeline};
 
@@ -55,7 +58,7 @@ impl Application for Aery {
                 self.summoner.view().map(Message::Summoner),
                 self.timeline.view().map(Message::Timeline),
             ]
-            .spacing(16)
+            .spacing(16),
         )
         .style(theme::timeline_container())
         .into()
@@ -271,13 +274,17 @@ mod widget {
         }
 
         fn summoner_icon<'a>(icon_id: u16, level: u16) -> Element<'a, Message> {
-            container(container(bold(level).size(12)).padding(2).style(theme::summoner_level_container()))
-                .width(96.0)
-                .height(96.0)
-                .center_x()
-                .align_y(alignment::Vertical::Bottom)
-                .style(theme::summoner_icon_container(icon_id))
-                .into()
+            container(
+                container(bold(level).size(12))
+                    .padding(2)
+                    .style(theme::summoner_level_container()),
+            )
+            .width(96.0)
+            .height(96.0)
+            .center_x()
+            .align_y(alignment::Vertical::Bottom)
+            .style(theme::summoner_icon_container(icon_id))
+            .into()
         }
 
         pub struct Summoner;
@@ -344,7 +351,9 @@ mod widget {
                 let ladder = row![
                     text("Ladder rank").size(12).style(theme::gray_text()),
                     text!("{ladder_rank}").size(12),
-                    text!("(top {rank_percentage}%)").size(12).style(theme::gray_text()),
+                    text!("(top {rank_percentage}%)")
+                        .size(12)
+                        .style(theme::gray_text()),
                 ]
                 .spacing(4);
 
@@ -1075,7 +1084,9 @@ mod theme {
                 Container::Dark
                 | Container::LeftBorder(_)
                 | Container::Timeline
-                | Container::PastRank | Container::SummonerIcon(_) | Container::SummonerLevel => Color::WHITE,
+                | Container::PastRank
+                | Container::SummonerIcon(_)
+                | Container::SummonerLevel => Color::WHITE,
                 Container::Icon => Color::BLACK,
             };
 
@@ -1088,12 +1099,20 @@ mod theme {
             };
 
             let border_color = match self {
-                Container::Dark | Container::PastRank | Container::Timeline | Container::LeftBorder(_) | Container::Icon => Color::TRANSPARENT,
+                Container::Dark
+                | Container::PastRank
+                | Container::Timeline
+                | Container::LeftBorder(_)
+                | Container::Icon => Color::TRANSPARENT,
                 Container::SummonerIcon(_) | Container::SummonerLevel => GOLD,
             };
 
             let border_width = match self {
-                Container::Dark | Container::PastRank | Container::Timeline | Container::LeftBorder(_) | Container::Icon => 0.0,
+                Container::Dark
+                | Container::PastRank
+                | Container::Timeline
+                | Container::LeftBorder(_)
+                | Container::Icon => 0.0,
                 Container::SummonerIcon(_) => 2.0,
                 Container::SummonerLevel => 1.0,
             };
