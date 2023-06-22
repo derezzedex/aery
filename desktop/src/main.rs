@@ -1,4 +1,5 @@
-use iced::{Application, Command, Element, Settings};
+use iced::{widget::{container, column}, Application, Command, Element, Settings};
+use widget::summoner::{self, Summoner};
 use widget::timeline::{self, Timeline};
 
 pub fn main() -> iced::Result {
@@ -10,11 +11,13 @@ pub fn main() -> iced::Result {
 
 struct Aery {
     timeline: Timeline,
+    summoner: Summoner,
 }
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
     Timeline(timeline::Message),
+    Summoner(summoner::Message),
 }
 
 impl Application for Aery {
@@ -27,6 +30,7 @@ impl Application for Aery {
         (
             Self {
                 timeline: Timeline::new(),
+                summoner: Summoner::new(),
             },
             Command::none(),
         )
@@ -39,13 +43,22 @@ impl Application for Aery {
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
             Message::Timeline(message) => self.timeline.update(message),
+            Message::Summoner(message) => self.summoner.update(message),
         }
 
         Command::none()
     }
 
     fn view(&self) -> Element<Message> {
-        self.timeline.view().map(Message::Timeline)
+        container(
+            column![
+                self.summoner.view().map(Message::Summoner),
+                self.timeline.view().map(Message::Timeline),
+            ]
+            .spacing(16)
+        )
+        .style(theme::timeline_container())
+        .into()
     }
 }
 
@@ -171,6 +184,189 @@ mod widget {
 
         pub fn vision_score(vision_score: u16) -> String {
             format!("{vision_score} vision")
+        }
+    }
+
+    pub mod summoner {
+        use crate::text;
+        use crate::theme;
+        use crate::widget::bold;
+        use iced::alignment;
+        use iced::widget::column;
+        use iced::widget::{button, container, row, text};
+        use iced::Element;
+        use iced::Length;
+
+        #[derive(Debug, Copy, Clone)]
+        pub enum Message {
+            Update,
+        }
+
+        #[allow(dead_code)]
+        #[derive(Debug, Copy, Clone)]
+        enum Tier {
+            Iron(Division),
+            Bronze(Division),
+            Silver(Division),
+            Gold(Division),
+            Platinum(Division),
+            Diamond(Division),
+            Master(u16),
+            Grandmaster(u16),
+            Challenger(u16),
+        }
+
+        impl Tier {
+            fn division(&self) -> String {
+                match self {
+                    Tier::Iron(division)
+                    | Tier::Bronze(division)
+                    | Tier::Silver(division)
+                    | Tier::Gold(division)
+                    | Tier::Platinum(division)
+                    | Tier::Diamond(division) => division.to_string(),
+                    Tier::Master(points) | Tier::Grandmaster(points) | Tier::Challenger(points) => {
+                        points.to_string()
+                    }
+                }
+            }
+        }
+
+        impl ToString for Tier {
+            fn to_string(&self) -> String {
+                match self {
+                    Tier::Iron(_) => "Iron",
+                    Tier::Bronze(_) => "Bronze",
+                    Tier::Silver(_) => "Silver",
+                    Tier::Gold(_) => "Gold",
+                    Tier::Platinum(_) => "Platinum",
+                    Tier::Diamond(_) => "Diamond",
+                    Tier::Master(_) => "Master",
+                    Tier::Grandmaster(_) => "Grandmaster",
+                    Tier::Challenger(_) => "Challenger",
+                }
+                .to_string()
+            }
+        }
+
+        #[allow(dead_code)]
+        #[derive(Debug, Copy, Clone)]
+        enum Division {
+            One(u8),
+            Two(u8),
+            Three(u8),
+            Four(u8),
+        }
+
+        impl ToString for Division {
+            fn to_string(&self) -> String {
+                match self {
+                    Division::One(_) => "1",
+                    Division::Two(_) => "2",
+                    Division::Three(_) => "3",
+                    Division::Four(_) => "4",
+                }
+                .to_string()
+            }
+        }
+
+        fn summoner_icon<'a>(icon_id: u16, level: u16) -> Element<'a, Message> {
+            container(container(bold(level).size(12)).padding(2).style(theme::summoner_level_container()))
+                .width(96.0)
+                .height(96.0)
+                .center_x()
+                .align_y(alignment::Vertical::Bottom)
+                .style(theme::summoner_icon_container(icon_id))
+                .into()
+        }
+
+        pub struct Summoner;
+
+        impl Summoner {
+            pub fn new() -> Self {
+                Summoner
+            }
+
+            pub fn update(&mut self, message: Message) {
+                match message {
+                    Message::Update => todo!(),
+                }
+            }
+
+            pub fn view(&self) -> Element<Message> {
+                let icon_id = 0;
+                let summoner_level = 466;
+                let icon = summoner_icon(icon_id, summoner_level);
+                let past_ranks = {
+                    let ranks = [
+                        (12, Tier::Silver(Division::One(0))),
+                        (11, Tier::Gold(Division::Four(100))),
+                    ];
+
+                    row(ranks
+                        .into_iter()
+                        .map(|(season, tier)| {
+                            let division = tier.division();
+                            let tier = tier.to_string();
+
+                            container(
+                                row![
+                                    container(bold(format!("S{season}")).size(11)),
+                                    text!("{tier} {division}")
+                                        .size(11)
+                                        .style(theme::gray_text()),
+                                ]
+                                .spacing(2),
+                            )
+                            .padding(2)
+                            .style(theme::past_rank_container())
+                            .into()
+                        })
+                        .collect())
+                    .spacing(4)
+                };
+
+                let name = text("SynxTrak")
+                    .size(24)
+                    .vertical_alignment(alignment::Vertical::Center);
+
+                let rank = 241768;
+                let ladder_rank = rank
+                    .to_string()
+                    .as_bytes()
+                    .rchunks(3)
+                    .rev()
+                    .map(std::str::from_utf8)
+                    .collect::<Result<Vec<&str>, _>>()
+                    .unwrap()
+                    .join(",");
+                let rank_percentage = 24.7;
+                let ladder = row![
+                    text("Ladder rank").size(12).style(theme::gray_text()),
+                    text!("{ladder_rank}").size(12),
+                    text!("(top {rank_percentage}%)").size(12).style(theme::gray_text()),
+                ]
+                .spacing(4);
+
+                let update_button = button("Update")
+                    .style(theme::update_button())
+                    .on_press(Message::Update);
+
+                container(
+                    column![
+                        past_ranks,
+                        row![icon, column![name, ladder, update_button].spacing(4)].spacing(8)
+                    ]
+                    .spacing(8)
+                    .width(Length::Fill)
+                    .max_width(640)
+                    .padding([8, 0, 8, 0]),
+                )
+                .center_x()
+                .width(Length::Fill)
+                .style(theme::timeline_container())
+                .into()
+            }
         }
     }
 
@@ -787,17 +983,34 @@ mod theme {
         Icon,
         LeftBorder(bool),
         Timeline,
+        PastRank,
+        SummonerIcon(u16),
+        SummonerLevel,
     }
 
     pub const DARKER_BACKGROUND: Color = Color::from_rgb(0.05, 0.05, 0.05);
     pub const DARK_BACKGROUND: Color = Color::from_rgb(0.1, 0.1, 0.1);
+    pub const LIGHTER_BACKGROUND: Color = Color::from_rgb(0.2, 0.2, 0.2);
     pub const LIGHT_BACKGROUND: Color = Color::from_rgb(0.95, 0.95, 0.95);
 
     pub const RED: Color = Color::from_rgb(1.0, 0.34, 0.2);
     pub const BLUE: Color = Color::from_rgb(0.0, 0.58, 1.0);
+    pub const GOLD: Color = Color::from_rgb(205.0 / 255.0, 136.0 / 255.0, 55.0 / 255.0);
 
     pub fn timeline_container() -> theme::Container {
         theme::Container::Custom(Box::new(Container::Timeline))
+    }
+
+    pub fn past_rank_container() -> theme::Container {
+        theme::Container::Custom(Box::new(Container::PastRank))
+    }
+
+    pub fn summoner_icon_container(id: u16) -> theme::Container {
+        theme::Container::Custom(Box::new(Container::SummonerIcon(id)))
+    }
+
+    pub fn summoner_level_container() -> theme::Container {
+        theme::Container::Custom(Box::new(Container::SummonerLevel))
     }
 
     pub fn dark_container() -> theme::Container {
@@ -840,32 +1053,57 @@ mod theme {
         BLUE
     }
 
+    pub fn update_button() -> theme::Button {
+        theme::Button::Custom(Box::new(Button::Update))
+    }
+
     impl widget::container::StyleSheet for Container {
         type Style = iced::Theme;
 
         fn appearance(&self, _theme: &iced::Theme) -> widget::container::Appearance {
-            let background_color = match self {
-                Container::Timeline => DARKER_BACKGROUND,
-                Container::Dark => DARK_BACKGROUND,
-                Container::Icon => LIGHT_BACKGROUND,
-                Container::LeftBorder(win) => win_color(*win),
+            let background = match self {
+                Container::Timeline => Background::Color(DARKER_BACKGROUND),
+                Container::Dark => Background::Color(DARK_BACKGROUND),
+                Container::PastRank => Background::Color(LIGHTER_BACKGROUND),
+                Container::Icon => Background::Color(LIGHT_BACKGROUND),
+                Container::LeftBorder(win) => Background::Color(win_color(*win)),
+                Container::SummonerIcon(_) => Background::Color(LIGHT_BACKGROUND), // todo: switch to image
+                Container::SummonerLevel => Background::Color(DARK_BACKGROUND),
             };
 
             let text_color = match self {
-                Container::Dark | Container::LeftBorder(_) | Container::Timeline => Color::WHITE,
+                Container::Dark
+                | Container::LeftBorder(_)
+                | Container::Timeline
+                | Container::PastRank | Container::SummonerIcon(_) | Container::SummonerLevel => Color::WHITE,
                 Container::Icon => Color::BLACK,
             };
 
             let border_radius = match self {
                 Container::Dark => 4.0.into(),
+                Container::PastRank => 2.0.into(),
+                Container::SummonerLevel | Container::SummonerIcon(_) => 2.0.into(),
                 Container::Timeline | Container::Icon => 0.0.into(),
                 Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
             };
 
+            let border_color = match self {
+                Container::Dark | Container::PastRank | Container::Timeline | Container::LeftBorder(_) | Container::Icon => Color::TRANSPARENT,
+                Container::SummonerIcon(_) | Container::SummonerLevel => GOLD,
+            };
+
+            let border_width = match self {
+                Container::Dark | Container::PastRank | Container::Timeline | Container::LeftBorder(_) | Container::Icon => 0.0,
+                Container::SummonerIcon(_) => 2.0,
+                Container::SummonerLevel => 1.0,
+            };
+
             widget::container::Appearance {
-                background: Some(Background::Color(background_color)),
+                background: Some(background),
                 text_color: Some(text_color),
                 border_radius,
+                border_color,
+                border_width,
                 ..Default::default()
             }
         }
@@ -877,6 +1115,7 @@ mod theme {
 
     pub enum Button {
         Expander(bool),
+        Update,
     }
 
     impl widget::button::StyleSheet for Button {
@@ -886,22 +1125,32 @@ mod theme {
             let background_color = match self {
                 Button::Expander(false) => Color::from_rgba(0.2, 0.2, 0.2, 0.6),
                 Button::Expander(true) => Color::TRANSPARENT,
+                Button::Update => BLUE,
             };
 
             let border_radius = match self {
                 Button::Expander(true) => [0.0, 4.0, 0.0, 0.0].into(),
                 Button::Expander(false) => [0.0, 4.0, 4.0, 0.0].into(),
+                Button::Update => 2.0.into(),
+            };
+
+            let text_color = match self {
+                Button::Expander(_) | Button::Update => Color::WHITE,
             };
 
             widget::button::Appearance {
                 background: Some(iced::Background::Color(background_color)),
                 border_radius,
+                text_color,
                 ..Default::default()
             }
         }
 
         fn hovered(&self, _theme: &iced::Theme) -> widget::button::Appearance {
-            let background_color = Color::from_rgba(0.4, 0.4, 0.4, 0.9);
+            let background_color = match self {
+                Button::Update => Color::from_rgba(0.0, 0.58, 1.0, 0.7),
+                Button::Expander(_) => Color::from_rgba(0.4, 0.4, 0.4, 0.9),
+            };
 
             widget::button::Appearance {
                 background: Some(iced::Background::Color(background_color)),
