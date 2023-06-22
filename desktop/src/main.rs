@@ -1168,7 +1168,7 @@ mod theme {
             widget::progress_bar::Appearance {
                 background: Background::Color(RED),
                 bar: Background::Color(BLUE),
-                border_radius: 2.0.into(),
+                border_radius: 0.0.into(),
             }
         }
     }
