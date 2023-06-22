@@ -207,7 +207,7 @@ mod widget {
 
         #[allow(dead_code)]
         #[derive(Debug, Copy, Clone)]
-        enum Tier {
+        pub enum Tier {
             Iron(Division),
             Bronze(Division),
             Silver(Division),
@@ -254,7 +254,7 @@ mod widget {
 
         #[allow(dead_code)]
         #[derive(Debug, Copy, Clone)]
-        enum Division {
+        pub enum Division {
             One(u8),
             Two(u8),
             Three(u8),
@@ -306,31 +306,44 @@ mod widget {
                 let icon = summoner_icon(icon_id, summoner_level);
                 let past_ranks = {
                     let ranks = [
-                        (12, Tier::Silver(Division::One(0))),
-                        (11, Tier::Gold(Division::Four(100))),
+                        (12, Tier::Iron(Division::One(0))),
+                        (11, Tier::Bronze(Division::Four(100))),
+                        (10, Tier::Silver(Division::One(0))),
+                        (9, Tier::Gold(Division::Four(100))),
+                        (8, Tier::Platinum(Division::One(0))),
+                        (7, Tier::Diamond(Division::Four(100))),
+                        (6, Tier::Master(150)),
+                        (5, Tier::Grandmaster(600)),
+                        (4, Tier::Challenger(2000)),
                     ];
 
                     row(ranks
                         .into_iter()
-                        .map(|(season, tier)| {
-                            let division = tier.division();
-                            let tier = tier.to_string();
+                        .map(|(season, rank)| {
+                            let division = rank.division();
+                            let tier = rank.to_string();
 
                             container(
                                 row![
-                                    container(bold(format!("S{season}")).size(11)),
-                                    text!("{tier} {division}")
-                                        .size(11)
-                                        .style(theme::gray_text()),
+                                    container(
+                                        container(bold(format!("S{season}")).size(10))
+                                            .padding([0, 2, 0, 2])
+                                    )
+                                    .style(theme::past_rank_badge_container()),
+                                    container(
+                                        text!("{tier} {division}")
+                                            .size(10)
+                                            .style(theme::tier_color(rank))
+                                    )
+                                    .padding([0, 2, 0, 2]),
                                 ]
                                 .spacing(2),
                             )
-                            .padding(2)
                             .style(theme::past_rank_container())
                             .into()
                         })
                         .collect())
-                    .spacing(4)
+                    .spacing(2)
                 };
 
                 let name = text("SynxTrak")
@@ -1004,6 +1017,7 @@ mod theme {
         LeftBorder(bool),
         Timeline,
         PastRank,
+        PastRankBadge,
         SummonerIcon(u16),
         SummonerLevel,
     }
@@ -1045,8 +1059,26 @@ mod theme {
         theme::Container::Custom(Box::new(Container::LeftBorder(win)))
     }
 
+    pub fn past_rank_badge_container() -> theme::Container {
+        theme::Container::Custom(Box::new(Container::PastRankBadge))
+    }
+
     pub fn ratio_bar() -> theme::ProgressBar {
         theme::ProgressBar::Custom(Box::new(RatioBar))
+    }
+
+    pub fn tier_color(tier: crate::summoner::Tier) -> Color {
+        match tier {
+            crate::widget::summoner::Tier::Iron(_) => Color::from_rgb8(87, 77, 79),
+            crate::widget::summoner::Tier::Bronze(_) => Color::from_rgb8(140, 82, 58),
+            crate::widget::summoner::Tier::Silver(_) => Color::from_rgb8(128, 152, 157),
+            crate::widget::summoner::Tier::Gold(_) => Color::from_rgb8(205, 136, 55),
+            crate::widget::summoner::Tier::Platinum(_) => Color::from_rgb8(78, 153, 150),
+            crate::widget::summoner::Tier::Diamond(_) => Color::from_rgb8(87, 107, 206),
+            crate::widget::summoner::Tier::Master(_) => Color::from_rgb8(157, 72, 224),
+            crate::widget::summoner::Tier::Grandmaster(_) => Color::from_rgb8(205, 69, 69),
+            crate::widget::summoner::Tier::Challenger(_) => Color::from_rgb8(244, 200, 116),
+        }
     }
 
     pub fn win_color(win: bool) -> Color {
@@ -1088,7 +1120,8 @@ mod theme {
             let background = match self {
                 Container::Timeline => Background::Color(DARKER_BACKGROUND),
                 Container::Dark => Background::Color(DARK_BACKGROUND),
-                Container::PastRank => Background::Color(LIGHTER_BACKGROUND),
+                Container::PastRankBadge => Background::Color(LIGHTER_BACKGROUND),
+                Container::PastRank => Background::Color(Color::from_rgb(0.1, 0.1, 0.1)),
                 Container::Icon => Background::Color(LIGHT_BACKGROUND),
                 Container::LeftBorder(win) => Background::Color(win_color(*win)),
                 Container::SummonerIcon(_) => Background::Color(LIGHT_BACKGROUND), // todo: switch to image
@@ -1100,6 +1133,7 @@ mod theme {
                 | Container::LeftBorder(_)
                 | Container::Timeline
                 | Container::PastRank
+                | Container::PastRankBadge
                 | Container::SummonerIcon(_)
                 | Container::SummonerLevel => Color::WHITE,
                 Container::Icon => Color::BLACK,
@@ -1111,11 +1145,13 @@ mod theme {
                 Container::SummonerLevel | Container::SummonerIcon(_) => 2.0.into(),
                 Container::Timeline | Container::Icon => 0.0.into(),
                 Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
+                Container::PastRankBadge => [2.0, 0.0, 0.0, 2.0].into(),
             };
 
             let border_color = match self {
                 Container::Dark
                 | Container::PastRank
+                | Container::PastRankBadge
                 | Container::Timeline
                 | Container::LeftBorder(_)
                 | Container::Icon => Color::TRANSPARENT,
@@ -1125,6 +1161,7 @@ mod theme {
             let border_width = match self {
                 Container::Dark
                 | Container::PastRank
+                | Container::PastRankBadge
                 | Container::Timeline
                 | Container::LeftBorder(_)
                 | Container::Icon => 0.0,
