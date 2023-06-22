@@ -364,7 +364,17 @@ mod widget {
                 container(
                     column![
                         past_ranks,
-                        row![icon, column![name, ladder, update_button].spacing(4)].spacing(8)
+                        row![
+                            icon,
+                            column![
+                                column![name, ladder],
+                                container(update_button)
+                                    .height(48)
+                                    .align_y(alignment::Vertical::Bottom)
+                            ]
+                            .spacing(1)
+                        ]
+                        .spacing(8)
                     ]
                     .spacing(8)
                     .width(Length::Fill)
