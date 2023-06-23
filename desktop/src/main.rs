@@ -1,7 +1,8 @@
 use iced::{
-    widget::{column, container},
-    Application, Command, Element, Settings,
+    widget::{column, container, horizontal_space, row},
+    Application, Command, Element, Length, Settings,
 };
+use widget::ranked_overview::{self, RankedOverview};
 use widget::search_bar::{self, SearchBar};
 use widget::summoner::{self, Summoner};
 use widget::timeline::{self, Timeline};
@@ -17,6 +18,7 @@ struct Aery {
     timeline: Timeline,
     summoner: Summoner,
     search_bar: SearchBar,
+    ranked_overview: RankedOverview,
 }
 
 #[derive(Debug, Clone)]
@@ -24,6 +26,7 @@ enum Message {
     Timeline(timeline::Message),
     Summoner(summoner::Message),
     SearchBar(search_bar::Message),
+    RankedOverview(ranked_overview::Message),
 }
 
 impl Application for Aery {
@@ -38,6 +41,7 @@ impl Application for Aery {
                 timeline: Timeline::new(),
                 summoner: Summoner::new(),
                 search_bar: SearchBar::new(),
+                ranked_overview: RankedOverview::new(),
             },
             Command::none(),
         )
@@ -52,6 +56,7 @@ impl Application for Aery {
             Message::Timeline(message) => self.timeline.update(message),
             Message::Summoner(message) => self.summoner.update(message),
             Message::SearchBar(message) => self.search_bar.update(message),
+            Message::RankedOverview(message) => self.ranked_overview.update(message),
         }
 
         Command::none()
@@ -62,7 +67,14 @@ impl Application for Aery {
             column![
                 self.search_bar.view().map(Message::SearchBar),
                 self.summoner.view().map(Message::Summoner),
-                self.timeline.view().map(Message::Timeline),
+                row![
+                    horizontal_space(Length::Fill),
+                    self.ranked_overview.view().map(Message::RankedOverview),
+                    self.timeline.view().map(Message::Timeline),
+                    horizontal_space(Length::Fill),
+                ]
+                .padding(8)
+                .spacing(8),
             ]
             .spacing(16),
         )
@@ -485,6 +497,98 @@ mod widget {
         }
     }
 
+    pub mod ranked_overview {
+        use iced::{
+            widget::{
+                button, column, container, horizontal_space, progress_bar, row, text,
+                vertical_space,
+            },
+            Alignment, Element, Length,
+        };
+
+        use crate::theme;
+
+        use super::{bold, large_icon, medium_icon};
+
+        fn ranked_container<'a>(queue_type: impl ToString) -> Element<'a, Message> {
+            let left_bar = container(horizontal_space(2))
+                .style(theme::left_bar_container())
+                .height(18);
+
+            container(column![
+                row![
+                    left_bar,
+                    horizontal_space(4),
+                    bold(queue_type).size(14),
+                    horizontal_space(Length::Fill),
+                    button(medium_icon())
+                        .style(theme::expand_button())
+                        .padding(4)
+                        .on_press(Message::Expand),
+                ]
+                .spacing(2)
+                .align_items(Alignment::Center),
+                vertical_space(12),
+                row![
+                    large_icon(),
+                    column![
+                        row![
+                            bold("Gold 4").size(16),
+                            text("·").style(theme::sub_text()).size(16),
+                            text("39 LP").style(theme::sub_text()).size(16)
+                        ]
+                        .align_items(Alignment::Start)
+                        .spacing(4),
+                        row![
+                            text("21W 13L").style(theme::sub_text()).size(12),
+                            text("·").style(theme::sub_text()),
+                            bold("61.8%").style(theme::blue_text()).size(12)
+                        ]
+                        .align_items(Alignment::End)
+                        .spacing(4),
+                        progress_bar(0.0..=100.0, 61.8)
+                            .width(120)
+                            .height(4)
+                            .style(theme::ratio_bar()),
+                    ]
+                    .spacing(2)
+                ]
+                .padding(4)
+                .spacing(12)
+                .align_items(Alignment::Center),
+            ])
+            .padding(12)
+            .style(theme::dark_container())
+            .max_width(280)
+            .into()
+        }
+
+        #[derive(Debug, Clone)]
+        pub enum Message {
+            Expand,
+        }
+
+        pub struct RankedOverview;
+
+        impl RankedOverview {
+            pub fn new() -> RankedOverview {
+                RankedOverview
+            }
+
+            pub fn update(&mut self, _message: Message) {}
+
+            pub fn view(&self) -> Element<Message> {
+                column![
+                    ranked_container("Ranked Solo"),
+                    ranked_container("Ranked Flex"),
+                ]
+                .spacing(4)
+                .align_items(Alignment::Center)
+                .into()
+            }
+        }
+    }
+
     pub mod timeline {
         use self::summary::Summary;
 
@@ -550,14 +654,9 @@ mod widget {
                 .align_items(Alignment::Center)
                 .spacing(4);
 
-                let el: Element<_> = container(timeline)
-                    .width(Length::Fill)
-                    .height(Length::Fill)
-                    .center_x()
+                container(timeline)
                     .style(theme::timeline_container())
-                    .into();
-
-                el
+                    .into()
             }
         }
 
@@ -1104,6 +1203,7 @@ mod theme {
         SummonerIcon(u16),
         SummonerLevel,
         SearchBar,
+        LeftBar,
     }
 
     pub const DARKER_BACKGROUND: Color = Color::from_rgb(0.05, 0.05, 0.05);
@@ -1117,6 +1217,10 @@ mod theme {
 
     pub fn search_bar_text_input() -> theme::TextInput {
         theme::TextInput::Custom(Box::new(TextInput::SearchBar))
+    }
+
+    pub fn left_bar_container() -> theme::Container {
+        theme::Container::Custom(Box::new(Container::LeftBar))
     }
 
     pub fn search_bar_container() -> theme::Container {
@@ -1161,6 +1265,10 @@ mod theme {
 
     pub fn region_button() -> theme::Button {
         theme::Button::Custom(Box::new(Button::Region))
+    }
+
+    pub fn expand_button() -> theme::Button {
+        theme::Button::Custom(Box::new(Button::Expand))
     }
 
     pub fn tier_color(tier: crate::summoner::Tier) -> Color {
@@ -1223,6 +1331,7 @@ mod theme {
                 Container::SummonerIcon(_) => Background::Color(LIGHT_BACKGROUND), // todo: switch to image
                 Container::SummonerLevel => Background::Color(DARK_BACKGROUND),
                 Container::SearchBar => Background::Color(LIGHTER_BACKGROUND),
+                Container::LeftBar => Background::Color(BLUE),
             };
 
             let text_color = match self {
@@ -1232,7 +1341,8 @@ mod theme {
                 | Container::PastRank
                 | Container::PastRankBadge
                 | Container::SummonerIcon(_)
-                | Container::SummonerLevel => Color::WHITE,
+                | Container::SummonerLevel
+                | Container::LeftBar => Color::WHITE,
                 Container::Icon => Color::BLACK,
                 Container::SearchBar => sub_text(),
             };
@@ -1244,7 +1354,7 @@ mod theme {
                 Container::Timeline | Container::Icon => 0.0.into(),
                 Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
                 Container::PastRankBadge => [2.0, 0.0, 0.0, 2.0].into(),
-                Container::SearchBar => 0.0.into(),
+                Container::SearchBar | Container::LeftBar => 0.0.into(),
             };
 
             let border_color = match self {
@@ -1256,6 +1366,7 @@ mod theme {
                 | Container::Icon => Color::TRANSPARENT,
                 Container::SummonerIcon(_) | Container::SummonerLevel => GOLD,
                 Container::SearchBar => Color::TRANSPARENT,
+                Container::LeftBar => Color::TRANSPARENT,
             };
 
             let border_width = match self {
@@ -1268,6 +1379,7 @@ mod theme {
                 | Container::SearchBar => 0.0,
                 Container::SummonerIcon(_) => 2.0,
                 Container::SummonerLevel => 1.0,
+                Container::LeftBar => 0.0,
             };
 
             widget::container::Appearance {
@@ -1289,6 +1401,7 @@ mod theme {
         Expander(bool),
         Update,
         Region,
+        Expand,
     }
 
     impl widget::button::StyleSheet for Button {
@@ -1300,6 +1413,7 @@ mod theme {
                 Button::Expander(true) => Color::TRANSPARENT,
                 Button::Update => BLUE,
                 Button::Region => GOLD,
+                Button::Expand => LIGHTER_BACKGROUND,
             };
 
             let border_radius = match self {
@@ -1307,10 +1421,13 @@ mod theme {
                 Button::Expander(false) => [0.0, 4.0, 4.0, 0.0].into(),
                 Button::Update => 2.0.into(),
                 Button::Region => 0.0.into(),
+                Button::Expand => 2.0.into(),
             };
 
             let text_color = match self {
-                Button::Region | Button::Expander(_) | Button::Update => Color::WHITE,
+                Button::Region | Button::Expander(_) | Button::Update | Button::Expand => {
+                    Color::WHITE
+                }
             };
 
             widget::button::Appearance {
@@ -1326,6 +1443,7 @@ mod theme {
                 Button::Update => Color::from_rgba(0.0, 0.58, 1.0, 0.7),
                 Button::Expander(_) => Color::from_rgba(0.4, 0.4, 0.4, 0.9),
                 Button::Region => Color::from_rgba(205.0 / 255.0, 136.0 / 255.0, 55.0 / 255.0, 0.7),
+                Button::Expand => Color::from_rgba(0.4, 0.4, 0.4, 0.9),
             };
 
             widget::button::Appearance {
