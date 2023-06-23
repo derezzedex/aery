@@ -2,6 +2,7 @@ use iced::{
     widget::{column, container},
     Application, Command, Element, Settings,
 };
+use widget::search_bar::{self, SearchBar};
 use widget::summoner::{self, Summoner};
 use widget::timeline::{self, Timeline};
 
@@ -15,12 +16,14 @@ pub fn main() -> iced::Result {
 struct Aery {
     timeline: Timeline,
     summoner: Summoner,
+    search_bar: SearchBar,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 enum Message {
     Timeline(timeline::Message),
     Summoner(summoner::Message),
+    SearchBar(search_bar::Message),
 }
 
 impl Application for Aery {
@@ -34,6 +37,7 @@ impl Application for Aery {
             Self {
                 timeline: Timeline::new(),
                 summoner: Summoner::new(),
+                search_bar: SearchBar::new(),
             },
             Command::none(),
         )
@@ -47,6 +51,7 @@ impl Application for Aery {
         match message {
             Message::Timeline(message) => self.timeline.update(message),
             Message::Summoner(message) => self.summoner.update(message),
+            Message::SearchBar(message) => self.search_bar.update(message),
         }
 
         Command::none()
@@ -55,6 +60,7 @@ impl Application for Aery {
     fn view(&self) -> Element<Message> {
         container(
             column![
+                self.search_bar.view().map(Message::SearchBar),
                 self.summoner.view().map(Message::Summoner),
                 self.timeline.view().map(Message::Timeline),
             ]
@@ -187,6 +193,83 @@ mod widget {
 
         pub fn vision_score(vision_score: u16) -> String {
             format!("{vision_score} vision")
+        }
+    }
+
+    pub mod search_bar {
+        use iced::{
+            widget::{button, container, horizontal_space, row, text, text_input, Space},
+            Alignment, Element, Length,
+        };
+
+        use crate::theme;
+
+        use super::medium_large_icon;
+
+        #[derive(Clone, Debug)]
+        pub enum Message {
+            TextChanged(String),
+            SearchPressed,
+            RegionPressed,
+        }
+
+        pub struct SearchBar {
+            text: String,
+        }
+
+        fn logo<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
+            container(Space::new(28.0, 28.0))
+                .style(theme::icon_container())
+                .max_width(28.0)
+                .max_height(28.0)
+        }
+
+        impl SearchBar {
+            pub fn new() -> SearchBar {
+                SearchBar {
+                    text: String::new(),
+                }
+            }
+
+            pub fn update(&mut self, message: Message) {
+                match message {
+                    Message::TextChanged(text) => self.text = text,
+                    Message::SearchPressed => todo!(),
+                    Message::RegionPressed => todo!(),
+                }
+            }
+
+            pub fn view(&self) -> Element<Message> {
+                let region = "BR";
+
+                container(row![
+                    logo(),
+                    horizontal_space(Length::FillPortion(2)),
+                    container(
+                        row![
+                            text_input("Search for a summoner or champion", &self.text)
+                                .on_input(Message::TextChanged)
+                                .style(theme::search_bar_text_input())
+                                .size(12),
+                            button(text(region).size(10))
+                                .width(Length::Shrink)
+                                .padding(2)
+                                .style(theme::region_button())
+                                .on_press(Message::RegionPressed),
+                            button(medium_large_icon())
+                                .style(iced::theme::Button::Text)
+                                .on_press(Message::SearchPressed),
+                        ]
+                        .align_items(Alignment::Center)
+                    )
+                    .style(theme::search_bar_container())
+                    .width(Length::FillPortion(4)),
+                    horizontal_space(Length::FillPortion(2))
+                ])
+                .padding(8)
+                .style(theme::dark_container())
+                .into()
+            }
         }
     }
 
@@ -1020,6 +1103,7 @@ mod theme {
         PastRankBadge,
         SummonerIcon(u16),
         SummonerLevel,
+        SearchBar,
     }
 
     pub const DARKER_BACKGROUND: Color = Color::from_rgb(0.05, 0.05, 0.05);
@@ -1030,6 +1114,14 @@ mod theme {
     pub const RED: Color = Color::from_rgb(1.0, 0.34, 0.2);
     pub const BLUE: Color = Color::from_rgb(0.0, 0.58, 1.0);
     pub const GOLD: Color = Color::from_rgb(205.0 / 255.0, 136.0 / 255.0, 55.0 / 255.0);
+
+    pub fn search_bar_text_input() -> theme::TextInput {
+        theme::TextInput::Custom(Box::new(TextInput::SearchBar))
+    }
+
+    pub fn search_bar_container() -> theme::Container {
+        theme::Container::Custom(Box::new(Container::SearchBar))
+    }
 
     pub fn timeline_container() -> theme::Container {
         theme::Container::Custom(Box::new(Container::Timeline))
@@ -1065,6 +1157,10 @@ mod theme {
 
     pub fn ratio_bar() -> theme::ProgressBar {
         theme::ProgressBar::Custom(Box::new(RatioBar))
+    }
+
+    pub fn region_button() -> theme::Button {
+        theme::Button::Custom(Box::new(Button::Region))
     }
 
     pub fn tier_color(tier: crate::summoner::Tier) -> Color {
@@ -1126,6 +1222,7 @@ mod theme {
                 Container::LeftBorder(win) => Background::Color(win_color(*win)),
                 Container::SummonerIcon(_) => Background::Color(LIGHT_BACKGROUND), // todo: switch to image
                 Container::SummonerLevel => Background::Color(DARK_BACKGROUND),
+                Container::SearchBar => Background::Color(LIGHTER_BACKGROUND),
             };
 
             let text_color = match self {
@@ -1137,6 +1234,7 @@ mod theme {
                 | Container::SummonerIcon(_)
                 | Container::SummonerLevel => Color::WHITE,
                 Container::Icon => Color::BLACK,
+                Container::SearchBar => sub_text(),
             };
 
             let border_radius = match self {
@@ -1146,6 +1244,7 @@ mod theme {
                 Container::Timeline | Container::Icon => 0.0.into(),
                 Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
                 Container::PastRankBadge => [2.0, 0.0, 0.0, 2.0].into(),
+                Container::SearchBar => 0.0.into(),
             };
 
             let border_color = match self {
@@ -1156,6 +1255,7 @@ mod theme {
                 | Container::LeftBorder(_)
                 | Container::Icon => Color::TRANSPARENT,
                 Container::SummonerIcon(_) | Container::SummonerLevel => GOLD,
+                Container::SearchBar => Color::TRANSPARENT,
             };
 
             let border_width = match self {
@@ -1164,7 +1264,8 @@ mod theme {
                 | Container::PastRankBadge
                 | Container::Timeline
                 | Container::LeftBorder(_)
-                | Container::Icon => 0.0,
+                | Container::Icon
+                | Container::SearchBar => 0.0,
                 Container::SummonerIcon(_) => 2.0,
                 Container::SummonerLevel => 1.0,
             };
@@ -1187,6 +1288,7 @@ mod theme {
     pub enum Button {
         Expander(bool),
         Update,
+        Region,
     }
 
     impl widget::button::StyleSheet for Button {
@@ -1197,16 +1299,18 @@ mod theme {
                 Button::Expander(false) => Color::from_rgba(0.2, 0.2, 0.2, 0.6),
                 Button::Expander(true) => Color::TRANSPARENT,
                 Button::Update => BLUE,
+                Button::Region => GOLD,
             };
 
             let border_radius = match self {
                 Button::Expander(true) => [0.0, 4.0, 0.0, 0.0].into(),
                 Button::Expander(false) => [0.0, 4.0, 4.0, 0.0].into(),
                 Button::Update => 2.0.into(),
+                Button::Region => 0.0.into(),
             };
 
             let text_color = match self {
-                Button::Expander(_) | Button::Update => Color::WHITE,
+                Button::Region | Button::Expander(_) | Button::Update => Color::WHITE,
             };
 
             widget::button::Appearance {
@@ -1221,6 +1325,7 @@ mod theme {
             let background_color = match self {
                 Button::Update => Color::from_rgba(0.0, 0.58, 1.0, 0.7),
                 Button::Expander(_) => Color::from_rgba(0.4, 0.4, 0.4, 0.9),
+                Button::Region => Color::from_rgba(205.0 / 255.0, 136.0 / 255.0, 55.0 / 255.0, 0.7),
             };
 
             widget::button::Appearance {
@@ -1304,6 +1409,58 @@ mod theme {
             } else {
                 self.active(style)
             }
+        }
+    }
+
+    pub enum TextInput {
+        SearchBar,
+    }
+
+    impl widget::text_input::StyleSheet for TextInput {
+        type Style = iced::Theme;
+
+        fn active(&self, _style: &Self::Style) -> widget::text_input::Appearance {
+            widget::text_input::Appearance {
+                background: Background::Color(Color::TRANSPARENT),
+                border_radius: 0.0.into(),
+                border_width: 0.0,
+                border_color: Color::TRANSPARENT,
+                icon_color: Color::TRANSPARENT,
+            }
+        }
+
+        fn hovered(&self, style: &Self::Style) -> widget::text_input::Appearance {
+            widget::text_input::Appearance {
+                background: Background::Color(Color::from_rgba(0.2, 0.2, 0.2, 0.7)),
+                ..self.active(style)
+            }
+        }
+
+        fn focused(&self, style: &Self::Style) -> widget::text_input::Appearance {
+            self.hovered(style)
+        }
+
+        fn placeholder_color(&self, _style: &Self::Style) -> Color {
+            sub_text()
+        }
+
+        fn value_color(&self, _style: &Self::Style) -> Color {
+            Color::WHITE
+        }
+
+        fn selection_color(&self, _style: &Self::Style) -> Color {
+            BLUE
+        }
+
+        fn disabled(&self, style: &Self::Style) -> widget::text_input::Appearance {
+            widget::text_input::Appearance {
+                background: Background::Color(DARKER_BACKGROUND),
+                ..self.active(style)
+            }
+        }
+
+        fn disabled_color(&self, _style: &Self::Style) -> Color {
+            sub_text()
         }
     }
 }
