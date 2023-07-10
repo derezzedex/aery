@@ -371,7 +371,7 @@ mod widget {
         fn summoner_icon<'a>(icon_id: u16, level: u16) -> Element<'a, Message> {
             container(
                 container(bold(level).size(12))
-                    .padding(2)
+                    .padding(4)
                     .style(theme::summoner_level_container()),
             )
             .width(96.0)
@@ -420,18 +420,17 @@ mod widget {
 
                             container(
                                 row![
-                                    container(
-                                        container(bold(format!("S{season}")).size(10))
-                                            .padding([0, 2, 0, 2])
-                                    )
-                                    .style(theme::past_rank_badge_container()),
+                                    container(bold(format!("S{season}")).size(10))
+                                        .padding([0, 2, 2, 2])
+                                        .style(theme::past_rank_badge_container()),
                                     container(
                                         text!("{tier} {division}")
                                             .size(10)
                                             .style(theme::tier_color(rank))
                                     )
-                                    .padding([0, 2, 0, 2]),
+                                    .padding([0, 2, 2, 2]),
                                 ]
+                                .align_items(iced::Alignment::Center)
                                 .spacing(2),
                             )
                             .style(theme::past_rank_container())
@@ -482,11 +481,11 @@ mod widget {
                             ]
                             .spacing(1)
                         ]
-                        .spacing(8)
+                        .spacing(16)
                     ]
                     .spacing(8)
                     .width(Length::Fill)
-                    .max_width(640)
+                    .max_width(920)
                     .padding([8, 0, 8, 0]),
                 )
                 .center_x()
@@ -1378,7 +1377,7 @@ mod theme {
                 | Container::Icon
                 | Container::SearchBar => 0.0,
                 Container::SummonerIcon(_) => 2.0,
-                Container::SummonerLevel => 1.0,
+                Container::SummonerLevel => 2.0,
                 Container::LeftBar => 0.0,
             };
 
