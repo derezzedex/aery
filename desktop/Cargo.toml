@@ -7,6 +7,5 @@ edition = "2021"
 
 [dependencies]
 aery_core = { path = "../core" }
-iced = { git = "https://github.com/iced-rs/iced", rev = "c15f1b5f6575792cc89bb5fba2e613428397e46a" }
-iced_table = { git = "https://github.com/my4ng/iced_table", rev = "0c9fc58a1eb8eb8e8406b44ae021108141bf78ed" }
+iced = { git = "https://github.com/iced-rs/iced" }
 time = "0.3"

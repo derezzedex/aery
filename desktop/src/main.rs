@@ -3,7 +3,6 @@ use iced::{
     Application, Command, Element, Length, Settings,
 };
 use widget::ranked_overview::{self, RankedOverview};
-use widget::recently_played::{self, RecentlyPlayed};
 use widget::search_bar::{self, SearchBar};
 use widget::summoner::{self, Summoner};
 use widget::timeline::{self, Timeline};
@@ -20,7 +19,6 @@ struct Aery {
     summoner: Summoner,
     search_bar: SearchBar,
     ranked_overview: RankedOverview,
-    recently_played: RecentlyPlayed,
 }
 
 #[derive(Debug, Clone)]
@@ -29,7 +27,6 @@ enum Message {
     Summoner(summoner::Message),
     SearchBar(search_bar::Message),
     RankedOverview(ranked_overview::Message),
-    RecentlyPlayed(recently_played::Message),
 }
 
 impl Application for Aery {
@@ -45,7 +42,6 @@ impl Application for Aery {
                 summoner: Summoner::new(),
                 search_bar: SearchBar::new(),
                 ranked_overview: RankedOverview::new(),
-                recently_played: RecentlyPlayed::new(),
             },
             Command::none(),
         )
@@ -61,12 +57,6 @@ impl Application for Aery {
             Message::Summoner(message) => self.summoner.update(message),
             Message::SearchBar(message) => self.search_bar.update(message),
             Message::RankedOverview(message) => self.ranked_overview.update(message),
-            Message::RecentlyPlayed(message) => {
-                return self
-                    .recently_played
-                    .update(message)
-                    .map(Message::RecentlyPlayed)
-            }
         }
 
         Command::none()
@@ -79,11 +69,7 @@ impl Application for Aery {
                 self.summoner.view().map(Message::Summoner),
                 row![
                     horizontal_space(Length::Fill),
-                    column![
-                        self.ranked_overview.view().map(Message::RankedOverview),
-                        self.recently_played.view().map(Message::RecentlyPlayed),
-                    ]
-                    .spacing(8),
+                    self.ranked_overview.view().map(Message::RankedOverview),
                     self.timeline.view().map(Message::Timeline),
                     horizontal_space(Length::Fill),
                 ]
@@ -94,10 +80,6 @@ impl Application for Aery {
         )
         .style(theme::timeline_container())
         .into()
-    }
-
-    fn theme(&self) -> iced::Theme {
-        iced::Theme::Dark
     }
 }
 
@@ -511,256 +493,6 @@ mod widget {
                 .width(Length::Fill)
                 .style(theme::timeline_container())
                 .into()
-            }
-        }
-    }
-
-    pub mod recently_played {
-        use iced::widget::{
-            column, container, horizontal_space, row, scrollable, text, vertical_space,
-        };
-        use iced::{alignment, Alignment, Command, Element, Length, Renderer};
-        use iced_table::table;
-        use iced_table::table::Width;
-        use std::fmt;
-
-        use crate::theme;
-        use crate::widget::bold;
-
-        use super::medium_icon;
-
-        #[derive(Debug, Clone)]
-        pub enum Message {
-            Header(scrollable::AbsoluteOffset),
-        }
-
-        pub struct RecentlyPlayed {
-            columns: Vec<Column>,
-            rows: Vec<Row>,
-            header: scrollable::Id,
-            body: scrollable::Id,
-        }
-
-        impl RecentlyPlayed {
-            pub fn new() -> RecentlyPlayed {
-                RecentlyPlayed {
-                    columns: vec![
-                        Column::new(
-                            Category::Player,
-                            Width::Fill {
-                                proportion: 2,
-                                minimum: 20.0,
-                            },
-                        ),
-                        Column::new(
-                            Category::Games,
-                            Width::Fill {
-                                proportion: 1,
-                                minimum: 60.0,
-                            },
-                        ),
-                        Column::new(
-                            Category::WinRate,
-                            Width::Fill {
-                                proportion: 1,
-                                minimum: 60.0,
-                            },
-                        ),
-                    ],
-                    rows: vec![
-                        Row {
-                            player: String::from("OV1uni"),
-                            wins: 8,
-                            losses: 6,
-                        },
-                        Row {
-                            player: String::from("Doutor do povo"),
-                            wins: 5,
-                            losses: 3,
-                        },
-                        Row {
-                            player: String::from("DeEEaDRAA"),
-                            wins: 4,
-                            losses: 4,
-                        },
-                        Row {
-                            player: String::from("AllZimmer"),
-                            wins: 4,
-                            losses: 3,
-                        },
-                        Row {
-                            player: String::from("Bob Jr"),
-                            wins: 4,
-                            losses: 2,
-                        },
-                        Row {
-                            player: String::from("Agata Katsu"),
-                            wins: 2,
-                            losses: 4,
-                        },
-                        Row {
-                            player: String::from("Vanfarock"),
-                            wins: 2,
-                            losses: 1,
-                        },
-                    ],
-                    header: scrollable::Id::unique(),
-                    body: scrollable::Id::unique(),
-                }
-            }
-
-            pub fn update(&mut self, message: Message) -> Command<Message> {
-                match message {
-                    Message::Header(offset) => Command::batch(vec![
-                        scrollable::scroll_to(self.header.clone(), offset),
-                        scrollable::scroll_to(self.body.clone(), offset),
-                    ]),
-                }
-            }
-
-            pub fn view(&self) -> Element<Message> {
-                let table = table(
-                    self.header.clone(),
-                    self.body.clone(),
-                    &self.columns,
-                    &self.rows,
-                    Message::Header,
-                )
-                .min_width(246.0)
-                .divider_width(2.0)
-                .cell_padding(4.0);
-
-                let left_bar = container(horizontal_space(2))
-                    .style(theme::left_bar_container())
-                    .height(18);
-
-                let title = row![
-                    left_bar,
-                    horizontal_space(4),
-                    bold("Recently played with").size(14),
-                ]
-                .spacing(2)
-                .align_items(Alignment::Center);
-
-                let content = column![
-                    title,
-                    vertical_space(12),
-                    container(table).max_height(226.0).padding(4)
-                ]
-                .width(Length::Fill);
-
-                container(content)
-                    .center_x()
-                    .width(Length::Fixed(280.0))
-                    .padding(12)
-                    .style(theme::dark_container())
-                    .into()
-            }
-        }
-
-        struct Row {
-            player: String,
-            wins: usize,
-            losses: usize,
-        }
-
-        struct Column {
-            category: Category,
-            width: Width,
-        }
-
-        impl Column {
-            fn new(category: Category, width: Width) -> Self {
-                Self { category, width }
-            }
-        }
-
-        enum Category {
-            Player,
-            Games,
-            WinRate,
-        }
-
-        impl fmt::Display for Category {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                match self {
-                    Category::Player => "Player",
-                    Category::Games => "Games",
-                    Category::WinRate => "Win rate",
-                }
-                .fmt(f)
-            }
-        }
-
-        impl<'a, 'b> table::Column<'a, 'b, Message, Renderer> for Column {
-            type Row = Row;
-
-            fn header(&'b self, col_index: usize) -> Element<'a, Message> {
-                let content = container(text(format!("{}", self.category)).size(12))
-                    .width(Length::Fill)
-                    .center_y();
-
-                match col_index {
-                    1 => content.align_x(alignment::Horizontal::Right).into(),
-                    _ => content.align_x(alignment::Horizontal::Left).into(),
-                }
-            }
-
-            fn cell(
-                &'b self,
-                col_index: usize,
-                _row_index: usize,
-                row: &'b Row,
-            ) -> Element<'a, Message> {
-                let content = match self.category {
-                    Category::Player => {
-                        let icon = medium_icon();
-
-                        container(
-                            row![icon, horizontal_space(4), text(&row.player).size(12),]
-                                .align_items(Alignment::Center),
-                        )
-                        .width(Length::Fill)
-                        .center_y()
-                    }
-                    Category::Games => {
-                        container(text(format!("{}W {}L", row.wins, row.losses)).size(12))
-                            .width(Length::Fill)
-                            .center_y()
-                    }
-                    Category::WinRate => container(
-                        text(format!(
-                            "{:.2}%",
-                            (row.wins as f32 / (row.wins + row.losses) as f32) * 100.0
-                        ))
-                        .size(12),
-                    )
-                    .width(Length::Fill)
-                    .center_y(),
-                };
-
-                match col_index {
-                    1 => content.align_x(alignment::Horizontal::Right).into(),
-                    _ => content.align_x(alignment::Horizontal::Left).into(),
-                }
-            }
-
-            fn footer(
-                &'b self,
-                _col_index: usize,
-                rows: &'b [Self::Row],
-            ) -> Option<Element<'a, Message>> {
-                let content = if matches!(self.category, Category::Player) {
-                    Element::from(text(format!("Count: {}", rows.len())).size(12))
-                } else {
-                    horizontal_space(Length::Fill).into()
-                };
-
-                Some(container(content).center_y().into())
-            }
-
-            fn width(&self) -> Width {
-                self.width
             }
         }
     }
