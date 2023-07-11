@@ -1,7 +1,12 @@
+use std::collections::HashMap;
+use std::fs;
+
 use iced::{
+    widget::image::Handle,
     widget::{column, container, horizontal_space, row},
     Application, Command, Element, Length, Settings,
 };
+use image::GenericImageView;
 use widget::ranked_overview::{self, RankedOverview};
 use widget::search_bar::{self, SearchBar};
 use widget::summoner::{self, Summoner};
@@ -14,11 +19,104 @@ pub fn main() -> iced::Result {
     })
 }
 
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+enum DataFile {
+    Champion,
+    Item,
+    ProfileIcon,
+    RuneReforged,
+    Summoner,
+}
+
+impl TryFrom<String> for DataFile {
+    type Error = &'static str;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let value = value.split(".").next().unwrap();
+        match value.to_ascii_lowercase().as_str() {
+            "champion" => Ok(Self::Champion),
+            "item" => Ok(Self::Item),
+            "profileicon" => Ok(Self::ProfileIcon),
+            "runesreforged" => Ok(Self::RuneReforged),
+            "summoner" => Ok(Self::Summoner),
+            _ => Err("unknown data type"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+enum Sprite {
+    Champion(u8),
+    Item(u8),
+    SummonerSpell(u8),
+    ProfileIcon(u8),
+    RuneReforged(u8),
+}
+
+impl TryFrom<String> for Sprite {
+    type Error = &'static str;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        println!("{value}");
+        let value = value.split(".").next().unwrap();
+        println!("{value}");
+        let index: u8 = value
+            .chars()
+            .last()
+            .ok_or("last character not found")?
+            .to_digit(10)
+            .ok_or("digit is not base 10")?
+            .try_into()
+            .map_err(|_| "index is not u8")?;
+        let value = value[..value.len() - 1].to_string();
+        println!("{value}");
+
+        match value.to_ascii_lowercase().as_str() {
+            "champion" => Ok(Self::Champion(index)),
+            "item" => Ok(Self::Item(index)),
+            "profileicon" => Ok(Self::ProfileIcon(index)),
+            "runereforged" => Ok(Self::RuneReforged(index)),
+            "summonerspell" => Ok(Self::SummonerSpell(index)),
+            _ => Err("unknown sprite type"),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+enum Event {
+    Summoner(summoner::Event),
+}
+
 struct Aery {
+    sprites: HashMap<Sprite, image::DynamicImage>,
+    data: HashMap<DataFile, serde_json::Value>,
+
     timeline: Timeline,
     summoner: Summoner,
     search_bar: SearchBar,
     ranked_overview: RankedOverview,
+}
+
+impl Aery {
+    fn set_summoner_icon(&mut self, icon: u16) {
+        // let timer = std::time::Instant::now();
+        let icon_data = self.data.get(&DataFile::ProfileIcon).unwrap();
+        let icon = &icon_data["data"][icon.to_string()]["image"];
+        let sprite = Sprite::try_from(icon["sprite"].as_str().unwrap().to_string()).unwrap();
+        let x = icon["x"].as_u64().unwrap() as u32;
+        let y = icon["y"].as_u64().unwrap() as u32;
+        let w = icon["w"].as_u64().unwrap() as u32;
+        let h = icon["h"].as_u64().unwrap() as u32;
+
+        let icon_sprite = self.sprites.get(&sprite).unwrap();
+        let icon = icon_sprite.view(x, y, w, h);
+        // println!("Loaded icon in {:?}", timer.elapsed());
+        self.summoner.set_icon_handle(Handle::from_pixels(
+            icon.width(),
+            icon.height(),
+            icon.to_image().into_vec(),
+        ));
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -36,10 +134,49 @@ impl Application for Aery {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
+        let timer = std::time::Instant::now();
+        let mut sprites = HashMap::default();
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img");
+        let img_path = fs::read_dir(path).unwrap();
+        for sprite in img_path {
+            let file = sprite.unwrap();
+            let sprite = {
+                let name = file.file_name().into_string().unwrap();
+                name.try_into().unwrap()
+            };
+            let image = image::io::Reader::open(file.path())
+                .unwrap()
+                .decode()
+                .unwrap();
+
+            sprites.insert(sprite, image);
+        }
+        println!("Loaded sprites in {:?}", timer.elapsed());
+
+        let timer = std::time::Instant::now();
+        let mut data = HashMap::default();
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\data");
+        let data_path = fs::read_dir(path).unwrap();
+        for data_dir in data_path {
+            let file = data_dir.unwrap();
+            let sprite = {
+                let name = file.file_name().into_string().unwrap();
+                name.try_into().unwrap()
+            };
+            let value: serde_json::Value =
+                serde_json::from_reader(fs::File::open(file.path()).unwrap()).unwrap();
+
+            data.insert(sprite, value);
+        }
+        println!("Loaded data in {:?}", timer.elapsed());
+
         (
             Self {
+                sprites,
+                data,
+
                 timeline: Timeline::new(),
-                summoner: Summoner::new(),
+                summoner: Summoner::new(5843),
                 search_bar: SearchBar::new(),
                 ranked_overview: RankedOverview::new(),
             },
@@ -54,7 +191,15 @@ impl Application for Aery {
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
             Message::Timeline(message) => self.timeline.update(message),
-            Message::Summoner(message) => self.summoner.update(message),
+            Message::Summoner(message) => {
+                if let Some(event) = self.summoner.update(message) {
+                    match event {
+                        summoner::Event::FetchSummonerIcon(icon) => {
+                            self.set_summoner_icon(icon);
+                        }
+                    }
+                }
+            }
             Message::SearchBar(message) => self.search_bar.update(message),
             Message::RankedOverview(message) => self.ranked_overview.update(message),
         }
@@ -291,11 +436,11 @@ mod widget {
         use crate::widget::bold;
         use iced::alignment;
         use iced::widget::column;
-        use iced::widget::{button, container, row, text};
+        use iced::widget::{button, container, image, row, text, vertical_space};
         use iced::Element;
         use iced::Length;
 
-        #[derive(Debug, Copy, Clone)]
+        #[derive(Debug, Clone)]
         pub enum Message {
             Update,
         }
@@ -368,37 +513,59 @@ mod widget {
             }
         }
 
-        fn summoner_icon<'a>(icon_id: u16, level: u16) -> Element<'a, Message> {
-            container(
+        fn summoner_icon<'a>(icon: Option<image::Handle>, level: u16) -> Element<'a, Message> {
+            let image: Element<Message> = if let Some(handle) = icon {
+                image(handle).width(96.0).height(96.0).into()
+            } else {
+                vertical_space(96.0).into()
+            };
+
+            column![
+                container(image)
+                    .width(96.0)
+                    .height(96.0)
+                    .style(theme::summoner_icon_container()),
                 container(bold(level).size(12))
                     .padding(4)
-                    .style(theme::summoner_level_container()),
-            )
-            .width(96.0)
-            .height(96.0)
-            .center_x()
-            .align_y(alignment::Vertical::Bottom)
-            .style(theme::summoner_icon_container(icon_id))
+                    .style(theme::summoner_level_container())
+                    .center_x(),
+            ]
+            .align_items(iced::Alignment::Center)
             .into()
         }
 
-        pub struct Summoner;
+        #[derive(Debug, Clone)]
+        pub enum Event {
+            FetchSummonerIcon(u16),
+        }
+
+        pub struct Summoner {
+            icon: u16,
+            icon_image: Option<image::Handle>,
+        }
 
         impl Summoner {
-            pub fn new() -> Self {
-                Summoner
+            pub fn new(icon: u16) -> Self {
+                Summoner {
+                    icon,
+                    icon_image: None,
+                }
             }
 
-            pub fn update(&mut self, message: Message) {
+            pub fn set_icon_handle(&mut self, handle: image::Handle) {
+                self.icon_image = Some(handle);
+            }
+
+            pub fn update(&mut self, message: Message) -> Option<Event> {
                 match message {
-                    Message::Update => todo!(),
+                    Message::Update => Some(Event::FetchSummonerIcon(self.icon)),
                 }
             }
 
             pub fn view(&self) -> Element<Message> {
-                let icon_id = 0;
                 let summoner_level = 466;
-                let icon = summoner_icon(icon_id, summoner_level);
+                println!("{:?}", self.icon_image);
+                let icon = summoner_icon(self.icon_image.clone(), summoner_level);
                 let past_ranks = {
                     let ranks = [
                         (12, Tier::Iron(Division::One(0))),
@@ -1199,7 +1366,7 @@ mod theme {
         Timeline,
         PastRank,
         PastRankBadge,
-        SummonerIcon(u16),
+        SummonerIcon,
         SummonerLevel,
         SearchBar,
         LeftBar,
@@ -1234,8 +1401,8 @@ mod theme {
         theme::Container::Custom(Box::new(Container::PastRank))
     }
 
-    pub fn summoner_icon_container(id: u16) -> theme::Container {
-        theme::Container::Custom(Box::new(Container::SummonerIcon(id)))
+    pub fn summoner_icon_container() -> theme::Container {
+        theme::Container::Custom(Box::new(Container::SummonerIcon))
     }
 
     pub fn summoner_level_container() -> theme::Container {
@@ -1327,7 +1494,7 @@ mod theme {
                 Container::PastRank => Background::Color(Color::from_rgb(0.1, 0.1, 0.1)),
                 Container::Icon => Background::Color(LIGHT_BACKGROUND),
                 Container::LeftBorder(win) => Background::Color(win_color(*win)),
-                Container::SummonerIcon(_) => Background::Color(LIGHT_BACKGROUND), // todo: switch to image
+                Container::SummonerIcon => Background::Color(LIGHT_BACKGROUND), // todo: switch to image
                 Container::SummonerLevel => Background::Color(DARK_BACKGROUND),
                 Container::SearchBar => Background::Color(LIGHTER_BACKGROUND),
                 Container::LeftBar => Background::Color(BLUE),
@@ -1339,7 +1506,7 @@ mod theme {
                 | Container::Timeline
                 | Container::PastRank
                 | Container::PastRankBadge
-                | Container::SummonerIcon(_)
+                | Container::SummonerIcon
                 | Container::SummonerLevel
                 | Container::LeftBar => Color::WHITE,
                 Container::Icon => Color::BLACK,
@@ -1349,7 +1516,8 @@ mod theme {
             let border_radius = match self {
                 Container::Dark => 4.0.into(),
                 Container::PastRank => 2.0.into(),
-                Container::SummonerLevel | Container::SummonerIcon(_) => 2.0.into(),
+                Container::SummonerLevel => 2.0.into(),
+                Container::SummonerIcon => [0.0, 2.0, 2.0, 2.0].into(),
                 Container::Timeline | Container::Icon => 0.0.into(),
                 Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
                 Container::PastRankBadge => [2.0, 0.0, 0.0, 2.0].into(),
@@ -1363,7 +1531,7 @@ mod theme {
                 | Container::Timeline
                 | Container::LeftBorder(_)
                 | Container::Icon => Color::TRANSPARENT,
-                Container::SummonerIcon(_) | Container::SummonerLevel => GOLD,
+                Container::SummonerIcon | Container::SummonerLevel => GOLD,
                 Container::SearchBar => Color::TRANSPARENT,
                 Container::LeftBar => Color::TRANSPARENT,
             };
@@ -1376,7 +1544,7 @@ mod theme {
                 | Container::LeftBorder(_)
                 | Container::Icon
                 | Container::SearchBar => 0.0,
-                Container::SummonerIcon(_) => 2.0,
+                Container::SummonerIcon => 2.0,
                 Container::SummonerLevel => 2.0,
                 Container::LeftBar => 0.0,
             };
