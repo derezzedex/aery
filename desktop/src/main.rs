@@ -20,7 +20,7 @@ pub fn main() -> iced::Result {
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-enum DataFile {
+pub enum DataFile {
     Champion,
     Item,
     ProfileIcon,
@@ -45,7 +45,7 @@ impl TryFrom<String> for DataFile {
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-enum Sprite {
+pub enum Sprite {
     Champion(u8),
     Item(u8),
     SummonerSpell(u8),
@@ -82,14 +82,17 @@ impl TryFrom<String> for Sprite {
     }
 }
 
+pub type SpriteMap = HashMap<Sprite, image::DynamicImage>;
+pub type DataMap = HashMap<DataFile, serde_json::Value>;
+
 #[derive(Debug, Clone)]
 enum Event {
     Summoner(summoner::Event),
 }
 
 struct Aery {
-    sprites: HashMap<Sprite, image::DynamicImage>,
-    data: HashMap<DataFile, serde_json::Value>,
+    sprites: SpriteMap,
+    data: DataMap,
 
     timeline: Timeline,
     summoner: Summoner,
@@ -97,24 +100,21 @@ struct Aery {
     ranked_overview: RankedOverview,
 }
 
-// fn load_sprite() {
-//     let icon_data = self.data.get(&DataFile::ProfileIcon).unwrap();
-//     let icon = &icon_data["data"][icon.to_string()]["image"];
-//     let sprite = Sprite::try_from(icon["sprite"].as_str().unwrap().to_string()).unwrap();
-//     let x = icon["x"].as_u64().unwrap() as u32;
-//     let y = icon["y"].as_u64().unwrap() as u32;
-//     let w = icon["w"].as_u64().unwrap() as u32;
-//     let h = icon["h"].as_u64().unwrap() as u32;
+// TODO: use champion id instead of name
+fn load_champion_icon(sprites: &SpriteMap, data: &DataMap, champion: &str) -> Handle {
+    let icon_data = data.get(&DataFile::Champion).unwrap();
+    let icon = &icon_data["data"][champion]["image"];
+    let sprite = Sprite::try_from(icon["sprite"].as_str().unwrap().to_string()).unwrap();
+    let x = icon["x"].as_u64().unwrap() as u32;
+    let y = icon["y"].as_u64().unwrap() as u32;
+    let w = icon["w"].as_u64().unwrap() as u32;
+    let h = icon["h"].as_u64().unwrap() as u32;
+    let offset = 3;
 
-//     let icon_sprite = self.sprites.get(&sprite).unwrap();
-//     let icon = icon_sprite.view(x, y, w, h);
-//     // println!("Loaded icon in {:?}", timer.elapsed());
-//     self.summoner.set_icon_handle(Handle::from_pixels(
-//         icon.width(),
-//         icon.height(),
-//         icon.to_image().into_vec(),
-//     ));
-// }
+    let icon_sprite = sprites.get(&sprite).unwrap();
+    let icon = icon_sprite.view(x + offset, y + offset, w - offset * 2, h - offset * 2);
+    Handle::from_pixels(icon.width(), icon.height(), icon.to_image().into_vec())
+}
 
 impl Aery {
     fn set_summoner_icon(&mut self, icon: u16) {
@@ -180,13 +180,13 @@ impl Application for Aery {
 
         (
             Self {
-                sprites,
-                data,
-
-                timeline: Timeline::new(),
+                timeline: Timeline::new(&sprites, &data),
                 summoner: Summoner::new(5843),
                 search_bar: SearchBar::new(),
                 ranked_overview: RankedOverview::new(),
+
+                sprites,
+                data,
             },
             Command::none(),
         )
@@ -764,6 +764,8 @@ mod widget {
     }
 
     pub mod timeline {
+        use crate::{load_champion_icon, DataMap, SpriteMap};
+
         use self::summary::Summary;
 
         use super::game::{self, Game};
@@ -783,9 +785,36 @@ mod widget {
         }
 
         impl Timeline {
-            pub fn new() -> Self {
+            pub fn new(sprites: &SpriteMap, data: &DataMap) -> Self {
+                let champions = vec![
+                    summary::Champion {
+                        handle: load_champion_icon(sprites, data, "TwistedFate"),
+                        wins: 2,
+                        losses: 1,
+                        kda: 1.15,
+                    },
+                    summary::Champion {
+                        handle: load_champion_icon(sprites, data, "Orianna"),
+                        wins: 3,
+                        losses: 0,
+                        kda: 2.0,
+                    },
+                    summary::Champion {
+                        handle: load_champion_icon(sprites, data, "Annie"),
+                        wins: 2,
+                        losses: 2,
+                        kda: 3.0,
+                    },
+                    summary::Champion {
+                        handle: load_champion_icon(sprites, data, "Sion"),
+                        wins: 0,
+                        losses: 3,
+                        kda: 0.5,
+                    },
+                ];
+
                 Timeline {
-                    summary: Summary::new(),
+                    summary: Summary::new(champions),
                     games: (0..5)
                         .into_iter()
                         .map(|_| [Game::new(true), Game::new(false)])
@@ -842,7 +871,7 @@ mod widget {
             use crate::widget::medium_large_icon;
             use crate::widget::very_small_icon;
             use iced::alignment;
-            use iced::widget::Space;
+            use iced::widget::image::Handle;
             use iced::widget::{column, container, horizontal_rule, progress_bar, row, text};
             use iced::{Alignment, Element};
 
@@ -858,12 +887,12 @@ mod widget {
                 }
             }
 
-            #[derive(Debug, Clone, Copy)]
+            #[derive(Debug, Clone)]
             pub struct Champion {
-                name: &'static str,
-                wins: i16,
-                losses: i16,
-                kda: f32,
+                pub handle: Handle,
+                pub wins: i16,
+                pub losses: i16,
+                pub kda: f32,
             }
 
             #[derive(Debug, Clone)]
@@ -879,40 +908,13 @@ mod widget {
             }
 
             impl Summary {
-                pub fn new() -> Summary {
+                pub fn new(champions: Vec<Champion>) -> Summary {
                     let wins = 6;
                     let losses = 4;
                     let ratio = (wins as f32 / (wins + losses) as f32) * 100.0;
                     let kill_ratio = 2.7;
                     let death_ratio = 6.7;
                     let assist_ratio = 7.0;
-
-                    let champions = vec![
-                        Champion {
-                            name: "Twisted Fate",
-                            wins: 2,
-                            losses: 1,
-                            kda: 1.15,
-                        },
-                        Champion {
-                            name: "Orianna",
-                            wins: 3,
-                            losses: 0,
-                            kda: 2.0,
-                        },
-                        Champion {
-                            name: "Annie",
-                            wins: 2,
-                            losses: 2,
-                            kda: 3.0,
-                        },
-                        Champion {
-                            name: "Sion",
-                            wins: 0,
-                            losses: 3,
-                            kda: 0.5,
-                        },
-                    ];
 
                     Summary {
                         wins,
@@ -1032,48 +1034,42 @@ mod widget {
                         let content: Vec<Element<Message>> = self
                             .champions
                             .iter()
-                            .map(
-                                |&_champion @ Champion {
-                                     name,
-                                     wins,
-                                     losses,
-                                     kda,
-                                 }| {
-                                    let icon = container(Space::new(24.0, 24.0))
-                                        .style(theme::icon_container())
-                                        .max_width(24.0)
-                                        .max_height(24.0);
-                                    let winrate = wins as f32 * 100.0 / (wins + losses) as f32;
+                            .map(|champion| {
+                                let icon = iced::widget::image(champion.handle.clone())
+                                    .width(24.0)
+                                    .height(24.0)
+                                    .content_fit(iced::ContentFit::Fill);
+                                let winrate = champion.wins as f32 * 100.0
+                                    / (champion.wins + champion.losses) as f32;
 
-                                    row![
-                                        icon,
-                                        // TODO: fix strange alignment between bottom and top text
-                                        column![
-                                            row![
-                                                text!("{:.1}%", winrate)
-                                                    .size(10)
-                                                    .style(theme::win_color(winrate > 50.0)),
-                                                text!("({wins}W {losses}L)")
-                                                    .size(10)
-                                                    .style(theme::gray_text())
-                                            ]
-                                            .align_items(Alignment::Center)
-                                            .spacing(2),
-                                            row![
-                                                very_small_icon(),
-                                                text!("{:.2} KDA", kda)
-                                                    .size(10)
-                                                    .style(theme::gray_text())
-                                            ]
-                                            .spacing(2)
-                                            .align_items(Alignment::Center),
+                                row![
+                                    icon,
+                                    // TODO: fix strange alignment between bottom and top text
+                                    column![
+                                        row![
+                                            text!("{:.1}%", winrate)
+                                                .size(10)
+                                                .style(theme::win_color(winrate > 50.0)),
+                                            text!("({}W {}L)", champion.wins, champion.losses)
+                                                .size(10)
+                                                .style(theme::gray_text())
                                         ]
+                                        .align_items(Alignment::Center)
+                                        .spacing(2),
+                                        row![
+                                            very_small_icon(),
+                                            text!("{:.2} KDA", champion.kda)
+                                                .size(10)
+                                                .style(theme::gray_text())
+                                        ]
+                                        .spacing(2)
+                                        .align_items(Alignment::Center),
                                     ]
-                                    .align_items(Alignment::Center)
-                                    .spacing(4)
-                                    .into()
-                                },
-                            )
+                                ]
+                                .align_items(Alignment::Center)
+                                .spacing(4)
+                                .into()
+                            })
                             .collect();
 
                         column![
