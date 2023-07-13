@@ -97,25 +97,29 @@ struct Aery {
     ranked_overview: RankedOverview,
 }
 
+// fn load_sprite() {
+//     let icon_data = self.data.get(&DataFile::ProfileIcon).unwrap();
+//     let icon = &icon_data["data"][icon.to_string()]["image"];
+//     let sprite = Sprite::try_from(icon["sprite"].as_str().unwrap().to_string()).unwrap();
+//     let x = icon["x"].as_u64().unwrap() as u32;
+//     let y = icon["y"].as_u64().unwrap() as u32;
+//     let w = icon["w"].as_u64().unwrap() as u32;
+//     let h = icon["h"].as_u64().unwrap() as u32;
+
+//     let icon_sprite = self.sprites.get(&sprite).unwrap();
+//     let icon = icon_sprite.view(x, y, w, h);
+//     // println!("Loaded icon in {:?}", timer.elapsed());
+//     self.summoner.set_icon_handle(Handle::from_pixels(
+//         icon.width(),
+//         icon.height(),
+//         icon.to_image().into_vec(),
+//     ));
+// }
+
 impl Aery {
     fn set_summoner_icon(&mut self, icon: u16) {
-        // let timer = std::time::Instant::now();
-        let icon_data = self.data.get(&DataFile::ProfileIcon).unwrap();
-        let icon = &icon_data["data"][icon.to_string()]["image"];
-        let sprite = Sprite::try_from(icon["sprite"].as_str().unwrap().to_string()).unwrap();
-        let x = icon["x"].as_u64().unwrap() as u32;
-        let y = icon["y"].as_u64().unwrap() as u32;
-        let w = icon["w"].as_u64().unwrap() as u32;
-        let h = icon["h"].as_u64().unwrap() as u32;
-
-        let icon_sprite = self.sprites.get(&sprite).unwrap();
-        let icon = icon_sprite.view(x, y, w, h);
-        // println!("Loaded icon in {:?}", timer.elapsed());
-        self.summoner.set_icon_handle(Handle::from_pixels(
-            icon.width(),
-            icon.height(),
-            icon.to_image().into_vec(),
-        ));
+        let path = format!("{}{}.png", concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\profileicon\\"), icon);
+        self.summoner.set_icon_handle(Handle::from_path(path));
     }
 }
 
@@ -136,7 +140,7 @@ impl Application for Aery {
     fn new(_flags: ()) -> (Self, Command<Message>) {
         let timer = std::time::Instant::now();
         let mut sprites = HashMap::default();
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img");
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\sprite");
         let img_path = fs::read_dir(path).unwrap();
         for sprite in img_path {
             let file = sprite.unwrap();
@@ -515,7 +519,7 @@ mod widget {
 
         fn summoner_icon<'a>(icon: Option<image::Handle>, level: u16) -> Element<'a, Message> {
             let image: Element<Message> = if let Some(handle) = icon {
-                image(handle).width(96.0).height(96.0).into()
+                image(handle).into()
             } else {
                 vertical_space(96.0).into()
             };
