@@ -118,7 +118,11 @@ struct Aery {
 
 impl Aery {
     fn set_summoner_icon(&mut self, icon: u16) {
-        let path = format!("{}{}.png", concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\profileicon\\"), icon);
+        let path = format!(
+            "{}{}.png",
+            concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\profileicon\\"),
+            icon
+        );
         self.summoner.set_icon_handle(Handle::from_path(path));
     }
 }
@@ -854,26 +858,80 @@ mod widget {
                 }
             }
 
+            #[derive(Debug, Clone, Copy)]
+            pub struct Champion {
+                name: &'static str,
+                wins: i16,
+                losses: i16,
+                kda: f32,
+            }
+
             #[derive(Debug, Clone)]
-            pub struct Summary;
+            pub struct Summary {
+                wins: i8,
+                losses: i8,
+                ratio: f32,
+                kill_ratio: f32,
+                death_ratio: f32,
+                assist_ratio: f32,
+
+                champions: Vec<Champion>,
+            }
 
             impl Summary {
                 pub fn new() -> Summary {
-                    Summary
-                }
-
-                pub fn view(&self) -> Element<Message> {
                     let wins = 6;
                     let losses = 4;
                     let ratio = (wins as f32 / (wins + losses) as f32) * 100.0;
-                    let is_positive_ratio = ratio > 50.0;
                     let kill_ratio = 2.7;
                     let death_ratio = 6.7;
                     let assist_ratio = 7.0;
 
+                    let champions = vec![
+                        Champion {
+                            name: "Twisted Fate",
+                            wins: 2,
+                            losses: 1,
+                            kda: 1.15,
+                        },
+                        Champion {
+                            name: "Orianna",
+                            wins: 3,
+                            losses: 0,
+                            kda: 2.0,
+                        },
+                        Champion {
+                            name: "Annie",
+                            wins: 2,
+                            losses: 2,
+                            kda: 3.0,
+                        },
+                        Champion {
+                            name: "Sion",
+                            wins: 0,
+                            losses: 3,
+                            kda: 0.5,
+                        },
+                    ];
+
+                    Summary {
+                        wins,
+                        losses,
+                        ratio,
+                        kill_ratio,
+                        death_ratio,
+                        assist_ratio,
+                        champions,
+                    }
+                }
+
+                pub fn view(&self) -> Element<Message> {
+                    let total = self.wins + self.losses;
+                    let is_positive_ratio = self.ratio > 50.0;
+
                     let title_bar = row![
                         widget::bold("Recent summary").size(12),
-                        text!("last {total} games", total = wins + losses)
+                        text!("last {total} games")
                             .style(theme::gray_text())
                             .size(10)
                     ]
@@ -885,25 +943,25 @@ mod widget {
                         let ratio_text = row![
                             row![
                                 row![
-                                    text!("{wins}").fit(12),
+                                    text!("{}", self.wins).fit(12),
                                     text("W").fit(12).style(theme::gray_text())
                                 ]
                                 .spacing(1),
                                 row![
-                                    text!("{losses}").fit(12),
+                                    text!("{}", self.losses).fit(12),
                                     text("L").fit(12).style(theme::gray_text())
                                 ]
                             ]
                             .spacing(4),
                             text("·").fit(18).style(theme::sub_text()),
-                            text!("{ratio:.1}%")
+                            text!("{:.1}%", self.ratio)
                                 .fit(12)
                                 .style(theme::win_color(is_positive_ratio)),
                         ]
                         .align_items(Alignment::Center)
                         .spacing(4);
 
-                        let ratio_bar = progress_bar(0.0..=100.0, ratio)
+                        let ratio_bar = progress_bar(0.0..=100.0, self.ratio)
                             .width(80.0)
                             .height(4.0)
                             .style(theme::ratio_bar());
@@ -923,34 +981,37 @@ mod widget {
                             row![
                                 row![
                                     row![
-                                        text!("{wins}").fit(12),
+                                        text!("{}", self.wins).fit(12),
                                         text("W").fit(12).style(theme::gray_text())
                                     ]
                                     .spacing(1),
                                     row![
-                                        text!("{losses}").fit(12),
+                                        text!("{}", self.losses).fit(12),
                                         text("L").fit(12).style(theme::gray_text())
                                     ]
                                 ]
                                 .spacing(4),
                                 text("·").fit(18).style(theme::sub_text()),
-                                text!("{ratio:.1}%")
+                                text!("{:.1}%", self.ratio)
                                     .fit(12)
                                     .style(theme::win_color(is_positive_ratio)),
                             ]
                             .align_items(Alignment::Center)
                             .spacing(4),
                             row![
-                                text!("{kill_ratio:.1}").size(10),
+                                text!("{:.1}", self.kill_ratio).size(10),
                                 text("/").size(10).style(theme::gray_text()),
-                                text!("{death_ratio:.1}").size(10),
+                                text!("{:.1}", self.death_ratio).size(10),
                                 text("/").size(10).style(theme::gray_text()),
-                                text!("{assist_ratio:.1}").size(10),
+                                text!("{:.1}", self.assist_ratio).size(10),
                                 row![
                                     text("(").size(10).style(theme::red_text()),
-                                    text!("{:.1} KDA", death_ratio + assist_ratio / kill_ratio)
-                                        .size(10)
-                                        .style(theme::red_text()),
+                                    text!(
+                                        "{:.1} KDA",
+                                        self.death_ratio + self.assist_ratio / self.kill_ratio
+                                    )
+                                    .size(10)
+                                    .style(theme::red_text()),
                                     text(")").size(10).style(theme::red_text())
                                 ],
                             ]
@@ -968,51 +1029,51 @@ mod widget {
                     };
 
                     let summary_champions = {
-                        // TODO: change to champion id
-                        let champions = vec![
-                            ("Twisted Fate", 2, 1, 1.15),
-                            ("Orianna", 3, 0, 2.0),
-                            ("Annie", 2, 2, 3.0),
-                            ("Sion", 0, 3, 0.5),
-                        ];
+                        let content: Vec<Element<Message>> = self
+                            .champions
+                            .iter()
+                            .map(
+                                |&_champion @ Champion {
+                                     name,
+                                     wins,
+                                     losses,
+                                     kda,
+                                 }| {
+                                    let icon = container(Space::new(24.0, 24.0))
+                                        .style(theme::icon_container())
+                                        .max_width(24.0)
+                                        .max_height(24.0);
+                                    let winrate = wins as f32 * 100.0 / (wins + losses) as f32;
 
-                        let content: Vec<Element<Message>> = champions
-                            .into_iter()
-                            .map(|(_name, wins, losses, kda)| {
-                                let icon = container(Space::new(24.0, 24.0))
-                                    .style(theme::icon_container())
-                                    .max_width(24.0)
-                                    .max_height(24.0);
-                                let winrate = wins as f32 * 100.0 / (wins + losses) as f32;
-
-                                row![
-                                    icon,
-                                    // TODO: fix strange alignment between bottom and top text
-                                    column![
-                                        row![
-                                            text!("{:.1}%", winrate)
-                                                .size(10)
-                                                .style(theme::win_color(winrate > 50.0)),
-                                            text!("({wins}W {losses}L)")
-                                                .size(10)
-                                                .style(theme::gray_text())
+                                    row![
+                                        icon,
+                                        // TODO: fix strange alignment between bottom and top text
+                                        column![
+                                            row![
+                                                text!("{:.1}%", winrate)
+                                                    .size(10)
+                                                    .style(theme::win_color(winrate > 50.0)),
+                                                text!("({wins}W {losses}L)")
+                                                    .size(10)
+                                                    .style(theme::gray_text())
+                                            ]
+                                            .align_items(Alignment::Center)
+                                            .spacing(2),
+                                            row![
+                                                very_small_icon(),
+                                                text!("{:.2} KDA", kda)
+                                                    .size(10)
+                                                    .style(theme::gray_text())
+                                            ]
+                                            .spacing(2)
+                                            .align_items(Alignment::Center),
                                         ]
-                                        .align_items(Alignment::Center)
-                                        .spacing(2),
-                                        row![
-                                            very_small_icon(),
-                                            text!("{:.2} KDA", kda)
-                                                .size(10)
-                                                .style(theme::gray_text())
-                                        ]
-                                        .spacing(2)
-                                        .align_items(Alignment::Center),
                                     ]
-                                ]
-                                .align_items(Alignment::Center)
-                                .spacing(4)
-                                .into()
-                            })
+                                    .align_items(Alignment::Center)
+                                    .spacing(4)
+                                    .into()
+                                },
+                            )
                             .collect();
 
                         column![
