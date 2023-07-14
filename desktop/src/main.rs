@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use std::fs;
+use std::collections::HashMap;
 
 use iced::{
     widget::image::Handle,
@@ -25,7 +25,7 @@ pub enum DataFile {
     Item,
     ProfileIcon,
     RuneReforged,
-    Summoner,
+    SummonerSpell,
 }
 
 impl TryFrom<String> for DataFile {
@@ -38,7 +38,7 @@ impl TryFrom<String> for DataFile {
             "item" => Ok(Self::Item),
             "profileicon" => Ok(Self::ProfileIcon),
             "runesreforged" => Ok(Self::RuneReforged),
-            "summoner" => Ok(Self::Summoner),
+            "summoner" => Ok(Self::SummonerSpell),
             _ => Err("unknown data type"),
         }
     }
@@ -60,15 +60,15 @@ impl TryFrom<String> for Sprite {
         println!("{value}");
         let value = value.split(".").next().unwrap();
         println!("{value}");
+        let mut size = 0;
         let index: u8 = value
             .chars()
-            .last()
-            .ok_or("last character not found")?
-            .to_digit(10)
-            .ok_or("digit is not base 10")?
-            .try_into()
+            .filter(|c| c.is_digit(10))
+            .inspect(|_| size += 1)
+            .collect::<String>()
+            .parse()
             .map_err(|_| "index is not u8")?;
-        let value = value[..value.len() - 1].to_string();
+        let value = value[..value.len() - size].to_string();
         println!("{value}");
 
         match value.to_ascii_lowercase().as_str() {
@@ -76,7 +76,7 @@ impl TryFrom<String> for Sprite {
             "item" => Ok(Self::Item(index)),
             "profileicon" => Ok(Self::ProfileIcon(index)),
             "runereforged" => Ok(Self::RuneReforged(index)),
-            "summonerspell" => Ok(Self::SummonerSpell(index)),
+            "spell" => Ok(Self::SummonerSpell(index)),
             _ => Err("unknown sprite type"),
         }
     }
@@ -84,6 +84,13 @@ impl TryFrom<String> for Sprite {
 
 pub type SpriteMap = HashMap<Sprite, image::DynamicImage>;
 pub type DataMap = HashMap<DataFile, serde_json::Value>;
+pub type RuneMap = HashMap<String, String>;
+
+pub struct Assets {
+    pub sprites: SpriteMap,
+    pub data: DataMap,
+    pub runes: RuneMap,
+}
 
 #[derive(Debug, Clone)]
 enum Event {
@@ -91,8 +98,7 @@ enum Event {
 }
 
 struct Aery {
-    sprites: SpriteMap,
-    data: DataMap,
+    assets: Assets,
 
     timeline: Timeline,
     summoner: Summoner,
@@ -101,8 +107,8 @@ struct Aery {
 }
 
 // TODO: use champion id instead of name
-fn load_champion_icon(sprites: &SpriteMap, data: &DataMap, champion: &str) -> Handle {
-    let icon_data = data.get(&DataFile::Champion).unwrap();
+fn load_champion_icon(assets: &Assets, champion: &str) -> Handle {
+    let icon_data = assets.data.get(&DataFile::Champion).unwrap();
     let icon = &icon_data["data"][champion]["image"];
     let sprite = Sprite::try_from(icon["sprite"].as_str().unwrap().to_string()).unwrap();
     let x = icon["x"].as_u64().unwrap() as u32;
@@ -111,9 +117,36 @@ fn load_champion_icon(sprites: &SpriteMap, data: &DataMap, champion: &str) -> Ha
     let h = icon["h"].as_u64().unwrap() as u32;
     let offset = 3;
 
-    let icon_sprite = sprites.get(&sprite).unwrap();
+    let icon_sprite = assets.sprites.get(&sprite).unwrap();
     let icon = icon_sprite.view(x + offset, y + offset, w - offset * 2, h - offset * 2);
     Handle::from_pixels(icon.width(), icon.height(), icon.to_image().into_vec())
+}
+
+fn load_summoner_spell_icon(assets: &Assets, summoner_spell: &str) -> Handle {
+    let icon_data = assets.data.get(&DataFile::SummonerSpell).unwrap();
+    let icon = &icon_data["data"][summoner_spell]["image"];
+    let sprite = Sprite::try_from(icon["sprite"].as_str().unwrap().to_string()).unwrap();
+    let x = icon["x"].as_u64().unwrap() as u32;
+    let y = icon["y"].as_u64().unwrap() as u32;
+    let w = icon["w"].as_u64().unwrap() as u32;
+    let h = icon["h"].as_u64().unwrap() as u32;
+    let offset = 0;
+
+    let icon_sprite = assets.sprites.get(&sprite).unwrap();
+    let icon = icon_sprite.view(x + offset, y + offset, w - offset * 2, h - offset * 2);
+    Handle::from_pixels(icon.width(), icon.height(), icon.to_image().into_vec())
+}
+
+fn load_runes_icon(assets: &Assets, rune: &str) -> Handle {
+    let rune_path = assets.runes.get(rune).unwrap();
+    let mut path = std::path::PathBuf::from(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "\\assets\\img\\runes\\"
+    ));
+    path.push(rune_path);
+    println!("rune_at: {:?}", path);
+
+    Handle::from_path(path)
 }
 
 impl Aery {
@@ -178,15 +211,50 @@ impl Application for Aery {
         }
         println!("Loaded data in {:?}", timer.elapsed());
 
+        let timer = std::time::Instant::now();
+        let mut runes = HashMap::default();
+        let runes_path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "\\assets\\data\\runesReforged.json"
+        );
+        let value: serde_json::Value =
+            serde_json::from_reader(fs::File::open(runes_path).unwrap()).unwrap();
+
+        for value in value.as_array().unwrap() {
+            let path = value["icon"]
+                .as_str()
+                .unwrap()
+                .trim_start_matches("perk-images/");
+            let name = value["name"].as_str().unwrap();
+            runes.insert(name.to_string(), path.to_string());
+
+            for slots in value["slots"].as_array().unwrap() {
+                for rune in slots["runes"].as_array().unwrap() {
+                    let path = rune["icon"]
+                        .as_str()
+                        .unwrap()
+                        .trim_start_matches("perk-images/");
+                    let name = rune["name"].as_str().unwrap();
+                    runes.insert(name.to_string(), path.to_string());
+                }
+            }
+        }
+        println!("Loaded rune data in {:?}", timer.elapsed());
+        println!("{runes:#?}");
+
+        let assets = Assets {
+            sprites,
+            data,
+            runes,
+        };
+
         (
             Self {
-                timeline: Timeline::new(&sprites, &data),
+                timeline: Timeline::new(&assets),
                 summoner: Summoner::new(5843),
                 search_bar: SearchBar::new(),
                 ranked_overview: RankedOverview::new(),
-
-                sprites,
-                data,
+                assets,
             },
             Command::none(),
         )
@@ -764,7 +832,7 @@ mod widget {
     }
 
     pub mod timeline {
-        use crate::{load_champion_icon, DataMap, SpriteMap};
+        use crate::load_champion_icon;
 
         use self::summary::Summary;
 
@@ -785,28 +853,28 @@ mod widget {
         }
 
         impl Timeline {
-            pub fn new(sprites: &SpriteMap, data: &DataMap) -> Self {
+            pub fn new(assets: &crate::Assets) -> Self {
                 let champions = vec![
                     summary::Champion {
-                        handle: load_champion_icon(sprites, data, "TwistedFate"),
+                        handle: load_champion_icon(assets, "TwistedFate"),
                         wins: 2,
                         losses: 1,
                         kda: 1.15,
                     },
                     summary::Champion {
-                        handle: load_champion_icon(sprites, data, "Orianna"),
+                        handle: load_champion_icon(assets, "Orianna"),
                         wins: 3,
                         losses: 0,
                         kda: 2.0,
                     },
                     summary::Champion {
-                        handle: load_champion_icon(sprites, data, "Annie"),
+                        handle: load_champion_icon(assets, "Annie"),
                         wins: 2,
                         losses: 2,
                         kda: 3.0,
                     },
                     summary::Champion {
-                        handle: load_champion_icon(sprites, data, "Sion"),
+                        handle: load_champion_icon(assets, "Sion"),
                         wins: 0,
                         losses: 3,
                         kda: 0.5,
@@ -819,8 +887,11 @@ mod widget {
                         .into_iter()
                         .map(|_| {
                             [
-                                Game::new(true, load_champion_icon(sprites, data, "Annie")),
-                                Game::new(false, load_champion_icon(sprites, data, "Sion")),
+                                Game::new(true, assets, "Annie"),
+                                Game::new(false, assets, "Sion"),
+                                Game::new(true, assets, "Darius"),
+                                Game::new(false, assets, "KSante"),
+                                Game::new(false, assets, "MonkeyKing"),
                             ]
                         })
                         .flatten()
@@ -1111,6 +1182,9 @@ mod widget {
 
     pub mod game {
         use super::*;
+        use crate::load_champion_icon;
+        use crate::load_runes_icon;
+        use crate::load_summoner_spell_icon;
         use crate::theme;
         use crate::widget;
         use iced::widget::image;
@@ -1118,9 +1192,21 @@ mod widget {
         use iced::{alignment, Alignment, Element, Length};
 
         fn champion_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
-            let icon = iced::widget::image(handle).content_fit(iced::ContentFit::Fill);
+            let icon = iced::widget::image(handle)
+                .width(48.0)
+                .height(48.0)
+                .content_fit(iced::ContentFit::Fill);
 
             container(icon).max_width(48.0).max_height(48.0).into()
+        }
+
+        fn summoner_spell_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
+            let icon = iced::widget::image(handle)
+                .width(22.0)
+                .height(22.0)
+                .content_fit(iced::ContentFit::Fill);
+
+            container(icon).max_width(22.0).max_height(22.0).into()
         }
 
         #[derive(Debug, Clone)]
@@ -1131,6 +1217,8 @@ mod widget {
             duration: Duration,
             role: Option<Role>,
             champion_image: image::Handle,
+            summoner_spell_images: [image::Handle; 2],
+            runes_images: [image::Handle; 2],
             player_kills: u16,
             player_deaths: u16,
             player_assists: u16,
@@ -1147,7 +1235,17 @@ mod widget {
         }
 
         impl Game {
-            pub fn new(win: bool, champion_image: image::Handle) -> Self {
+            pub fn new(win: bool, assets: &crate::Assets, champion: &'static str) -> Self {
+                let champion_image = load_champion_icon(assets, champion);
+                let summoner_spell_images = [
+                    load_summoner_spell_icon(assets, "SummonerFlash"),
+                    load_summoner_spell_icon(assets, "SummonerDot"),
+                ];
+                let runes_images = [
+                    load_runes_icon(assets, "Conqueror"),
+                    load_runes_icon(assets, "Resolve"),
+                ];
+
                 Game {
                     win,
                     queue: Queue::RankedFlex,
@@ -1159,6 +1257,8 @@ mod widget {
                     ),
                     role: Some(Role::Mid),
                     champion_image,
+                    summoner_spell_images,
+                    runes_images,
                     player_kills: 1,
                     player_deaths: 6,
                     player_assists: 12,
@@ -1225,9 +1325,17 @@ mod widget {
                 let champion_info = {
                     let champion_icon = champion_icon(self.champion_image.clone());
 
-                    let champion_spells = row![medium_icon(), medium_icon(),].spacing(2);
+                    let champion_spells = row![
+                        summoner_spell_icon(self.summoner_spell_images[0].clone()),
+                        summoner_spell_icon(self.summoner_spell_images[1].clone())
+                    ]
+                    .spacing(2);
 
-                    let champion_runes = row![medium_icon(), medium_icon(),].spacing(2);
+                    let champion_runes = row![
+                        summoner_spell_icon(self.runes_images[0].clone()),
+                        summoner_spell_icon(self.runes_images[1].clone())
+                    ]
+                    .spacing(2);
 
                     row![
                         champion_icon,
