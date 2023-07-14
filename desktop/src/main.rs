@@ -323,7 +323,7 @@ mod widget {
     }
 
     #[derive(Debug, Clone)]
-    struct Champion(u16);
+    pub struct Champion(u16);
 
     #[derive(Debug, Clone, Copy)]
     struct Item(u16);
@@ -817,7 +817,12 @@ mod widget {
                     summary: Summary::new(champions),
                     games: (0..5)
                         .into_iter()
-                        .map(|_| [Game::new(true), Game::new(false)])
+                        .map(|_| {
+                            [
+                                Game::new(true, load_champion_icon(sprites, data, "Annie")),
+                                Game::new(false, load_champion_icon(sprites, data, "Sion")),
+                            ]
+                        })
                         .flatten()
                         .collect(),
                 }
@@ -1108,8 +1113,15 @@ mod widget {
         use super::*;
         use crate::theme;
         use crate::widget;
+        use iced::widget::image;
         use iced::widget::{button, column, container, row, text, Space};
         use iced::{alignment, Alignment, Element, Length};
+
+        fn champion_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
+            let icon = iced::widget::image(handle).content_fit(iced::ContentFit::Fill);
+
+            container(icon).max_width(48.0).max_height(48.0).into()
+        }
 
         #[derive(Debug, Clone)]
         pub struct Game {
@@ -1118,6 +1130,7 @@ mod widget {
             time: Time,
             duration: Duration,
             role: Option<Role>,
+            champion_image: image::Handle,
             player_kills: u16,
             player_deaths: u16,
             player_assists: u16,
@@ -1134,7 +1147,7 @@ mod widget {
         }
 
         impl Game {
-            pub fn new(win: bool) -> Self {
+            pub fn new(win: bool, champion_image: image::Handle) -> Self {
                 Game {
                     win,
                     queue: Queue::RankedFlex,
@@ -1145,6 +1158,7 @@ mod widget {
                         time::Duration::minutes(28).saturating_add(time::Duration::seconds(33)),
                     ),
                     role: Some(Role::Mid),
+                    champion_image,
                     player_kills: 1,
                     player_deaths: 6,
                     player_assists: 12,
@@ -1209,7 +1223,7 @@ mod widget {
                 };
 
                 let champion_info = {
-                    let champion_icon = large_icon();
+                    let champion_icon = champion_icon(self.champion_image.clone());
 
                     let champion_spells = row![medium_icon(), medium_icon(),].spacing(2);
 
@@ -1378,6 +1392,7 @@ mod widget {
             .size(8.0)
     }
 
+    /// size 8
     fn very_small_icon<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
         container(Space::new(8.0, 8.0))
             .style(theme::icon_container())
@@ -1385,6 +1400,7 @@ mod widget {
             .max_height(8.0)
     }
 
+    /// size 10
     fn small_icon<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
         container(Space::new(10.0, 10.0))
             .style(theme::icon_container())
@@ -1392,6 +1408,7 @@ mod widget {
             .max_height(10.0)
     }
 
+    /// size 12
     fn medium_icon<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
         container(Space::new(12.0, 12.0))
             .style(theme::icon_container())
@@ -1399,6 +1416,7 @@ mod widget {
             .max_height(12.0)
     }
 
+    /// size 18
     fn medium_large_icon<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
         container(Space::new(18.0, 18.0))
             .style(theme::icon_container())
@@ -1406,6 +1424,7 @@ mod widget {
             .max_height(18.0)
     }
 
+    /// size 48
     fn large_icon<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
         container(Space::new(48.0, 48.0))
             .style(theme::icon_container())
