@@ -1,5 +1,5 @@
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 
 use iced::{
     widget::image::Handle,
@@ -85,11 +85,13 @@ impl TryFrom<String> for Sprite {
 pub type SpriteMap = HashMap<Sprite, image::DynamicImage>;
 pub type DataMap = HashMap<DataFile, serde_json::Value>;
 pub type RuneMap = HashMap<String, String>;
+pub type EmblemMap = HashMap<String, Handle>;
 
 pub struct Assets {
     pub sprites: SpriteMap,
     pub data: DataMap,
     pub runes: RuneMap,
+    pub emblems: EmblemMap,
 }
 
 #[derive(Debug, Clone)]
@@ -240,12 +242,29 @@ impl Application for Aery {
             }
         }
         println!("Loaded rune data in {:?}", timer.elapsed());
-        println!("{runes:#?}");
+        // println!("{runes:#?}");
+
+        let timer = std::time::Instant::now();
+        let mut emblems = HashMap::default();
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\emblems");
+        let img_path = fs::read_dir(path).unwrap();
+        for sprite in img_path {
+            let file = sprite.unwrap();
+            let sprite = {
+                let name = file.file_name().into_string().unwrap();
+                name.try_into().unwrap()
+            };
+            let image = iced::widget::image::Handle::from_path(file.path());
+
+            emblems.insert(sprite, image);
+        }
+        println!("Loaded emblems in {:?}", timer.elapsed());
 
         let assets = Assets {
             sprites,
             data,
             runes,
+            emblems,
         };
 
         (
@@ -253,7 +272,7 @@ impl Application for Aery {
                 timeline: Timeline::new(&assets),
                 summoner: Summoner::new(5843),
                 search_bar: SearchBar::new(),
-                ranked_overview: RankedOverview::new(),
+                ranked_overview: RankedOverview::new(&assets),
                 assets,
             },
             Command::none(),
@@ -742,7 +761,7 @@ mod widget {
     pub mod ranked_overview {
         use iced::{
             widget::{
-                button, column, container, horizontal_space, progress_bar, row, text,
+                button, column, container, horizontal_space, image, progress_bar, row, text,
                 vertical_space,
             },
             Alignment, Element, Length,
@@ -752,7 +771,11 @@ mod widget {
 
         use super::{bold, large_icon, medium_icon};
 
-        fn ranked_container<'a>(queue_type: impl ToString) -> Element<'a, Message> {
+        fn ranked_container<'a>(
+            queue_type: impl ToString,
+            handle: image::Handle,
+            size: f32,
+        ) -> Element<'a, Message> {
             let left_bar = container(horizontal_space(2))
                 .style(theme::left_bar_container())
                 .height(18);
@@ -772,7 +795,7 @@ mod widget {
                 .align_items(Alignment::Center),
                 vertical_space(12),
                 row![
-                    large_icon(),
+                    image(handle).width(size).height(size),
                     column![
                         row![
                             bold("Gold 4").size(16),
@@ -810,19 +833,25 @@ mod widget {
             Expand,
         }
 
-        pub struct RankedOverview;
+        pub struct RankedOverview {
+            ranked_solo_image: image::Handle,
+            ranked_flex_image: image::Handle,
+        }
 
         impl RankedOverview {
-            pub fn new() -> RankedOverview {
-                RankedOverview
+            pub fn new(assets: &crate::Assets) -> RankedOverview {
+                RankedOverview {
+                    ranked_solo_image: assets.emblems.get("emblem-challenger.png").unwrap().clone(),
+                    ranked_flex_image: assets.emblems.get("emblem-iron.png").unwrap().clone(),
+                }
             }
 
             pub fn update(&mut self, _message: Message) {}
 
             pub fn view(&self) -> Element<Message> {
                 column![
-                    ranked_container("Ranked Solo"),
-                    ranked_container("Ranked Flex"),
+                    ranked_container("Ranked Solo", self.ranked_solo_image.clone(), 80.0),
+                    ranked_container("Ranked Flex", self.ranked_flex_image.clone(), 70.0),
                 ]
                 .spacing(4)
                 .align_items(Alignment::Center)
