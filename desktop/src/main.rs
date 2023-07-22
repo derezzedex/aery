@@ -1226,7 +1226,7 @@ mod widget {
                 .height(48.0)
                 .content_fit(iced::ContentFit::Fill);
 
-            container(icon).max_width(48.0).max_height(48.0).into()
+            container(icon).width(48.0).height(48.0).into()
         }
 
         fn summoner_spell_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
@@ -1235,7 +1235,30 @@ mod widget {
                 .height(22.0)
                 .content_fit(iced::ContentFit::Fill);
 
-            container(icon).max_width(22.0).max_height(22.0).into()
+            container(icon).width(22.0).height(22.0).into()
+        }
+
+        fn summoner_rune_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
+            let icon = iced::widget::image(handle)
+                .width(30.0)
+                .height(30.0)
+                .content_fit(iced::ContentFit::Cover);
+
+            container(icon).width(22.0).height(22.0).into()
+        }
+
+        fn summoner_rune2_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
+            let icon = iced::widget::image(handle)
+                .width(16.0)
+                .height(16.0)
+                .content_fit(iced::ContentFit::Fill);
+
+            container(icon)
+                .center_x()
+                .center_y()
+                .width(22.0)
+                .height(22.0)
+                .into()
         }
 
         #[derive(Debug, Clone)]
@@ -1267,8 +1290,8 @@ mod widget {
             pub fn new(win: bool, assets: &crate::Assets, champion: &'static str) -> Self {
                 let champion_image = load_champion_icon(assets, champion);
                 let summoner_spell_images = [
-                    load_summoner_spell_icon(assets, "SummonerFlash"),
                     load_summoner_spell_icon(assets, "SummonerDot"),
+                    load_summoner_spell_icon(assets, "SummonerFlash"),
                 ];
                 let runes_images = [
                     load_runes_icon(assets, "Conqueror"),
@@ -1361,8 +1384,8 @@ mod widget {
                     .spacing(2);
 
                     let champion_runes = row![
-                        summoner_spell_icon(self.runes_images[0].clone()),
-                        summoner_spell_icon(self.runes_images[1].clone())
+                        summoner_rune_icon(self.runes_images[0].clone()),
+                        summoner_rune2_icon(self.runes_images[1].clone())
                     ]
                     .spacing(2);
 
