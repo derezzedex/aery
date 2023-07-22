@@ -151,6 +151,21 @@ fn load_runes_icon(assets: &Assets, rune: &str) -> Handle {
     Handle::from_path(path)
 }
 
+fn load_item_icon(assets: &Assets, item_id: &str) -> Handle {
+    let icon_data = assets.data.get(&DataFile::Item).unwrap();
+    let icon = &icon_data["data"][item_id]["image"];
+    let sprite = Sprite::try_from(icon["sprite"].as_str().unwrap().to_string()).unwrap();
+    let x = icon["x"].as_u64().unwrap() as u32;
+    let y = icon["y"].as_u64().unwrap() as u32;
+    let w = icon["w"].as_u64().unwrap() as u32;
+    let h = icon["h"].as_u64().unwrap() as u32;
+    let offset = 0;
+
+    let icon_sprite = assets.sprites.get(&sprite).unwrap();
+    let icon = icon_sprite.view(x + offset, y + offset, w - offset * 2, h - offset * 2);
+    Handle::from_pixels(icon.width(), icon.height(), icon.to_image().into_vec())
+}
+
 impl Aery {
     fn set_summoner_icon(&mut self, icon: u16) {
         let path = format!(
@@ -1212,6 +1227,7 @@ mod widget {
     pub mod game {
         use super::*;
         use crate::load_champion_icon;
+        use crate::load_item_icon;
         use crate::load_runes_icon;
         use crate::load_summoner_spell_icon;
         use crate::theme;
@@ -1261,6 +1277,15 @@ mod widget {
                 .into()
         }
 
+        fn item_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
+            let icon = iced::widget::image(handle)
+                .width(22.0)
+                .height(22.0)
+                .content_fit(iced::ContentFit::Fill);
+
+            container(icon).width(22.0).height(22.0).into()
+        }
+
         #[derive(Debug, Clone)]
         pub struct Game {
             win: bool,
@@ -1271,6 +1296,7 @@ mod widget {
             champion_image: image::Handle,
             summoner_spell_images: [image::Handle; 2],
             runes_images: [image::Handle; 2],
+            item_images: [image::Handle; 7],
             player_kills: u16,
             player_deaths: u16,
             player_assists: u16,
@@ -1297,6 +1323,15 @@ mod widget {
                     load_runes_icon(assets, "Conqueror"),
                     load_runes_icon(assets, "Resolve"),
                 ];
+                let item_images = [
+                    load_item_icon(assets, "1001"),
+                    load_item_icon(assets, "6630"),
+                    load_item_icon(assets, "4401"),
+                    load_item_icon(assets, "3143"),
+                    load_item_icon(assets, "3742"),
+                    load_item_icon(assets, "6333"),
+                    load_item_icon(assets, "3364"),
+                ];
 
                 Game {
                     win,
@@ -1311,6 +1346,7 @@ mod widget {
                     champion_image,
                     summoner_spell_images,
                     runes_images,
+                    item_images,
                     player_kills: 1,
                     player_deaths: 6,
                     player_assists: 12,
@@ -1447,10 +1483,22 @@ mod widget {
 
                 let player_items = {
                     row![
-                        column![medium_large_icon(), medium_large_icon()].spacing(2),
-                        column![medium_large_icon(), medium_large_icon()].spacing(2),
-                        column![medium_large_icon(), medium_large_icon()].spacing(2),
-                        medium_large_icon(),
+                        column![
+                            item_icon(self.item_images[0].clone()),
+                            item_icon(self.item_images[1].clone())
+                        ]
+                        .spacing(2),
+                        column![
+                            item_icon(self.item_images[2].clone()),
+                            item_icon(self.item_images[3].clone())
+                        ]
+                        .spacing(2),
+                        column![
+                            item_icon(self.item_images[4].clone()),
+                            item_icon(self.item_images[5].clone())
+                        ]
+                        .spacing(2),
+                        item_icon(self.item_images[6].clone()),
                     ]
                     .spacing(2)
                 };
