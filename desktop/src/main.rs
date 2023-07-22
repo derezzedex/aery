@@ -108,6 +108,22 @@ struct Aery {
     ranked_overview: RankedOverview,
 }
 
+fn chevron_down_icon() -> Handle {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "\\assets\\img\\icons\\chevron-down-white.png"
+    );
+    Handle::from_path(path)
+}
+
+fn chevron_up_icon() -> Handle {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "\\assets\\img\\icons\\chevron-up-white.png"
+    );
+    Handle::from_path(path)
+}
+
 // TODO: use champion id instead of name
 fn load_champion_icon(assets: &Assets, champion: &str) -> Handle {
     let icon_data = assets.data.get(&DataFile::Champion).unwrap();
@@ -782,7 +798,7 @@ mod widget {
             Alignment, Element, Length,
         };
 
-        use crate::theme;
+        use crate::{chevron_down_icon, theme};
 
         use super::{bold, large_icon, medium_icon};
 
@@ -795,13 +811,15 @@ mod widget {
                 .style(theme::left_bar_container())
                 .height(18);
 
+            let chevron_down = image(chevron_down_icon()).width(10.0).height(10.0);
+
             container(column![
                 row![
                     left_bar,
                     horizontal_space(4),
                     bold(queue_type).size(14),
                     horizontal_space(Length::Fill),
-                    button(medium_icon())
+                    button(chevron_down)
                         .style(theme::expand_button())
                         .padding(4)
                         .on_press(Message::Expand),
@@ -1226,6 +1244,8 @@ mod widget {
 
     pub mod game {
         use super::*;
+        use crate::chevron_down_icon;
+        use crate::chevron_up_icon;
         use crate::load_champion_icon;
         use crate::load_item_icon;
         use crate::load_runes_icon;
@@ -1527,7 +1547,13 @@ mod widget {
                     .spacing(8)
                 };
 
-                let expand_content = container(small_icon())
+                let chevron_icon = if self.is_expanded {
+                    chevron_up_icon()
+                } else {
+                    chevron_down_icon()
+                };
+
+                let expand_content = container(image(chevron_icon).width(8.0).height(8.0))
                     .center_x()
                     .align_y(alignment::Vertical::Bottom)
                     .height(Length::Fill)
