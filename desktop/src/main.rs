@@ -1317,6 +1317,7 @@ mod widget {
             summoner_spell_images: [image::Handle; 2],
             runes_images: [image::Handle; 2],
             item_images: [image::Handle; 7],
+            summoner_icons: [image::Handle; 10],
             player_kills: u16,
             player_deaths: u16,
             player_assists: u16,
@@ -1353,6 +1354,19 @@ mod widget {
                     load_item_icon(assets, "3364"),
                 ];
 
+                let summoner_icons = [
+                    load_champion_icon(assets, champion),
+                    load_champion_icon(assets, "Annie"),
+                    load_champion_icon(assets, "Xerath"),
+                    load_champion_icon(assets, "Sion"),
+                    load_champion_icon(assets, "Darius"),
+                    load_champion_icon(assets, "KSante"),
+                    load_champion_icon(assets, "MonkeyKing"),
+                    load_champion_icon(assets, "TwistedFate"),
+                    load_champion_icon(assets, "Orianna"),
+                    load_champion_icon(assets, "Jhin"),
+                ];
+
                 Game {
                     win,
                     queue: Queue::RankedFlex,
@@ -1367,6 +1381,7 @@ mod widget {
                     summoner_spell_images,
                     runes_images,
                     item_images,
+                    summoner_icons,
                     player_kills: 1,
                     player_deaths: 6,
                     player_assists: 12,
@@ -1523,12 +1538,20 @@ mod widget {
                     .spacing(2)
                 };
 
+                let player_i = 0;
                 let mut left_players: Vec<Element<_>> = self
                     .summoners
                     .iter()
-                    .map(|summoner| {
-                        let summoner_icon = small_icon();
-                        let summoner_name = small_text(summoner.to_string());
+                    .enumerate()
+                    .map(|(i, summoner)| {
+                        let summoner_icon = image(self.summoner_icons[i].clone())
+                            .width(14.0)
+                            .height(14.0);
+                        let summoner_name = if player_i == i {
+                            bold(summoner.to_string()).size(8.0)
+                        } else {
+                            small_text(summoner.to_string())
+                        };
 
                         row![summoner_icon, summoner_name]
                             .align_items(Alignment::Center)
