@@ -1479,39 +1479,30 @@ mod widget {
                     .spacing(3);
 
                     let other_stats = column![
-                        row![
-                            very_small_icon(),
-                            text(formatting::kda(
-                                self.player_kills,
-                                self.player_deaths,
-                                self.player_assists
-                            ))
-                            .size(10)
-                            .style(theme::sub_text())
-                        ]
+                        row![text(formatting::kda(
+                            self.player_kills,
+                            self.player_deaths,
+                            self.player_assists
+                        ))
+                        .size(10)
+                        .style(theme::sub_text())]
                         .spacing(4)
                         .align_items(Alignment::Center),
-                        row![
-                            very_small_icon(),
-                            text(formatting::creep_score(
-                                self.player_creep_score,
-                                self.duration.0.whole_minutes() as u16
-                            ))
-                            .size(10)
-                            .style(theme::sub_text())
-                        ]
+                        row![text(formatting::creep_score(
+                            self.player_creep_score,
+                            self.duration.0.whole_minutes() as u16
+                        ))
+                        .size(10)
+                        .style(theme::sub_text())]
                         .spacing(4)
                         .align_items(Alignment::Center),
-                        row![
-                            very_small_icon(),
-                            text(formatting::vision_score(self.player_vision_score))
-                                .size(10)
-                                .style(theme::sub_text())
-                        ]
+                        row![text(formatting::vision_score(self.player_vision_score))
+                            .size(10)
+                            .style(theme::sub_text())]
                         .spacing(4)
                         .align_items(Alignment::Center),
                     ]
-                    .align_items(Alignment::Start);
+                    .align_items(Alignment::Center);
 
                     column![kda, other_stats,].align_items(Alignment::Center)
                 };
