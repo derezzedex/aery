@@ -356,6 +356,7 @@ impl Application for Aery {
 
 mod widget {
     use crate::theme;
+    use iced::widget::image::Handle;
     use iced::widget::{container, Space};
     use iced::Length;
 
@@ -375,13 +376,33 @@ mod widget {
 
     #[derive(Debug, Clone)]
     enum Role {
+        Bottom,
+        Jungle,
         Mid,
+        Support,
+        Top,
+    }
+
+    impl Role {
+        pub fn icon(&self) -> Handle {
+            let role = self.to_string().to_ascii_lowercase();
+            let path = format!(
+                "{}\\assets\\img\\position\\{role}.png",
+                env!("CARGO_MANIFEST_DIR"),
+            );
+
+            Handle::from_path(path)
+        }
     }
 
     impl ToString for Role {
         fn to_string(&self) -> String {
             match self {
+                Role::Bottom => "Bottom",
+                Role::Jungle => "Jungle",
                 Role::Mid => "Mid",
+                Role::Support => "Support",
+                Role::Top => "Top",
             }
             .to_string()
         }
@@ -899,7 +920,7 @@ mod widget {
         use self::summary::Summary;
 
         use super::game::{self, Game};
-        use super::theme;
+        use super::{theme, Role};
         use iced::widget::{column, container, scrollable};
         use iced::{Alignment, Element, Length};
 
@@ -922,24 +943,28 @@ mod widget {
                         wins: 2,
                         losses: 1,
                         kda: 1.15,
+                        lane: Role::Mid.icon(),
                     },
                     summary::Champion {
                         handle: load_champion_icon(assets, "Orianna"),
                         wins: 3,
                         losses: 0,
                         kda: 2.0,
+                        lane: Role::Bottom.icon(),
                     },
                     summary::Champion {
                         handle: load_champion_icon(assets, "Annie"),
                         wins: 2,
                         losses: 2,
                         kda: 3.0,
+                        lane: Role::Support.icon(),
                     },
                     summary::Champion {
                         handle: load_champion_icon(assets, "Sion"),
                         wins: 0,
                         losses: 3,
                         kda: 0.5,
+                        lane: Role::Top.icon(),
                     },
                 ];
 
@@ -1008,7 +1033,9 @@ mod widget {
             use crate::widget;
             use crate::widget::medium_large_icon;
             use crate::widget::very_small_icon;
+            use crate::widget::Role;
             use iced::alignment;
+            use iced::widget::image;
             use iced::widget::image::Handle;
             use iced::widget::{column, container, horizontal_rule, progress_bar, row, text};
             use iced::{Alignment, Element};
@@ -1028,6 +1055,7 @@ mod widget {
             #[derive(Debug, Clone)]
             pub struct Champion {
                 pub handle: Handle,
+                pub lane: Handle,
                 pub wins: i16,
                 pub losses: i16,
                 pub kda: f32,
@@ -1115,7 +1143,10 @@ mod widget {
                     };
 
                     let summary_lane = {
-                        let lane_icon = medium_large_icon();
+                        let lane_icon = image(Role::Mid.icon())
+                            .width(24.0)
+                            .height(24.0)
+                            .content_fit(iced::ContentFit::Fill);
 
                         let lane_info = column![
                             row![
@@ -1195,7 +1226,7 @@ mod widget {
                                         .align_items(Alignment::Center)
                                         .spacing(2),
                                         row![
-                                            very_small_icon(),
+                                            image(champion.lane.clone()).width(12.0).height(12.0),
                                             text!("{:.2} KDA", champion.kda)
                                                 .size(10)
                                                 .style(theme::gray_text())
@@ -1411,7 +1442,7 @@ mod widget {
                     let role: Element<_> = if let Some(role) = &self.role {
                         column![
                             row![
-                                very_small_icon(),
+                                image(role.icon()).width(12.0).height(12.0),
                                 text(role.to_string()).style(theme::sub_text()).size(10),
                             ]
                             .align_items(Alignment::Center)
