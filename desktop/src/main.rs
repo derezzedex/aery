@@ -714,6 +714,9 @@ mod widget {
                 container(image)
                     .width(96.0)
                     .height(96.0)
+                    .center_x()
+                    .center_y()
+                    .padding(2.0)
                     .style(theme::summoner_icon_container()),
                 container(bold(level).size(12))
                     .padding(4)
