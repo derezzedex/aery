@@ -432,7 +432,7 @@ mod widget {
             let years = days / 365;
 
             if seconds < 60 {
-                format!("{} seconds ago", seconds)
+                String::from("few seconds ago")
             } else if minutes < 60 {
                 format!(
                     "{} minute{} ago",
@@ -440,19 +440,31 @@ mod widget {
                     if minutes == 1 { "" } else { "s" }
                 )
             } else if hours < 24 {
-                format!("{} hour{} ago", hours, if minutes == 1 { "" } else { "s" })
+                format!("{} hour{} ago", hours, if hours == 1 { "" } else { "s" })
             } else if days < 7 {
-                format!("{} day{} ago", days, if minutes == 1 { "" } else { "s" })
+                if days == 1 {
+                    String::from("yesterday")
+                } else {
+                    format!("{} days ago", days)
+                }
             } else if weeks < 4 {
-                format!("{} week{} ago", weeks, if minutes == 1 { "" } else { "s" })
+                if weeks == 1 {
+                    String::from("last week")
+                } else {
+                    format!("{} weeks ago", weeks)
+                }
             } else if months < 12 {
-                format!(
-                    "{} month{} ago",
-                    months,
-                    if minutes == 1 { "" } else { "s" }
-                )
+                if months == 1 {
+                    String::from("last month")
+                } else {
+                    format!("{} months ago", months)
+                }
             } else {
-                format!("{} years ago", years)
+                if years == 1 {
+                    return String::from("last year");
+                } else {
+                    format!("{} years ago", years)
+                }
             }
         }
     }
