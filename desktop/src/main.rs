@@ -703,6 +703,288 @@ mod widget {
             }
         }
 
+        mod modal {
+            use iced::advanced::layout::{self, Layout};
+            use iced::advanced::overlay;
+            use iced::advanced::renderer;
+            use iced::advanced::widget::{self, Widget};
+            use iced::advanced::{self, Clipboard, Shell};
+            use iced::alignment::Alignment;
+            use iced::event;
+            use iced::mouse;
+            use iced::{Element, Event, Length, Point, Rectangle, Size};
+
+            /// A widget that centers a modal element over some base element
+            pub struct Modal<'a, Message, Renderer> {
+                image: Element<'a, Message, Renderer>,
+                level: Element<'a, Message, Renderer>,
+            }
+
+            impl<'a, Message, Renderer> Modal<'a, Message, Renderer> {
+                /// Returns a new [`Modal`]
+                pub fn new(
+                    image: impl Into<Element<'a, Message, Renderer>>,
+                    level: impl Into<Element<'a, Message, Renderer>>,
+                ) -> Self {
+                    Self {
+                        image: image.into(),
+                        level: level.into(),
+                    }
+                }
+            }
+
+            impl<'a, Message, Renderer> Widget<Message, Renderer> for Modal<'a, Message, Renderer>
+            where
+                Renderer: advanced::Renderer,
+                Message: Clone,
+            {
+                fn children(&self) -> Vec<widget::Tree> {
+                    vec![
+                        widget::Tree::new(&self.image),
+                        widget::Tree::new(&self.level),
+                    ]
+                }
+
+                fn diff(&self, tree: &mut widget::Tree) {
+                    tree.diff_children(&[&self.image, &self.level]);
+                }
+
+                fn width(&self) -> Length {
+                    self.image.as_widget().width()
+                }
+
+                fn height(&self) -> Length {
+                    self.image.as_widget().height()
+                }
+
+                fn layout(&self, renderer: &Renderer, limits: &layout::Limits) -> layout::Node {
+                    self.image.as_widget().layout(renderer, limits)
+                }
+
+                fn on_event(
+                    &mut self,
+                    state: &mut widget::Tree,
+                    event: Event,
+                    layout: Layout<'_>,
+                    cursor: mouse::Cursor,
+                    renderer: &Renderer,
+                    clipboard: &mut dyn Clipboard,
+                    shell: &mut Shell<'_, Message>,
+                    viewport: &Rectangle,
+                ) -> event::Status {
+                    self.image.as_widget_mut().on_event(
+                        &mut state.children[0],
+                        event,
+                        layout,
+                        cursor,
+                        renderer,
+                        clipboard,
+                        shell,
+                        viewport,
+                    )
+                }
+
+                fn draw(
+                    &self,
+                    state: &widget::Tree,
+                    renderer: &mut Renderer,
+                    theme: &<Renderer as advanced::Renderer>::Theme,
+                    style: &renderer::Style,
+                    layout: Layout<'_>,
+                    cursor: mouse::Cursor,
+                    viewport: &Rectangle,
+                ) {
+                    self.image.as_widget().draw(
+                        &state.children[0],
+                        renderer,
+                        theme,
+                        style,
+                        layout,
+                        cursor,
+                        viewport,
+                    );
+                }
+
+                fn overlay<'b>(
+                    &'b mut self,
+                    state: &'b mut widget::Tree,
+                    layout: Layout<'_>,
+                    _renderer: &Renderer,
+                ) -> Option<overlay::Element<'b, Message, Renderer>> {
+                    Some(overlay::Element::new(
+                        layout.position(),
+                        Box::new(Overlay {
+                            content: &mut self.level,
+                            tree: &mut state.children[1],
+                            size: layout.bounds().size(),
+                        }),
+                    ))
+                }
+
+                fn mouse_interaction(
+                    &self,
+                    state: &widget::Tree,
+                    layout: Layout<'_>,
+                    cursor: mouse::Cursor,
+                    viewport: &Rectangle,
+                    renderer: &Renderer,
+                ) -> mouse::Interaction {
+                    self.image.as_widget().mouse_interaction(
+                        &state.children[0],
+                        layout,
+                        cursor,
+                        viewport,
+                        renderer,
+                    )
+                }
+
+                fn operate(
+                    &self,
+                    state: &mut widget::Tree,
+                    layout: Layout<'_>,
+                    renderer: &Renderer,
+                    operation: &mut dyn widget::Operation<Message>,
+                ) {
+                    self.image.as_widget().operate(
+                        &mut state.children[0],
+                        layout,
+                        renderer,
+                        operation,
+                    );
+                }
+            }
+
+            struct Overlay<'a, 'b, Message, Renderer> {
+                content: &'b mut Element<'a, Message, Renderer>,
+                tree: &'b mut widget::Tree,
+                size: Size,
+            }
+
+            impl<'a, 'b, Message, Renderer> overlay::Overlay<Message, Renderer>
+                for Overlay<'a, 'b, Message, Renderer>
+            where
+                Renderer: advanced::Renderer,
+                Message: Clone,
+            {
+                fn layout(
+                    &self,
+                    renderer: &Renderer,
+                    _bounds: Size,
+                    position: Point,
+                ) -> layout::Node {
+                    let limits = layout::Limits::new(Size::ZERO, self.size)
+                        .width(Length::Fill)
+                        .height(Length::Fill);
+
+                    let mut child = self.content.as_widget().layout(renderer, &limits);
+                    child.align(
+                        Alignment::Center,
+                        Alignment::End,
+                        limits
+                            .max()
+                            .pad([0.0, 0.0, child.size().height / 2.0, 0.0].into()),
+                    );
+
+                    let mut node = layout::Node::with_children(self.size, vec![child]);
+                    node.move_to(position);
+
+                    node
+                }
+
+                fn on_event(
+                    &mut self,
+                    event: Event,
+                    layout: Layout<'_>,
+                    cursor: mouse::Cursor,
+                    renderer: &Renderer,
+                    clipboard: &mut dyn Clipboard,
+                    shell: &mut Shell<'_, Message>,
+                ) -> event::Status {
+                    self.content.as_widget_mut().on_event(
+                        self.tree,
+                        event,
+                        layout.children().next().unwrap(),
+                        cursor,
+                        renderer,
+                        clipboard,
+                        shell,
+                        &layout.bounds(),
+                    )
+                }
+
+                fn draw(
+                    &self,
+                    renderer: &mut Renderer,
+                    theme: &Renderer::Theme,
+                    style: &renderer::Style,
+                    layout: Layout<'_>,
+                    cursor: mouse::Cursor,
+                ) {
+                    self.content.as_widget().draw(
+                        self.tree,
+                        renderer,
+                        theme,
+                        style,
+                        layout.children().next().unwrap(),
+                        cursor,
+                        &layout.bounds(),
+                    );
+                }
+
+                fn operate(
+                    &mut self,
+                    layout: Layout<'_>,
+                    renderer: &Renderer,
+                    operation: &mut dyn widget::Operation<Message>,
+                ) {
+                    self.content.as_widget().operate(
+                        self.tree,
+                        layout.children().next().unwrap(),
+                        renderer,
+                        operation,
+                    );
+                }
+
+                fn mouse_interaction(
+                    &self,
+                    layout: Layout<'_>,
+                    cursor: mouse::Cursor,
+                    viewport: &Rectangle,
+                    renderer: &Renderer,
+                ) -> mouse::Interaction {
+                    self.content.as_widget().mouse_interaction(
+                        self.tree,
+                        layout.children().next().unwrap(),
+                        cursor,
+                        viewport,
+                        renderer,
+                    )
+                }
+
+                fn overlay<'c>(
+                    &'c mut self,
+                    layout: Layout<'_>,
+                    renderer: &Renderer,
+                ) -> Option<overlay::Element<'c, Message, Renderer>> {
+                    self.content.as_widget_mut().overlay(
+                        self.tree,
+                        layout.children().next().unwrap(),
+                        renderer,
+                    )
+                }
+            }
+
+            impl<'a, Message, Renderer> From<Modal<'a, Message, Renderer>> for Element<'a, Message, Renderer>
+            where
+                Renderer: 'a + advanced::Renderer,
+                Message: 'a + Clone,
+            {
+                fn from(modal: Modal<'a, Message, Renderer>) -> Self {
+                    Element::new(modal)
+                }
+            }
+        }
+
         fn summoner_icon<'a>(icon: Option<image::Handle>, level: u16) -> Element<'a, Message> {
             let image: Element<Message> = if let Some(handle) = icon {
                 image(handle).into()
@@ -710,7 +992,7 @@ mod widget {
                 vertical_space(96.0).into()
             };
 
-            column![
+            modal::Modal::new(
                 container(image)
                     .width(96.0)
                     .height(96.0)
@@ -718,12 +1000,11 @@ mod widget {
                     .center_y()
                     .padding(2.0)
                     .style(theme::summoner_icon_container()),
-                container(bold(level).size(12))
-                    .padding(4)
-                    .style(theme::summoner_level_container())
-                    .center_x(),
-            ]
-            .align_items(iced::Alignment::Center)
+                container(bold(level).size(10))
+                    .padding([1, 4, 2, 4]) // TODO: fix this alignment issue (text doesnt seem to get centered)
+                    .center_y()
+                    .style(theme::summoner_level_container()),
+            )
             .into()
         }
 
@@ -1972,7 +2253,7 @@ mod theme {
                 Container::Dark => 4.0.into(),
                 Container::PastRank => 2.0.into(),
                 Container::SummonerLevel => 2.0.into(),
-                Container::SummonerIcon => [0.0, 2.0, 2.0, 2.0].into(),
+                Container::SummonerIcon => 2.0.into(),
                 Container::Timeline | Container::Icon => 0.0.into(),
                 Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
                 Container::PastRankBadge => [2.0, 0.0, 0.0, 2.0].into(),
@@ -2000,7 +2281,7 @@ mod theme {
                 | Container::Icon
                 | Container::SearchBar => 0.0,
                 Container::SummonerIcon => 2.0,
-                Container::SummonerLevel => 2.0,
+                Container::SummonerLevel => 1.0,
                 Container::LeftBar => 0.0,
             };
 

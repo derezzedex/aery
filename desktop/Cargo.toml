@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 aery_core = { path = "../core" }
-iced = { git = "https://github.com/iced-rs/iced", features = ["image"] }
+iced = { git = "https://github.com/iced-rs/iced", rev = "18f1ab551be6fe9a603eb07dceddf231c01b5c7f", features = ["image", "advanced"] }
 time = "0.3"
 image = "0.24.6"
 serde_json = "1.0"
