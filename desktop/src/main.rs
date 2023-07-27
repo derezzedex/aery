@@ -371,12 +371,14 @@ mod widget {
     #[derive(Debug, Clone)]
     enum Queue {
         RankedFlex,
+        RankedSolo,
     }
 
     impl ToString for Queue {
         fn to_string(&self) -> String {
             match self {
                 Queue::RankedFlex => "Ranked Flex",
+                Queue::RankedSolo => "Ranked Solo",
             }
             .to_string()
         }
@@ -629,7 +631,26 @@ mod widget {
         }
 
         impl Tier {
-            fn division(&self) -> String {
+            pub fn points(&self) -> u16 {
+                match self {
+                    Tier::Challenger(points) | Tier::Grandmaster(points) | Tier::Master(points) => {
+                        *points
+                    }
+                    Tier::Iron(division)
+                    | Tier::Bronze(division)
+                    | Tier::Silver(division)
+                    | Tier::Gold(division)
+                    | Tier::Platinum(division)
+                    | Tier::Diamond(division) => match division {
+                        Division::One(points)
+                        | Division::Two(points)
+                        | Division::Three(points)
+                        | Division::Four(points) => *points as u16,
+                    },
+                }
+            }
+
+            pub fn division(&self) -> String {
                 match self {
                     Tier::Iron(division)
                     | Tier::Bronze(division)
@@ -843,12 +864,18 @@ mod widget {
 
         use crate::{chevron_down_icon, theme};
 
-        use super::{bold, large_icon, medium_icon};
+        use super::{
+            bold, large_icon, medium_icon,
+            summoner::{Division, Tier},
+            Queue,
+        };
 
         fn ranked_container<'a>(
-            queue_type: impl ToString,
+            queue: Queue,
+            tier: Tier,
+            wins: u16,
+            losses: u16,
             handle: image::Handle,
-            size: f32,
         ) -> Element<'a, Message> {
             let left_bar = container(horizontal_space(2))
                 .style(theme::left_bar_container())
@@ -856,51 +883,84 @@ mod widget {
 
             let chevron_down = image(chevron_down_icon()).width(10.0).height(10.0);
 
+            let size = match queue {
+                Queue::RankedSolo => 100.0,
+                Queue::RankedFlex => 80.0,
+            };
+            let emblem_size = match queue {
+                Queue::RankedSolo => match tier {
+                    Tier::Challenger(_) | Tier::Grandmaster(_) | Tier::Master(_) => 100.0,
+                    Tier::Diamond(_) => 90.0,
+                    Tier::Platinum(_) | Tier::Gold(_) | Tier::Silver(_) => 80.0,
+                    Tier::Bronze(_) | Tier::Iron(_) => 70.0,
+                },
+                Queue::RankedFlex => match tier {
+                    Tier::Challenger(_) | Tier::Grandmaster(_) | Tier::Master(_) => 80.0,
+                    Tier::Diamond(_) => 70.0,
+                    Tier::Platinum(_) | Tier::Gold(_) | Tier::Silver(_) => 60.0,
+                    Tier::Bronze(_) | Tier::Iron(_) => 50.0,
+                },
+            };
+            let lp = tier.points();
+            let tier = match tier {
+                Tier::Challenger(_) | Tier::Grandmaster(_) | Tier::Master(_) => tier.to_string(),
+                _ => format!("{} {}", tier.to_string(), tier.division()),
+            };
+
+            let win_rate = ((wins as f32 / (wins + losses) as f32) * 100.0).ceil();
+
             container(column![
                 row![
                     left_bar,
                     horizontal_space(4),
-                    bold(queue_type).size(14),
+                    bold(queue.to_string()).size(14),
                     horizontal_space(Length::Fill),
                     button(chevron_down)
                         .style(theme::expand_button())
                         .padding(4)
                         .on_press(Message::Expand),
                 ]
+                .padding([12, 12, 0, 12])
                 .spacing(2)
                 .align_items(Alignment::Center),
-                vertical_space(12),
                 row![
-                    image(handle).width(size).height(size),
+                    container(image(handle).width(emblem_size).height(emblem_size))
+                        .width(size)
+                        .height(size)
+                        .center_x()
+                        .center_y(),
                     column![
                         row![
-                            bold("Gold 4").size(16),
+                            bold(tier).size(16),
                             text("·").style(theme::sub_text()).size(16),
-                            text("39 LP").style(theme::sub_text()).size(16)
+                            text(format!("{lp} LP")).style(theme::sub_text()).size(12)
                         ]
-                        .align_items(Alignment::Start)
+                        .align_items(Alignment::Center)
                         .spacing(4),
                         row![
-                            text("21W 13L").style(theme::sub_text()).size(12),
+                            text(format!("{wins}W {losses}L"))
+                                .style(theme::sub_text())
+                                .size(12),
                             text("·").style(theme::sub_text()),
-                            bold("61.8%").style(theme::blue_text()).size(12)
+                            bold(format!("{win_rate:.0}%"))
+                                .style(theme::blue_text())
+                                .size(12)
                         ]
-                        .align_items(Alignment::End)
+                        .align_items(Alignment::Center)
                         .spacing(4),
-                        progress_bar(0.0..=100.0, 61.8)
+                        progress_bar(0.0..=100.0, win_rate)
                             .width(120)
                             .height(4)
                             .style(theme::ratio_bar()),
                     ]
                     .spacing(2)
                 ]
-                .padding(4)
-                .spacing(12)
+                .padding([0, 18, 0, 18])
+                .spacing(16)
                 .align_items(Alignment::Center),
             ])
-            .padding(12)
             .style(theme::dark_container())
-            .max_width(280)
+            .width(280)
             .into()
         }
 
@@ -926,8 +986,20 @@ mod widget {
 
             pub fn view(&self) -> Element<Message> {
                 column![
-                    ranked_container("Ranked Solo", self.ranked_solo_image.clone(), 80.0),
-                    ranked_container("Ranked Flex", self.ranked_flex_image.clone(), 70.0),
+                    ranked_container(
+                        Queue::RankedSolo,
+                        Tier::Challenger(650),
+                        295,
+                        208,
+                        self.ranked_solo_image.clone()
+                    ),
+                    ranked_container(
+                        Queue::RankedFlex,
+                        Tier::Iron(Division::Four(39)),
+                        21,
+                        13,
+                        self.ranked_flex_image.clone()
+                    ),
                 ]
                 .spacing(4)
                 .align_items(Alignment::Center)
