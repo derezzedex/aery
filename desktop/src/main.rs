@@ -124,6 +124,14 @@ fn chevron_up_icon() -> Handle {
     Handle::from_path(path)
 }
 
+fn search_icon() -> Handle {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "\\assets\\img\\icons\\search-white.png"
+    );
+    Handle::from_path(path)
+}
+
 // TODO: use champion id instead of name
 fn load_champion_icon(assets: &Assets, champion: &str) -> Handle {
     let icon_data = assets.data.get(&DataFile::Champion).unwrap();
@@ -502,11 +510,11 @@ mod widget {
 
     pub mod search_bar {
         use iced::{
-            widget::{button, container, horizontal_space, row, text, text_input, Space},
+            widget::{button, container, horizontal_space, image, row, text, text_input, Space},
             Alignment, Element, Length,
         };
 
-        use crate::theme;
+        use crate::{search_icon, theme};
 
         use super::medium_large_icon;
 
@@ -546,6 +554,8 @@ mod widget {
             pub fn view(&self) -> Element<Message> {
                 let region = "BR";
 
+                let search = container(image(search_icon()).width(12.0).height(12.0)).padding(2);
+
                 container(row![
                     logo(),
                     horizontal_space(Length::FillPortion(2)),
@@ -557,10 +567,10 @@ mod widget {
                                 .size(12),
                             button(text(region).size(10))
                                 .width(Length::Shrink)
-                                .padding(2)
+                                .padding([2, 4, 2, 4])
                                 .style(theme::region_button())
                                 .on_press(Message::RegionPressed),
-                            button(medium_large_icon())
+                            button(search)
                                 .style(iced::theme::Button::Text)
                                 .on_press(Message::SearchPressed),
                         ]
