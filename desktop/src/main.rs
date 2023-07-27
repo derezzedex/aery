@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use std::fs;
+use std::{collections::HashMap, io::Read};
 
 use iced::{
     widget::image::Handle,
@@ -241,8 +241,12 @@ impl Application for Aery {
                 let name = file.file_name().into_string().unwrap();
                 name.try_into().unwrap()
             };
-            let value: serde_json::Value =
-                serde_json::from_reader(fs::File::open(file.path()).unwrap()).unwrap();
+            let mut bytes = Vec::new();
+            fs::File::open(file.path())
+                .unwrap()
+                .read_to_end(&mut bytes)
+                .unwrap();
+            let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
 
             data.insert(sprite, value);
         }
