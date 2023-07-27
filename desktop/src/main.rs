@@ -57,9 +57,7 @@ impl TryFrom<String> for Sprite {
     type Error = &'static str;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        println!("{value}");
         let value = value.split(".").next().unwrap();
-        println!("{value}");
         let mut size = 0;
         let index: u8 = value
             .chars()
@@ -69,7 +67,6 @@ impl TryFrom<String> for Sprite {
             .parse()
             .map_err(|_| "index is not u8")?;
         let value = value[..value.len() - size].to_string();
-        println!("{value}");
 
         match value.to_ascii_lowercase().as_str() {
             "champion" => Ok(Self::Champion(index)),
@@ -170,7 +167,6 @@ fn load_runes_icon(assets: &Assets, rune: &str) -> Handle {
         "\\assets\\img\\runes\\"
     ));
     path.push(rune_path);
-    println!("rune_at: {:?}", path);
 
     Handle::from_path(path)
 }
@@ -235,7 +231,7 @@ impl Application for Aery {
         }
         println!("Loaded sprites in {:?}", timer.elapsed());
 
-        let timer = std::time::Instant::now();
+        let json_timer = std::time::Instant::now();
         let mut data = HashMap::default();
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\data");
         let data_path = fs::read_dir(path).unwrap();
@@ -250,9 +246,9 @@ impl Application for Aery {
 
             data.insert(sprite, value);
         }
-        println!("Loaded data in {:?}", timer.elapsed());
+        println!("Loaded JSON data in {:?}", json_timer.elapsed());
 
-        let timer = std::time::Instant::now();
+        let runes_timer = std::time::Instant::now();
         let mut runes = HashMap::default();
         let runes_path = concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -280,10 +276,9 @@ impl Application for Aery {
                 }
             }
         }
-        println!("Loaded rune data in {:?}", timer.elapsed());
-        // println!("{runes:#?}");
+        println!("Loaded rune data in {:?}", runes_timer.elapsed());
 
-        let timer = std::time::Instant::now();
+        let emblem_timer = std::time::Instant::now();
         let mut emblems = HashMap::default();
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\emblems");
         let img_path = fs::read_dir(path).unwrap();
@@ -297,7 +292,8 @@ impl Application for Aery {
 
             emblems.insert(sprite, image);
         }
-        println!("Loaded emblems in {:?}", timer.elapsed());
+        println!("Loaded emblems in {:?}", emblem_timer.elapsed());
+        println!("Total time: {:?}", timer.elapsed());
 
         let assets = Assets {
             sprites,
@@ -754,7 +750,6 @@ mod widget {
 
             pub fn view(&self) -> Element<Message> {
                 let summoner_level = 466;
-                println!("{:?}", self.icon_image);
                 let icon = summoner_icon(self.icon_image.clone(), summoner_level);
                 let past_ranks = {
                     let ranks = [
