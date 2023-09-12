@@ -3,7 +3,8 @@ use iced::{
     Alignment, Element, Length,
 };
 
-use crate::{chevron_down_icon, theme};
+use crate::theme;
+use crate::theme::chevron_down_icon;
 
 use super::{
     bold,

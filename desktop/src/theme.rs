@@ -1,5 +1,6 @@
 use iced::theme;
 use iced::widget;
+use iced::widget::image;
 use iced::Background;
 use iced::Color;
 
@@ -24,6 +25,30 @@ pub const LIGHT_BACKGROUND: Color = Color::from_rgb(0.95, 0.95, 0.95);
 pub const RED: Color = Color::from_rgb(1.0, 0.34, 0.2);
 pub const BLUE: Color = Color::from_rgb(0.0, 0.58, 1.0);
 pub const GOLD: Color = Color::from_rgb(205.0 / 255.0, 136.0 / 255.0, 55.0 / 255.0);
+
+pub fn chevron_down_icon() -> image::Handle {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "\\assets\\img\\icons\\chevron-down-white.png"
+    );
+    image::Handle::from_path(path)
+}
+
+pub fn chevron_up_icon() -> image::Handle {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "\\assets\\img\\icons\\chevron-up-white.png"
+    );
+    image::Handle::from_path(path)
+}
+
+pub fn search_icon() -> image::Handle {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "\\assets\\img\\icons\\search-white.png"
+    );
+    image::Handle::from_path(path)
+}
 
 pub fn search_bar_text_input() -> theme::TextInput {
     theme::TextInput::Custom(Box::new(TextInput::SearchBar))

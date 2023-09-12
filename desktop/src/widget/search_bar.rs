@@ -3,7 +3,8 @@ use iced::{
     Alignment, Element, Length,
 };
 
-use crate::{search_icon, theme};
+use crate::theme;
+use crate::theme::search_icon;
 
 #[derive(Clone, Debug)]
 pub enum Message {

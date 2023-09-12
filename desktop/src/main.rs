@@ -1,3 +1,4 @@
+mod assets;
 mod theme;
 mod widget;
 
@@ -22,37 +23,11 @@ pub fn main() -> iced::Result {
     })
 }
 
-mod assets;
-
 struct Aery {
     timeline: Timeline,
     summoner: Summoner,
     search_bar: SearchBar,
     ranked_overview: RankedOverview,
-}
-
-fn chevron_down_icon() -> Handle {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "\\assets\\img\\icons\\chevron-down-white.png"
-    );
-    Handle::from_path(path)
-}
-
-fn chevron_up_icon() -> Handle {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "\\assets\\img\\icons\\chevron-up-white.png"
-    );
-    Handle::from_path(path)
-}
-
-fn search_icon() -> Handle {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "\\assets\\img\\icons\\search-white.png"
-    );
-    Handle::from_path(path)
 }
 
 impl Aery {
