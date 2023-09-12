@@ -2,6 +2,8 @@ use iced::widget::image::Handle;
 use image::GenericImageView;
 
 use std::collections::HashMap;
+use std::fs;
+use std::io::Read;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum DataFile {
@@ -76,6 +78,106 @@ pub struct Assets {
     pub data: DataMap,
     pub runes: RuneMap,
     pub emblems: EmblemMap,
+}
+
+impl Assets {
+    const SPRITE_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\sprite");
+    const DATA_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\data");
+    const RUNES_PATH: &'static str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "\\assets\\data\\runesReforged.json"
+    );
+    const EMBLEMS_PATH: &'static str =
+        concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\emblems");
+
+    pub fn new() -> Assets {
+        let timer = std::time::Instant::now();
+        let mut sprites = HashMap::default();
+        let img_path = fs::read_dir(Assets::SPRITE_PATH).unwrap();
+        for sprite in img_path {
+            let file = sprite.unwrap();
+            let sprite = {
+                let name = file.file_name().into_string().unwrap();
+                name.try_into().unwrap()
+            };
+            let image = image::io::Reader::open(file.path())
+                .unwrap()
+                .decode()
+                .unwrap();
+
+            sprites.insert(sprite, image);
+        }
+        println!("Loaded sprites in {:?}", timer.elapsed());
+
+        let json_timer = std::time::Instant::now();
+        let mut data = HashMap::default();
+        let data_path = fs::read_dir(Assets::DATA_PATH).unwrap();
+        for data_dir in data_path {
+            let file = data_dir.unwrap();
+            let sprite = {
+                let name = file.file_name().into_string().unwrap();
+                name.try_into().unwrap()
+            };
+            let mut bytes = Vec::new();
+            fs::File::open(file.path())
+                .unwrap()
+                .read_to_end(&mut bytes)
+                .unwrap();
+            let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+
+            data.insert(sprite, value);
+        }
+        println!("Loaded JSON data in {:?}", json_timer.elapsed());
+
+        let runes_timer = std::time::Instant::now();
+        let mut runes = HashMap::default();
+        let value: serde_json::Value =
+            serde_json::from_reader(fs::File::open(Assets::RUNES_PATH).unwrap()).unwrap();
+
+        for value in value.as_array().unwrap() {
+            let path = value["icon"]
+                .as_str()
+                .unwrap()
+                .trim_start_matches("perk-images/");
+            let name = value["name"].as_str().unwrap();
+            runes.insert(name.to_string(), path.to_string());
+
+            for slots in value["slots"].as_array().unwrap() {
+                for rune in slots["runes"].as_array().unwrap() {
+                    let path = rune["icon"]
+                        .as_str()
+                        .unwrap()
+                        .trim_start_matches("perk-images/");
+                    let name = rune["name"].as_str().unwrap();
+                    runes.insert(name.to_string(), path.to_string());
+                }
+            }
+        }
+        println!("Loaded rune data in {:?}", runes_timer.elapsed());
+
+        let emblem_timer = std::time::Instant::now();
+        let mut emblems = HashMap::default();
+        let img_path = fs::read_dir(Assets::EMBLEMS_PATH).unwrap();
+        for sprite in img_path {
+            let file = sprite.unwrap();
+            let sprite = {
+                let name = file.file_name().into_string().unwrap();
+                name.try_into().unwrap()
+            };
+            let image = iced::widget::image::Handle::from_path(file.path());
+
+            emblems.insert(sprite, image);
+        }
+        println!("Loaded emblems in {:?}", emblem_timer.elapsed());
+        println!("Total time: {:?}", timer.elapsed());
+
+        Assets {
+            sprites,
+            data,
+            runes,
+            emblems,
+        }
+    }
 }
 
 // TODO: use champion id instead of name

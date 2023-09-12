@@ -2,15 +2,13 @@ mod assets;
 mod theme;
 mod widget;
 
-use std::fs;
-use std::{collections::HashMap, io::Read};
-
 use iced::{
     widget::image::Handle,
     widget::{column, container, horizontal_space, row},
     Application, Command, Element, Length, Settings,
 };
 
+use assets::Assets;
 use widget::ranked_overview::{self, RankedOverview};
 use widget::search_bar::{self, SearchBar};
 use widget::summoner::{self, Summoner};
@@ -56,99 +54,7 @@ impl Application for Aery {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
-        let timer = std::time::Instant::now();
-        let mut sprites = HashMap::default();
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\sprite");
-        let img_path = fs::read_dir(path).unwrap();
-        for sprite in img_path {
-            let file = sprite.unwrap();
-            let sprite = {
-                let name = file.file_name().into_string().unwrap();
-                name.try_into().unwrap()
-            };
-            let image = image::io::Reader::open(file.path())
-                .unwrap()
-                .decode()
-                .unwrap();
-
-            sprites.insert(sprite, image);
-        }
-        println!("Loaded sprites in {:?}", timer.elapsed());
-
-        let json_timer = std::time::Instant::now();
-        let mut data = HashMap::default();
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\data");
-        let data_path = fs::read_dir(path).unwrap();
-        for data_dir in data_path {
-            let file = data_dir.unwrap();
-            let sprite = {
-                let name = file.file_name().into_string().unwrap();
-                name.try_into().unwrap()
-            };
-            let mut bytes = Vec::new();
-            fs::File::open(file.path())
-                .unwrap()
-                .read_to_end(&mut bytes)
-                .unwrap();
-            let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
-
-            data.insert(sprite, value);
-        }
-        println!("Loaded JSON data in {:?}", json_timer.elapsed());
-
-        let runes_timer = std::time::Instant::now();
-        let mut runes = HashMap::default();
-        let runes_path = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "\\assets\\data\\runesReforged.json"
-        );
-        let value: serde_json::Value =
-            serde_json::from_reader(fs::File::open(runes_path).unwrap()).unwrap();
-
-        for value in value.as_array().unwrap() {
-            let path = value["icon"]
-                .as_str()
-                .unwrap()
-                .trim_start_matches("perk-images/");
-            let name = value["name"].as_str().unwrap();
-            runes.insert(name.to_string(), path.to_string());
-
-            for slots in value["slots"].as_array().unwrap() {
-                for rune in slots["runes"].as_array().unwrap() {
-                    let path = rune["icon"]
-                        .as_str()
-                        .unwrap()
-                        .trim_start_matches("perk-images/");
-                    let name = rune["name"].as_str().unwrap();
-                    runes.insert(name.to_string(), path.to_string());
-                }
-            }
-        }
-        println!("Loaded rune data in {:?}", runes_timer.elapsed());
-
-        let emblem_timer = std::time::Instant::now();
-        let mut emblems = HashMap::default();
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\emblems");
-        let img_path = fs::read_dir(path).unwrap();
-        for sprite in img_path {
-            let file = sprite.unwrap();
-            let sprite = {
-                let name = file.file_name().into_string().unwrap();
-                name.try_into().unwrap()
-            };
-            let image = iced::widget::image::Handle::from_path(file.path());
-
-            emblems.insert(sprite, image);
-        }
-        println!("Loaded emblems in {:?}", emblem_timer.elapsed());
-        println!("Total time: {:?}", timer.elapsed());
-
-        let assets = assets::Assets {
-            sprites,
-            data,
-            runes,
-            emblems,
-        };
+        let assets = Assets::new();
 
         (
             Self {
