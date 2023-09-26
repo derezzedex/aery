@@ -23,6 +23,14 @@ impl Summoner {
         &self.0.puuid
     }
 
+    pub fn level(&self) -> i64 {
+        self.0.summoner_level
+    }
+
+    pub fn icon_id(&self) -> i32 {
+        self.0.profile_icon_id
+    }
+
     pub async fn from_name(client: &Client, name: &str) -> Result<Self, RequestError> {
         client
             .0
@@ -73,3 +81,33 @@ impl Summoner {
 
 #[derive(Debug)]
 pub struct League(riven::models::league_v4::LeagueEntry);
+
+impl League {
+    pub fn queue_kind(&self) -> Queue {
+        use riven::consts::QueueType;
+
+        match self.0.queue_type {
+            QueueType::RANKED_SOLO_5x5 => Queue::RankedSolo,
+            QueueType::RANKED_FLEX_SR => Queue::RankedFlex,
+            _ => Queue::Unknown(0),
+        }
+    }
+
+    pub fn tier(&self) -> Option<riven::consts::Tier> {
+        self.0.tier
+    }
+
+    pub fn division(&self) -> Option<riven::consts::Division> {
+        self.0.rank
+    }
+
+    pub fn points(&self) -> u32 {
+        self.0.league_points as u32
+    }
+    pub fn wins(&self) -> u32 {
+        self.0.wins as u32
+    }
+    pub fn losses(&self) -> u32 {
+        self.0.losses as u32
+    }
+}
