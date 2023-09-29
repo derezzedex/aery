@@ -56,9 +56,9 @@ impl Event {
 }
 
 #[derive(Debug)]
-pub struct Game(riven::models::match_v5::Match);
+pub struct GameMatch(riven::models::match_v5::Match);
 
-impl Game {
+impl GameMatch {
     pub fn id(&self) -> Id {
         Id(self.0.metadata.match_id.clone())
     }
@@ -70,7 +70,7 @@ impl Game {
             .get_match(RegionalRoute::AMERICAS, &id.0)
             .await
             .map_err(RequestError::RequestFailed)
-            .and_then(|game| game.map(Game).ok_or(RequestError::NotFound))
+            .and_then(|game| game.map(GameMatch).ok_or(RequestError::NotFound))
     }
 
     pub async fn events(&self, client: &Client) -> Result<Vec<Event>, RequestError> {

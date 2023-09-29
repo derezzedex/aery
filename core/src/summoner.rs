@@ -1,4 +1,4 @@
-use crate::game;
+use crate::game_match;
 use crate::Client;
 use crate::Queue;
 use riven::consts::{PlatformRoute, RegionalRoute};
@@ -46,7 +46,7 @@ impl Summoner {
         client: &Client,
         range: std::ops::Range<u32>,
         queue: impl Into<Option<Queue>>,
-    ) -> Result<impl Iterator<Item = game::Id>, RequestError> {
+    ) -> Result<impl Iterator<Item = game_match::Id>, RequestError> {
         client
             .0
             .match_v5()
