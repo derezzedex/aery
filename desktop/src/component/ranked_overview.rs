@@ -3,14 +3,11 @@ use iced::{
     Alignment, Element, Length,
 };
 
+use crate::component::Queue;
+use crate::summoner::{Division, Tier};
 use crate::theme;
 use crate::theme::chevron_down_icon;
-
-use super::{
-    bold,
-    summoner::{Division, Tier},
-    Queue,
-};
+use crate::widget;
 
 fn ranked_container<'a>(
     queue: Queue,
@@ -55,7 +52,7 @@ fn ranked_container<'a>(
         row![
             left_bar,
             horizontal_space(4),
-            bold(queue.to_string()).size(14),
+            widget::bold(queue.to_string()).size(14),
             horizontal_space(Length::Fill),
             button(chevron_down)
                 .style(theme::expand_button())
@@ -73,7 +70,7 @@ fn ranked_container<'a>(
                 .center_y(),
             column![
                 row![
-                    bold(tier).size(16),
+                    widget::bold(tier).size(16),
                     text("·").style(theme::sub_text()).size(16),
                     text(format!("{lp} LP")).style(theme::sub_text()).size(12)
                 ]
@@ -84,7 +81,7 @@ fn ranked_container<'a>(
                         .style(theme::sub_text())
                         .size(12),
                     text("·").style(theme::sub_text()),
-                    bold(format!("{win_rate:.0}%"))
+                    widget::bold(format!("{win_rate:.0}%"))
                         .style(theme::blue_text())
                         .size(12)
                 ]

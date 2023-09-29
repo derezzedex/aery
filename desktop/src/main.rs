@@ -1,4 +1,5 @@
 mod assets;
+mod component;
 mod theme;
 mod widget;
 
@@ -9,10 +10,10 @@ use iced::{
 };
 
 use assets::Assets;
-use widget::ranked_overview::{self, RankedOverview};
-use widget::search_bar::{self, SearchBar};
-use widget::summoner::{self, Summoner};
-use widget::timeline::{self, Timeline};
+use component::ranked_overview::{self, RankedOverview};
+use component::search_bar::{self, SearchBar};
+use component::summoner::{self, Summoner};
+use component::timeline::{self, Timeline};
 
 pub fn main() -> iced::Result {
     Aery::run(Settings {

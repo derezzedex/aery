@@ -292,9 +292,9 @@ impl Game {
                     .width(14.0)
                     .height(14.0);
                 let summoner_name = if player_i == i {
-                    bold(summoner.to_string()).size(8.0)
+                    widget::bold(summoner.to_string()).size(8.0)
                 } else {
-                    small_text(summoner.to_string())
+                    widget::small_text(summoner.to_string())
                 };
 
                 row![summoner_icon, summoner_name]
@@ -352,11 +352,14 @@ impl Game {
             let match_details = container(Space::new(0.0, 400.0));
 
             row![
-                left_border(self.win).max_height(600.0),
+                widget::left_border(self.win).max_height(600.0),
                 column![overview, match_details,]
             ]
         } else {
-            row![left_border(self.win).max_height(100.0), column![overview]]
+            row![
+                widget::left_border(self.win).max_height(100.0),
+                column![overview]
+            ]
         };
 
         container(game)

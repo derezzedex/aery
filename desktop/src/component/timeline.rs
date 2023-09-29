@@ -112,9 +112,9 @@ impl Timeline {
 pub mod summary {
     use super::theme;
     use super::Message;
+    use crate::component::Role;
     use crate::text;
     use crate::widget;
-    use crate::widget::Role;
     use iced::alignment;
     use iced::widget::image;
     use iced::widget::image::Handle;
