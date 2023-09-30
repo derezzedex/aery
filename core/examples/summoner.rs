@@ -11,7 +11,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Searching for: {name}");
     println!();
 
-    match Summoner::from_name(&client, &name).await {
+    match Summoner::from_name(client.clone(), name).await {
         Ok(summoner) => {
             println!("Name: {}", summoner.name());
             println!("Level: {}", summoner.level());

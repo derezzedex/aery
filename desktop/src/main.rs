@@ -4,7 +4,6 @@ mod theme;
 mod widget;
 
 use iced::{
-    widget::image::Handle,
     widget::{column, container, horizontal_space, row},
     Application, Command, Element, Length, Settings,
 };
@@ -23,21 +22,11 @@ pub fn main() -> iced::Result {
 }
 
 struct Aery {
+    client: aery_core::Client,
     timeline: Timeline,
     summoner: Summoner,
     search_bar: SearchBar,
     ranked_overview: RankedOverview,
-}
-
-impl Aery {
-    fn set_summoner_icon(&mut self, icon: u16) {
-        let path = format!(
-            "{}{}.png",
-            concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\profileicon\\"),
-            icon
-        );
-        self.summoner.set_icon_handle(Handle::from_path(path));
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -55,10 +44,13 @@ impl Application for Aery {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
+        let api_key =
+            dotenv::var("RGAPI_KEY").expect("Unable to find `RGAPI_KEY` environment variable");
         let assets = Assets::new();
 
         (
             Self {
+                client: aery_core::Client::new(api_key),
                 timeline: Timeline::new(&assets),
                 summoner: Summoner::new(5843),
                 search_bar: SearchBar::new(),
@@ -78,13 +70,34 @@ impl Application for Aery {
             Message::Summoner(message) => {
                 if let Some(event) = self.summoner.update(message) {
                     match event {
-                        summoner::Event::FetchSummonerIcon(icon) => {
-                            self.set_summoner_icon(icon);
+                        summoner::Event::UpdateProfile(name) => {
+                            let client = self.client.clone();
+
+                            return Command::perform(
+                                aery_core::Summoner::from_name(client, name),
+                                |summoner| {
+                                    Message::Summoner(summoner::Message::SummonerFetched(summoner))
+                                },
+                            );
                         }
                     }
                 }
             }
-            Message::SearchBar(message) => self.search_bar.update(message),
+            Message::SearchBar(message) => match self.search_bar.update(message) {
+                Some(event) => match event {
+                    search_bar::Event::SearchRequested(content) => {
+                        let client = self.client.clone();
+
+                        return Command::perform(
+                            aery_core::Summoner::from_name(client, content),
+                            |summoner| {
+                                Message::Summoner(summoner::Message::SummonerFetched(summoner))
+                            },
+                        );
+                    }
+                },
+                None => {}
+            },
             Message::RankedOverview(message) => self.ranked_overview.update(message),
         }
 

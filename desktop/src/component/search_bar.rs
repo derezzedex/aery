@@ -13,6 +13,10 @@ pub enum Message {
     RegionPressed,
 }
 
+pub enum Event {
+    SearchRequested(String),
+}
+
 pub struct SearchBar {
     text: String,
 }
@@ -31,11 +35,14 @@ impl SearchBar {
         }
     }
 
-    pub fn update(&mut self, message: Message) {
+    pub fn update(&mut self, message: Message) -> Option<Event> {
         match message {
-            Message::TextChanged(text) => self.text = text,
-            Message::SearchPressed => todo!(),
-            Message::RegionPressed => todo!(),
+            Message::TextChanged(text) => {
+                self.text = text;
+                None
+            }
+            Message::SearchPressed => Some(Event::SearchRequested(self.text.clone())),
+            Message::RegionPressed => None,
         }
     }
 
@@ -51,6 +58,7 @@ impl SearchBar {
                 row![
                     text_input("Search for a summoner or champion", &self.text)
                         .on_input(Message::TextChanged)
+                        .on_submit(Message::SearchPressed)
                         .style(theme::search_bar_text_input())
                         .size(12),
                     button(text(region).size(10))

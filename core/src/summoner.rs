@@ -3,15 +3,18 @@ use crate::Client;
 use crate::Queue;
 use riven::consts::{PlatformRoute, RegionalRoute};
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Clone)]
+pub struct InternalApiError(String);
+
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum RequestError {
     #[error("not found")]
     NotFound,
-    #[error(transparent)]
-    RequestFailed(#[from] riven::RiotApiError),
+    #[error("request failed")]
+    RequestFailed(InternalApiError),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Summoner(riven::models::summoner_v4::Summoner);
 
 impl Summoner {
@@ -23,21 +26,21 @@ impl Summoner {
         &self.0.puuid
     }
 
-    pub fn level(&self) -> i64 {
-        self.0.summoner_level
+    pub fn level(&self) -> u32 {
+        self.0.summoner_level as u32
     }
 
     pub fn icon_id(&self) -> i32 {
         self.0.profile_icon_id
     }
 
-    pub async fn from_name(client: &Client, name: &str) -> Result<Self, RequestError> {
+    pub async fn from_name(client: Client, name: String) -> Result<Self, RequestError> {
         client
-            .0
+            .as_ref()
             .summoner_v4()
             .get_by_summoner_name(PlatformRoute::BR1, &name)
             .await
-            .map_err(RequestError::RequestFailed)
+            .map_err(|error| RequestError::RequestFailed(InternalApiError(error.to_string())))
             .and_then(|summoner| summoner.map(Summoner).ok_or(RequestError::NotFound))
     }
 
@@ -48,7 +51,7 @@ impl Summoner {
         queue: impl Into<Option<Queue>>,
     ) -> Result<impl Iterator<Item = game_match::Id>, RequestError> {
         client
-            .0
+            .as_ref()
             .match_v5()
             .get_match_ids_by_puuid(
                 RegionalRoute::AMERICAS,
@@ -61,7 +64,7 @@ impl Summoner {
                 None,
             )
             .await
-            .map_err(RequestError::RequestFailed)
+            .map_err(|error| RequestError::RequestFailed(InternalApiError(error.to_string())))
             .map(|list| list.into_iter().filter_map(|s| s.try_into().ok()))
     }
 
@@ -70,11 +73,11 @@ impl Summoner {
         client: &Client,
     ) -> Result<impl Iterator<Item = League>, RequestError> {
         client
-            .0
+            .as_ref()
             .league_v4()
             .get_league_entries_for_summoner(PlatformRoute::BR1, &self.0.id)
             .await
-            .map_err(RequestError::RequestFailed)
+            .map_err(|error| RequestError::RequestFailed(InternalApiError(error.to_string())))
             .map(|leagues| leagues.into_iter().map(League))
     }
 }

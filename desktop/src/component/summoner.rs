@@ -10,6 +10,7 @@ use iced::Length;
 #[derive(Debug, Clone)]
 pub enum Message {
     Update,
+    SummonerFetched(Result<aery_core::Summoner, aery_core::summoner::RequestError>),
 }
 
 #[allow(dead_code)]
@@ -371,7 +372,7 @@ mod modal {
     }
 }
 
-fn summoner_icon<'a>(icon: Option<image::Handle>, level: u16) -> Element<'a, Message> {
+fn summoner_icon<'a>(icon: Option<image::Handle>, level: u32) -> Element<'a, Message> {
     let image: Element<Message> = if let Some(handle) = icon {
         image(handle).into()
     } else {
@@ -396,35 +397,56 @@ fn summoner_icon<'a>(icon: Option<image::Handle>, level: u16) -> Element<'a, Mes
 
 #[derive(Debug, Clone)]
 pub enum Event {
-    FetchSummonerIcon(u16),
+    UpdateProfile(String),
 }
 
 pub struct Summoner {
-    icon: u16,
+    name: String,
+    level: u32,
+    icon: u32,
     icon_image: Option<image::Handle>,
 }
 
 impl Summoner {
-    pub fn new(icon: u16) -> Self {
+    pub fn new(icon: u32) -> Self {
         Summoner {
+            name: String::from("loading..."),
+            level: 111,
             icon,
             icon_image: None,
         }
     }
 
-    pub fn set_icon_handle(&mut self, handle: image::Handle) {
-        self.icon_image = Some(handle);
+    pub fn load_icon(&mut self) {
+        let path = format!(
+            "{}{}.png",
+            concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\profileicon\\"),
+            self.icon
+        );
+        self.icon_image = Some(iced::widget::image::Handle::from_path(path));
     }
 
     pub fn update(&mut self, message: Message) -> Option<Event> {
         match message {
-            Message::Update => Some(Event::FetchSummonerIcon(self.icon)),
+            Message::Update => Some(Event::UpdateProfile(self.name.clone())),
+            Message::SummonerFetched(Ok(summoner)) => {
+                self.name = summoner.name().to_string();
+                self.level = summoner.level();
+                self.icon = summoner.icon_id() as u32;
+                self.load_icon();
+
+                None
+            }
+            Message::SummonerFetched(Err(error)) => {
+                println!("{:?}", error);
+
+                None
+            }
         }
     }
 
     pub fn view(&self) -> Element<Message> {
-        let summoner_level = 466;
-        let icon = summoner_icon(self.icon_image.clone(), summoner_level);
+        let icon = summoner_icon(self.icon_image.clone(), self.level);
         let past_ranks = {
             let ranks = [
                 (12, Tier::Iron(Division::One(0))),
@@ -466,7 +488,7 @@ impl Summoner {
             .spacing(2)
         };
 
-        let name = text("SynxTrak")
+        let name = text(&self.name)
             .size(24)
             .vertical_alignment(alignment::Vertical::Center);
 

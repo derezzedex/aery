@@ -1,4 +1,4 @@
-use crate::{summoner, Client, Duration, Participant, Queue};
+use crate::{Client, Duration, Participant, Queue};
 
 use riven::consts::RegionalRoute;
 
@@ -35,7 +35,7 @@ pub struct Event(riven::models::match_v5::MatchTimelineInfoFrameEvent);
 impl Event {
     pub async fn from_id(client: &Client, id: Id) -> Result<Vec<Self>, RequestError> {
         client
-            .0
+            .as_ref()
             .match_v5()
             .get_timeline(RegionalRoute::AMERICAS, &id.0)
             .await
@@ -87,7 +87,7 @@ impl GameMatch {
 
     pub async fn from_id(client: &Client, id: Id) -> Result<Self, RequestError> {
         client
-            .0
+            .as_ref()
             .match_v5()
             .get_match(RegionalRoute::AMERICAS, &id.0)
             .await
@@ -97,7 +97,7 @@ impl GameMatch {
 
     pub async fn events(&self, client: &Client) -> Result<Vec<Event>, RequestError> {
         client
-            .0
+            .as_ref()
             .match_v5()
             .get_timeline(RegionalRoute::AMERICAS, &self.0.metadata.match_id)
             .await

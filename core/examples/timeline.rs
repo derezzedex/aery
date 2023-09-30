@@ -7,7 +7,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let api_key = dotenv::var("RGAPI_KEY")?;
     let client = Client::new(api_key);
 
-    let summoner = Summoner::from_name(&client, "synxtrak").await?;
+    let summoner = Summoner::from_name(client.clone(), "synxtrak".to_string()).await?;
 
     println!("Summoner: {}", summoner.name());
 
