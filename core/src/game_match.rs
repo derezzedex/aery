@@ -1,4 +1,4 @@
-use crate::Client;
+use crate::{summoner, Client, Duration, Participant, Queue};
 
 use riven::consts::RegionalRoute;
 
@@ -61,6 +61,28 @@ pub struct GameMatch(riven::models::match_v5::Match);
 impl GameMatch {
     pub fn id(&self) -> Id {
         Id(self.0.metadata.match_id.clone())
+    }
+
+    pub fn queue(&self) -> Queue {
+        self.0.info.queue_id.into()
+    }
+
+    pub fn duration(&self) -> Duration {
+        use time::ext::NumericalDuration;
+
+        match self.0.info.game_end_timestamp {
+            Some(_) => Duration(self.0.info.game_duration.seconds()),
+            None => Duration(self.0.info.game_duration.milliseconds()),
+        }
+    }
+
+    pub fn participants(&self) -> Vec<Participant> {
+        self.0
+            .info
+            .participants
+            .iter()
+            .map(Participant::from)
+            .collect()
     }
 
     pub async fn from_id(client: &Client, id: Id) -> Result<Self, RequestError> {

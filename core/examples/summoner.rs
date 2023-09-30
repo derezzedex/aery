@@ -7,7 +7,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let api_key = dotenv::var("RGAPI_KEY")?;
     let client = Client::new(api_key);
 
-    let name = String::from("shiny abra");
+    let name = String::from("twitch nicklink");
     println!("Searching for: {name}");
     println!();
 
@@ -35,19 +35,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .buffered(10)
                             .filter_map(|game| future::ready(game.ok()))
                             .for_each(|game| {
-                                let player = game
-                                    .participant(summoner.puuid())
-                                    .expect("Participant missing");
+                                // let player = game
+                                //     .participant(summoner.puuid())
+                                //     .expect("Participant missing");
 
-                                let result = if player.win { "Win" } else { "Lose" };
+                                // let result = if player.win { "Win" } else { "Lose" };
+
+                                // println!(
+                                //     "[{}] {}: {}/{}/{}",
+                                //     result,
+                                //     player.champion_name,
+                                //     player.kills,
+                                //     player.deaths,
+                                //     player.assists
+                                // );
+
+                                let participants = game.participants();
 
                                 println!(
-                                    "[{}] {}: {}/{}/{}",
-                                    result,
-                                    player.champion_name,
-                                    player.kills,
-                                    player.deaths,
-                                    player.assists
+                                    "{:#?}",
+                                    participants.iter().find(
+                                        |&participant| participant.puuid() == summoner.puuid()
+                                    )
                                 );
 
                                 future::ready(())
