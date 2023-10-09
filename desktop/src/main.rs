@@ -17,6 +17,10 @@ use component::timeline::{self, Timeline};
 pub fn main() -> iced::Result {
     Aery::run(Settings {
         antialiasing: true,
+        window: iced::window::Settings {
+            min_size: Some((1024, 768)),
+            ..Default::default()
+        },
         ..Default::default()
     })
 }
