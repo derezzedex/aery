@@ -107,7 +107,7 @@ impl Assets {
 
             sprites.insert(sprite, image);
         }
-        println!("Loaded sprites in {:?}", timer.elapsed());
+        tracing::debug!("Loaded sprites in {:?}", timer.elapsed());
 
         let json_timer = std::time::Instant::now();
         let mut data = HashMap::default();
@@ -127,7 +127,7 @@ impl Assets {
 
             data.insert(sprite, value);
         }
-        println!("Loaded JSON data in {:?}", json_timer.elapsed());
+        tracing::debug!("Loaded JSON data in {:?}", json_timer.elapsed());
 
         let runes_timer = std::time::Instant::now();
         let mut runes = HashMap::default();
@@ -153,7 +153,7 @@ impl Assets {
                 }
             }
         }
-        println!("Loaded rune data in {:?}", runes_timer.elapsed());
+        tracing::debug!("Loaded rune data in {:?}", runes_timer.elapsed());
 
         let emblem_timer = std::time::Instant::now();
         let mut emblems = HashMap::default();
@@ -168,8 +168,8 @@ impl Assets {
 
             emblems.insert(sprite, image);
         }
-        println!("Loaded emblems in {:?}", emblem_timer.elapsed());
-        println!("Total time: {:?}", timer.elapsed());
+        tracing::debug!("Loaded emblems in {:?}", emblem_timer.elapsed());
+        tracing::debug!("Total time: {:?}", timer.elapsed());
 
         Assets {
             sprites,

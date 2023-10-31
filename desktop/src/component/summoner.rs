@@ -438,7 +438,7 @@ impl Summoner {
                 None
             }
             Message::SummonerFetched(Err(error)) => {
-                println!("{:?}", error);
+                tracing::error!("{error:?}");
 
                 None
             }
