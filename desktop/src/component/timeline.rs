@@ -118,7 +118,10 @@ pub mod summary {
     use iced::alignment;
     use iced::widget::image;
     use iced::widget::image::Handle;
-    use iced::widget::{column, container, horizontal_rule, progress_bar, row, text};
+    use iced::widget::vertical_space;
+    use iced::widget::{
+        column, container, horizontal_rule, horizontal_space, progress_bar, row, text,
+    };
     use iced::{Alignment, Element};
 
     trait Fit {
@@ -217,10 +220,11 @@ pub mod summary {
 
                 column![
                     text("Winrate").fit(10).style(theme::gray_text()),
+                    vertical_space(2),
                     ratio_text,
                     ratio_bar,
                 ]
-                .spacing(4)
+                .spacing(2)
             };
 
             let summary_lane = {
@@ -256,6 +260,7 @@ pub mod summary {
                         text!("{:.1}", self.death_ratio).size(10),
                         text("/").size(10).style(theme::gray_text()),
                         text!("{:.1}", self.assist_ratio).size(10),
+                        horizontal_space(2),
                         row![
                             text("(").size(10).style(theme::red_text()),
                             text!(
@@ -273,6 +278,7 @@ pub mod summary {
 
                 column![
                     text("Lane").size(10).height(13).style(theme::gray_text()),
+                    vertical_space(1),
                     row![lane_icon, lane_info]
                         .align_items(Alignment::Center)
                         .spacing(4)
@@ -308,9 +314,13 @@ pub mod summary {
                                 .spacing(2),
                                 row![
                                     image(champion.lane.clone()).width(12.0).height(12.0),
-                                    text!("{:.2} KDA", champion.kda)
-                                        .size(10)
-                                        .style(theme::gray_text())
+                                    container(
+                                        text!("{:.2} KDA", champion.kda)
+                                            .size(10)
+                                            .style(theme::gray_text())
+                                    )
+                                    .padding([2, 0, 0, 2])
+                                    .center_y()
                                 ]
                                 .spacing(2)
                                 .align_items(Alignment::Center),

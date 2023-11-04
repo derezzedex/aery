@@ -468,15 +468,15 @@ impl Summoner {
 
                     container(
                         row![
-                            container(bold(format!("S{season}")).size(10))
-                                .padding([0, 2, 2, 2])
+                            container(text(format!("S{season}")).size(10))
+                                .padding(2)
                                 .style(theme::past_rank_badge_container()),
                             container(
                                 text!("{tier} {division}")
                                     .size(10)
                                     .style(theme::tier_color(rank))
                             )
-                            .padding([0, 2, 2, 2]),
+                            .padding(2),
                         ]
                         .align_items(iced::Alignment::Center)
                         .spacing(2),

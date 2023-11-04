@@ -8,7 +8,7 @@ use crate::theme::chevron_down_icon;
 use crate::theme::chevron_up_icon;
 use crate::widget;
 use iced::widget::image;
-use iced::widget::{button, column, container, row, text, Space};
+use iced::widget::{button, column, container, row, text, vertical_space, Space};
 use iced::{alignment, Alignment, Element, Length};
 
 fn champion_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
@@ -169,7 +169,8 @@ impl Game {
                     ]
                     .align_items(Alignment::Center)
                     .spacing(2),
-                    text("28:33").size(10).style(theme::sub_text()),
+                    container(text("28:33").size(10).style(theme::sub_text()))
+                        .padding([0, 0, 0, 1]),
                 ]
                 .padding([4, 0, 0, 0])
                 .into()
@@ -178,24 +179,24 @@ impl Game {
             };
 
             column![
+                widget::bold(formatting::win(self.win))
+                    .style(theme::win_color(self.win))
+                    .size(18),
                 column![
-                    widget::bold(formatting::win(self.win))
-                        .style(if self.win {
-                            theme::blue_text()
-                        } else {
-                            theme::red_text()
-                        })
-                        .size(16),
-                    text(self.queue.to_string()).size(12),
-                    text(self.time.to_string())
-                        .style(theme::sub_text())
-                        .size(10),
+                    text(self.queue.to_string()).size(11),
+                    container(
+                        text(self.time.to_string())
+                            .style(theme::sub_text())
+                            .size(10)
+                    )
+                    .padding([0, 0, 0, 1]),
                 ],
+                vertical_space(2),
                 role
             ]
             .align_items(Alignment::Start)
             .spacing(2)
-            .padding(4)
+            .padding(2)
         };
 
         let champion_info = {
