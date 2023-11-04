@@ -152,8 +152,15 @@ mod modal {
             self.image.as_widget().height()
         }
 
-        fn layout(&self, renderer: &Renderer, limits: &layout::Limits) -> layout::Node {
-            self.image.as_widget().layout(renderer, limits)
+        fn layout(
+            &self,
+            tree: &mut widget::Tree,
+            renderer: &Renderer,
+            limits: &layout::Limits,
+        ) -> layout::Node {
+            self.image
+                .as_widget()
+                .layout(&mut tree.children[0], renderer, limits)
         }
 
         fn on_event(
@@ -258,12 +265,12 @@ mod modal {
         Renderer: advanced::Renderer,
         Message: Clone,
     {
-        fn layout(&self, renderer: &Renderer, _bounds: Size, position: Point) -> layout::Node {
+        fn layout(&mut self, renderer: &Renderer, _bounds: Size, position: Point) -> layout::Node {
             let limits = layout::Limits::new(Size::ZERO, self.size)
                 .width(Length::Fill)
                 .height(Length::Fill);
 
-            let mut child = self.content.as_widget().layout(renderer, &limits);
+            let mut child = self.content.as_widget().layout(self.tree, renderer, &limits);
             child.align(
                 Alignment::Center,
                 Alignment::End,
