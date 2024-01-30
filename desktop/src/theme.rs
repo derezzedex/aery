@@ -221,9 +221,11 @@ impl widget::container::StyleSheet for Container {
         widget::container::Appearance {
             background: Some(background),
             text_color: Some(text_color),
-            border_radius,
-            border_color,
-            border_width,
+            border: iced::Border {
+                color: border_color,
+                width: border_width,
+                radius: border_radius,
+            },
             ..Default::default()
         }
     }
@@ -266,7 +268,10 @@ impl widget::button::StyleSheet for Button {
 
         widget::button::Appearance {
             background: Some(iced::Background::Color(background_color)),
-            border_radius,
+            border: iced::Border {
+                radius: border_radius,
+                ..Default::default()
+            },
             text_color,
             ..Default::default()
         }
@@ -330,13 +335,17 @@ impl widget::scrollable::StyleSheet for Scrollable {
             background: Some(Background::Color(Color::from_rgb(0.1, 0.1, 0.1))),
             scroller: widget::scrollable::Scroller {
                 color: Color::from_rgb(0.2, 0.2, 0.2),
-                border_radius: 2.0.into(),
-                border_width: 0.0,
-                border_color: Color::TRANSPARENT,
+                border: iced::Border {
+                    radius: 2.0.into(),
+                    width: 0.0,
+                    color: Color::TRANSPARENT,
+                },
             },
-            border_radius: 2.0.into(),
-            border_width: 0.0,
-            border_color: Color::TRANSPARENT,
+            border: iced::Border {
+                radius: 2.0.into(),
+                width: 0.0,
+                color: Color::TRANSPARENT,
+            },
         }
     }
 
@@ -345,21 +354,19 @@ impl widget::scrollable::StyleSheet for Scrollable {
         style: &Self::Style,
         is_mouse_over_scrollbar: bool,
     ) -> widget::scrollable::Scrollbar {
+        let active = self.active(style);
+
         if is_mouse_over_scrollbar {
             widget::scrollable::Scrollbar {
                 background: Some(Background::Color(Color::from_rgb(0.1, 0.1, 0.1))),
-                border_radius: 2.0.into(),
-                border_width: 0.0,
-                border_color: Color::TRANSPARENT,
                 scroller: widget::scrollable::Scroller {
                     color: Color::from_rgba(0.4, 0.4, 0.4, 0.9),
-                    border_radius: 2.0.into(),
-                    border_width: 0.0,
-                    border_color: Color::TRANSPARENT,
+                    ..active.scroller
                 },
+                ..active
             }
         } else {
-            self.active(style)
+            active
         }
     }
 }
@@ -374,9 +381,11 @@ impl widget::text_input::StyleSheet for TextInput {
     fn active(&self, _style: &Self::Style) -> widget::text_input::Appearance {
         widget::text_input::Appearance {
             background: Background::Color(Color::TRANSPARENT),
-            border_radius: 0.0.into(),
-            border_width: 0.0,
-            border_color: Color::TRANSPARENT,
+            border: iced::Border {
+                radius: 0.0.into(),
+                width: 0.0,
+                color: Color::TRANSPARENT,
+            },
             icon_color: Color::TRANSPARENT,
         }
     }

@@ -18,7 +18,7 @@ pub fn main() -> iced::Result {
     Aery::run(Settings {
         antialiasing: true,
         window: iced::window::Settings {
-            min_size: Some((1024, 768)),
+            min_size: Some([1024, 768].into()),
             ..Default::default()
         },
         ..Default::default()

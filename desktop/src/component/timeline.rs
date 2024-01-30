@@ -82,8 +82,7 @@ impl Timeline {
             .games
             .iter()
             .enumerate()
-            .map(|(i, game)| game.view().map(move |message| Message::Game(i, message)))
-            .collect();
+            .map(|(i, game)| game.view().map(move |message| Message::Game(i, message)));
 
         let content = column(games)
             .width(Length::Fill)
@@ -287,50 +286,46 @@ pub mod summary {
             };
 
             let summary_champions = {
-                let content: Vec<Element<Message>> = self
-                    .champions
-                    .iter()
-                    .map(|champion| {
-                        let icon = iced::widget::image(champion.handle.clone())
-                            .width(24.0)
-                            .height(24.0)
-                            .content_fit(iced::ContentFit::Fill);
-                        let winrate =
-                            champion.wins as f32 * 100.0 / (champion.wins + champion.losses) as f32;
+                let content = self.champions.iter().map(|champion| {
+                    let icon = iced::widget::image(champion.handle.clone())
+                        .width(24.0)
+                        .height(24.0)
+                        .content_fit(iced::ContentFit::Fill);
+                    let winrate =
+                        champion.wins as f32 * 100.0 / (champion.wins + champion.losses) as f32;
 
-                        row![
-                            icon,
-                            // TODO: fix strange alignment between bottom and top text
-                            column![
-                                row![
-                                    text!("{:.1}%", winrate)
-                                        .size(10)
-                                        .style(theme::win_color(winrate > 50.0)),
-                                    text!("({}W {}L)", champion.wins, champion.losses)
+                    row![
+                        icon,
+                        // TODO: fix strange alignment between bottom and top text
+                        column![
+                            row![
+                                text!("{:.1}%", winrate)
+                                    .size(10)
+                                    .style(theme::win_color(winrate > 50.0)),
+                                text!("({}W {}L)", champion.wins, champion.losses)
+                                    .size(10)
+                                    .style(theme::gray_text())
+                            ]
+                            .align_items(Alignment::Center)
+                            .spacing(2),
+                            row![
+                                image(champion.lane.clone()).width(12.0).height(12.0),
+                                container(
+                                    text!("{:.2} KDA", champion.kda)
                                         .size(10)
                                         .style(theme::gray_text())
-                                ]
-                                .align_items(Alignment::Center)
-                                .spacing(2),
-                                row![
-                                    image(champion.lane.clone()).width(12.0).height(12.0),
-                                    container(
-                                        text!("{:.2} KDA", champion.kda)
-                                            .size(10)
-                                            .style(theme::gray_text())
-                                    )
-                                    .padding([2, 0, 0, 2])
-                                    .center_y()
-                                ]
-                                .spacing(2)
-                                .align_items(Alignment::Center),
+                                )
+                                .padding([2, 0, 0, 2])
+                                .center_y()
                             ]
+                            .spacing(2)
+                            .align_items(Alignment::Center),
                         ]
-                        .align_items(Alignment::Center)
-                        .spacing(4)
-                        .into()
-                    })
-                    .collect();
+                    ]
+                    .align_items(Alignment::Center)
+                    .spacing(4)
+                    .into()
+                });
 
                 column![
                     text("Champions").size(10).style(theme::gray_text()),

@@ -105,21 +105,21 @@ mod modal {
     use iced::advanced::widget::{self, Widget};
     use iced::advanced::{self, Clipboard, Shell};
     use iced::alignment::Alignment;
-    use iced::event;
     use iced::mouse;
+    use iced::{event, Vector};
     use iced::{Element, Event, Length, Point, Rectangle, Size};
 
     /// A widget that centers a modal element over some base element
-    pub struct Modal<'a, Message, Renderer> {
-        image: Element<'a, Message, Renderer>,
-        level: Element<'a, Message, Renderer>,
+    pub struct Modal<'a, Message, Theme, Renderer> {
+        image: Element<'a, Message, Theme, Renderer>,
+        level: Element<'a, Message, Theme, Renderer>,
     }
 
-    impl<'a, Message, Renderer> Modal<'a, Message, Renderer> {
+    impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
         /// Returns a new [`Modal`]
         pub fn new(
-            image: impl Into<Element<'a, Message, Renderer>>,
-            level: impl Into<Element<'a, Message, Renderer>>,
+            image: impl Into<Element<'a, Message, Theme, Renderer>>,
+            level: impl Into<Element<'a, Message, Theme, Renderer>>,
         ) -> Self {
             Self {
                 image: image.into(),
@@ -128,7 +128,8 @@ mod modal {
         }
     }
 
-    impl<'a, Message, Renderer> Widget<Message, Renderer> for Modal<'a, Message, Renderer>
+    impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
+        for Modal<'a, Message, Theme, Renderer>
     where
         Renderer: advanced::Renderer,
         Message: Clone,
@@ -144,12 +145,8 @@ mod modal {
             tree.diff_children(&[&self.image, &self.level]);
         }
 
-        fn width(&self) -> Length {
-            self.image.as_widget().width()
-        }
-
-        fn height(&self) -> Length {
-            self.image.as_widget().height()
+        fn size(&self) -> Size<Length> {
+            self.image.as_widget().size()
         }
 
         fn layout(
@@ -190,7 +187,7 @@ mod modal {
             &self,
             state: &widget::Tree,
             renderer: &mut Renderer,
-            theme: &<Renderer as advanced::Renderer>::Theme,
+            theme: &Theme,
             style: &renderer::Style,
             layout: Layout<'_>,
             cursor: mouse::Cursor,
@@ -212,7 +209,7 @@ mod modal {
             state: &'b mut widget::Tree,
             layout: Layout<'_>,
             _renderer: &Renderer,
-        ) -> Option<overlay::Element<'b, Message, Renderer>> {
+        ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
             Some(overlay::Element::new(
                 layout.position(),
                 Box::new(Overlay {
@@ -253,36 +250,41 @@ mod modal {
         }
     }
 
-    struct Overlay<'a, 'b, Message, Renderer> {
-        content: &'b mut Element<'a, Message, Renderer>,
+    struct Overlay<'a, 'b, Message, Theme, Renderer> {
+        content: &'b mut Element<'a, Message, Theme, Renderer>,
         tree: &'b mut widget::Tree,
         size: Size,
     }
 
-    impl<'a, 'b, Message, Renderer> overlay::Overlay<Message, Renderer>
-        for Overlay<'a, 'b, Message, Renderer>
+    impl<'a, 'b, Message, Theme, Renderer> overlay::Overlay<Message, Theme, Renderer>
+        for Overlay<'a, 'b, Message, Theme, Renderer>
     where
         Renderer: advanced::Renderer,
         Message: Clone,
     {
-        fn layout(&mut self, renderer: &Renderer, _bounds: Size, position: Point) -> layout::Node {
+        fn layout(
+            &mut self,
+            renderer: &Renderer,
+            _bounds: Size,
+            position: Point,
+            _translation: Vector,
+        ) -> layout::Node {
             let limits = layout::Limits::new(Size::ZERO, self.size)
                 .width(Length::Fill)
                 .height(Length::Fill);
 
-            let mut child = self.content.as_widget().layout(self.tree, renderer, &limits);
-            child.align(
-                Alignment::Center,
-                Alignment::End,
-                limits
-                    .max()
-                    .pad([0.0, 0.0, child.size().height / 2.0, 0.0].into()),
-            );
+            let child = self
+                .content
+                .as_widget()
+                .layout(self.tree, renderer, &limits)
+                .align(
+                    Alignment::Center,
+                    Alignment::End,
+                    limits.max(),
+                    // .pad([0.0, 0.0, child.size().height / 2.0, 0.0].into()),
+                );
 
-            let mut node = layout::Node::with_children(self.size, vec![child]);
-            node.move_to(position);
-
-            node
+            layout::Node::with_children(self.size, vec![child]).move_to(position)
         }
 
         fn on_event(
@@ -309,7 +311,7 @@ mod modal {
         fn draw(
             &self,
             renderer: &mut Renderer,
-            theme: &Renderer::Theme,
+            theme: &Theme,
             style: &renderer::Style,
             layout: Layout<'_>,
             cursor: mouse::Cursor,
@@ -359,7 +361,7 @@ mod modal {
             &'c mut self,
             layout: Layout<'_>,
             renderer: &Renderer,
-        ) -> Option<overlay::Element<'c, Message, Renderer>> {
+        ) -> Option<overlay::Element<'c, Message, Theme, Renderer>> {
             self.content.as_widget_mut().overlay(
                 self.tree,
                 layout.children().next().unwrap(),
@@ -368,12 +370,14 @@ mod modal {
         }
     }
 
-    impl<'a, Message, Renderer> From<Modal<'a, Message, Renderer>> for Element<'a, Message, Renderer>
+    impl<'a, Message, Theme, Renderer> From<Modal<'a, Message, Theme, Renderer>>
+        for Element<'a, Message, Theme, Renderer>
     where
-        Renderer: 'a + advanced::Renderer,
+        Theme: 'a,
         Message: 'a + Clone,
+        Renderer: 'a + advanced::Renderer,
     {
-        fn from(modal: Modal<'a, Message, Renderer>) -> Self {
+        fn from(modal: Modal<'a, Message, Theme, Renderer>) -> Self {
             Element::new(modal)
         }
     }
@@ -467,31 +471,28 @@ impl Summoner {
                 (4, Tier::Challenger(2000)),
             ];
 
-            row(ranks
-                .into_iter()
-                .map(|(season, rank)| {
-                    let division = rank.division();
-                    let tier = rank.to_string();
+            row(ranks.into_iter().map(|(season, rank)| {
+                let division = rank.division();
+                let tier = rank.to_string();
 
-                    container(
-                        row![
-                            container(text(format!("S{season}")).size(10))
-                                .padding(2)
-                                .style(theme::past_rank_badge_container()),
-                            container(
-                                text!("{tier} {division}")
-                                    .size(10)
-                                    .style(theme::tier_color(rank))
-                            )
-                            .padding(2),
-                        ]
-                        .align_items(iced::Alignment::Center)
-                        .spacing(2),
-                    )
-                    .style(theme::past_rank_container())
-                    .into()
-                })
-                .collect())
+                container(
+                    row![
+                        container(text(format!("S{season}")).size(10))
+                            .padding(2)
+                            .style(theme::past_rank_badge_container()),
+                        container(
+                            text!("{tier} {division}")
+                                .size(10)
+                                .style(theme::tier_color(rank))
+                        )
+                        .padding(2),
+                    ]
+                    .align_items(iced::Alignment::Center)
+                    .spacing(2),
+                )
+                .style(theme::past_rank_container())
+                .into()
+            }))
             .spacing(2)
         };
 
