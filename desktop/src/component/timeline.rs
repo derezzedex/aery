@@ -103,6 +103,7 @@ impl Timeline {
         .spacing(4);
 
         container(timeline)
+            .width(Length::Shrink)
             .style(theme::timeline_container())
             .into()
     }

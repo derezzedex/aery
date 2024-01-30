@@ -109,18 +109,22 @@ impl Application for Aery {
     }
 
     fn view(&self) -> Element<Message> {
+        let timeline = container(
+            row![
+                self.ranked_overview.view().map(Message::RankedOverview),
+                self.timeline.view().map(Message::Timeline),
+            ]
+            .padding(8)
+            .spacing(8),
+        )
+        .center_x()
+        .width(Length::Fill);
+
         container(
             column![
                 self.search_bar.view().map(Message::SearchBar),
                 self.summoner.view().map(Message::Summoner),
-                row![
-                    horizontal_space(Length::Fill),
-                    self.ranked_overview.view().map(Message::RankedOverview),
-                    self.timeline.view().map(Message::Timeline),
-                    horizontal_space(Length::Fill),
-                ]
-                .padding(8)
-                .spacing(8),
+                timeline,
             ]
             .spacing(16),
         )

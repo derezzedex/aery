@@ -329,7 +329,7 @@ impl Game {
             .padding(2);
 
         let expand_button = button(expand_content)
-            .height(Length::Fill)
+            .height(Length::Shrink)
             .on_press(Message::ExpandPressed)
             .style(theme::expander_button(self.is_expanded));
 
@@ -352,19 +352,22 @@ impl Game {
         let game = if self.is_expanded {
             let match_details = container(Space::new(0.0, 400.0));
 
-            row![
-                widget::left_border(self.win).max_height(600.0),
+            container(row![
+                widget::left_border(self.win),
                 column![overview, match_details,]
-            ]
+            ])
+            .max_height(600.0)
         } else {
-            row![
+            container(row![
                 widget::left_border(self.win).max_height(100.0),
-                column![overview]
-            ]
+                overview,
+            ])
+            .max_height(100.0)
         };
 
         container(game)
             .width(Length::Fill)
+            .height(Length::Shrink)
             .style(theme::dark_container())
             .into()
     }
