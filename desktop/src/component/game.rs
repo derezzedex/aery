@@ -8,7 +8,7 @@ use crate::theme::chevron_down_icon;
 use crate::theme::chevron_up_icon;
 use crate::widget;
 use iced::widget::image;
-use iced::widget::{button, column, container, row, text, vertical_space, Space};
+use iced::widget::{button, column, container, row, text, Space};
 use iced::{alignment, Alignment, Element, Length};
 
 fn champion_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
@@ -191,8 +191,7 @@ impl Game {
                     )
                     .padding([0, 0, 0, 1]),
                 ],
-                vertical_space(2),
-                role
+                role,
             ]
             .align_items(Alignment::Start)
             .spacing(2)
