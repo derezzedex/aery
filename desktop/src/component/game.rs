@@ -54,11 +54,11 @@ fn summoner_rune2_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
 
 fn item_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
     let icon = iced::widget::image(handle)
-        .width(22.0)
-        .height(22.0)
+        .width(28.0)
+        .height(28.0)
         .content_fit(iced::ContentFit::Fill);
 
-    container(icon).width(22.0).height(22.0).into()
+    container(icon).width(28.0).height(28.0).into()
 }
 
 #[derive(Debug, Clone)]
@@ -188,8 +188,7 @@ impl Game {
                         text(self.time.to_string())
                             .style(theme::sub_text())
                             .size(10)
-                    )
-                    .padding([0, 0, 0, 1]),
+                    ),
                 ],
                 role,
             ]
@@ -222,14 +221,14 @@ impl Game {
 
         let player_stats = {
             let kda = row![
-                text(self.player_kills).size(12),
-                text("/").style(theme::gray_text()).size(12),
-                text(self.player_deaths).style(theme::red_text()).size(12),
-                text("/").style(theme::gray_text()).size(12),
-                text(self.player_assists).size(12)
+                text(self.player_kills).size(15),
+                text("/").style(theme::gray_text()).size(15),
+                text(self.player_deaths).style(theme::red_text()).size(15),
+                text("/").style(theme::gray_text()).size(15),
+                text(self.player_assists).size(15)
             ]
             .align_items(Alignment::Center)
-            .spacing(3);
+            .spacing(2);
 
             let other_stats = column![
                 row![text(formatting::kda(
@@ -341,7 +340,7 @@ impl Game {
                 other_players,
             ]
             .width(Length::Fill)
-            .spacing(32)
+            .spacing(28)
             .padding(4)
             .align_items(Alignment::Center),
             expand_button.padding(0),
