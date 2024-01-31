@@ -4,7 +4,7 @@ mod theme;
 mod widget;
 
 use iced::{
-    widget::{column, container, horizontal_space, row},
+    widget::{column, container, row},
     Application, Command, Element, Length, Settings,
 };
 
