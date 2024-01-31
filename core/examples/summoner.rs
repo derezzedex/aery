@@ -7,7 +7,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let api_key = dotenv::var("RGAPI_KEY")?;
     let client = Client::new(api_key);
 
-    let name = String::from("twitch nicklink");
+    let name = String::from("duduelista");
     println!("Searching for: {name}");
     println!();
 
