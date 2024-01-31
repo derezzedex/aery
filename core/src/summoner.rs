@@ -82,7 +82,7 @@ impl Summoner {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct League(riven::models::league_v4::LeagueEntry);
 
 impl League {

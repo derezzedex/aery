@@ -3,6 +3,10 @@ mod component;
 mod theme;
 mod widget;
 
+use futures::stream;
+use futures::FutureExt;
+use futures::StreamExt;
+
 use iced::{
     widget::{column, container, row},
     Application, Command, Element, Length, Settings,
@@ -27,6 +31,8 @@ pub fn main() -> iced::Result {
 
 struct Aery {
     client: aery_core::Client,
+    profile: Option<Profile>,
+
     timeline: Timeline,
     summoner: Summoner,
     search_bar: SearchBar,
@@ -34,7 +40,15 @@ struct Aery {
 }
 
 #[derive(Debug, Clone)]
+struct Profile {
+    summoner: aery_core::Summoner,
+    leagues: Vec<aery_core::summoner::League>,
+    games: Vec<aery_core::GameMatch>,
+}
+
+#[derive(Debug, Clone)]
 enum Message {
+    FetchedProfile(Result<Profile, String>),
     Timeline(timeline::Message),
     Summoner(summoner::Message),
     SearchBar(search_bar::Message),
@@ -55,6 +69,8 @@ impl Application for Aery {
         (
             Self {
                 client: aery_core::Client::new(api_key),
+                profile: None,
+
                 timeline: Timeline::new(&assets),
                 summoner: Summoner::new(5843),
                 search_bar: SearchBar::new(),
@@ -70,6 +86,10 @@ impl Application for Aery {
 
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
+            Message::FetchedProfile(Ok(profile)) => {
+                self.profile = Some(profile);
+            }
+            Message::FetchedProfile(Err(error)) => panic!("failed: {error}"),
             Message::Timeline(message) => self.timeline.update(message),
             Message::Summoner(message) => {
                 if let Some(event) = self.summoner.update(message) {
@@ -89,16 +109,23 @@ impl Application for Aery {
             }
             Message::SearchBar(message) => match self.search_bar.update(message) {
                 Some(event) => match event {
-                    search_bar::Event::SearchRequested(content) => {
+                    search_bar::Event::SearchRequested(name) => {
                         let client = self.client.clone();
 
                         return Command::perform(
-                            aery_core::Summoner::from_name(client, content),
-                            |summoner| {
-                                Message::Summoner(summoner::Message::SummonerFetched(summoner))
-                            },
+                            fetch_profile(client, name),
+                            Message::FetchedProfile,
                         );
-                    }
+                    } // search_bar::Event::SearchRequested(content) => {
+                      //     let client = self.client.clone();
+
+                      //     return Command::perform(
+                      //         aery_core::Summoner::from_name(client, content),
+                      //         |summoner| {
+                      //             Message::Summoner(summoner::Message::SummonerFetched(summoner))
+                      //         },
+                      //     );
+                      // }
                 },
                 None => {}
             },
@@ -131,4 +158,37 @@ impl Application for Aery {
         .style(theme::timeline_container())
         .into()
     }
+}
+
+async fn fetch_profile(client: aery_core::Client, name: String) -> Result<Profile, String> {
+    let Ok(summoner) = aery_core::Summoner::from_name(client.clone(), name).await else {
+        return Err(String::from("Summoner not found!"));
+    };
+
+    let Ok(leagues) = summoner
+        .leagues(&client)
+        .await
+        .map(|leagues| leagues.collect::<Vec<_>>())
+    else {
+        return Err(String::from("Failed to fetch summoner leagues."));
+    };
+
+    let games = stream::iter(leagues.iter())
+        .filter_map(|league| {
+            summoner
+                .matches(&client, 0..10, league.queue_kind())
+                .map(Result::ok)
+        })
+        .flat_map(|game_ids| {
+            stream::iter(game_ids)
+                .filter_map(|id| aery_core::GameMatch::from_id(&client, id).map(Result::ok))
+        })
+        .collect()
+        .await;
+
+    Ok(Profile {
+        summoner,
+        leagues,
+        games,
+    })
 }

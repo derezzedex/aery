@@ -55,7 +55,7 @@ impl Event {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GameMatch(riven::models::match_v5::Match);
 
 impl GameMatch {

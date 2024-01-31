@@ -7,7 +7,7 @@ pub use summoner::Summoner;
 pub mod game_match;
 pub use game_match::GameMatch;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub enum Queue {
     /// CUSTOM
     Custom,
