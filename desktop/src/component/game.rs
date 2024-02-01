@@ -3,6 +3,7 @@ use crate::assets::load_champion_icon;
 use crate::assets::load_item_icon;
 use crate::assets::load_runes_icon;
 use crate::assets::load_summoner_spell_icon;
+use crate::core;
 use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::theme::chevron_up_icon;
@@ -89,37 +90,37 @@ pub enum Message {
 }
 
 impl Game {
-    pub fn new(win: bool, assets: &crate::assets::Assets, champion: &'static str) -> Self {
+    pub fn new(win: bool, assets: &crate::assets::Assets, champion: core::Champion) -> Self {
         let champion_image = load_champion_icon(assets, champion);
         let summoner_spell_images = [
-            load_summoner_spell_icon(assets, "SummonerDot"),
-            load_summoner_spell_icon(assets, "SummonerFlash"),
+            load_summoner_spell_icon(assets, core::SummonerSpell::new(14)),
+            load_summoner_spell_icon(assets, core::SummonerSpell::new(4)),
         ];
         let runes_images = [
-            load_runes_icon(assets, "Conqueror"),
-            load_runes_icon(assets, "Resolve"),
+            load_runes_icon(assets, core::RuneKeystone::new(8010)),
+            load_runes_icon(assets, core::RuneKeystone::new(8400)),
         ];
         let item_images = [
-            load_item_icon(assets, "1001"),
-            load_item_icon(assets, "6630"),
-            load_item_icon(assets, "4401"),
-            load_item_icon(assets, "3143"),
-            load_item_icon(assets, "3742"),
-            load_item_icon(assets, "6333"),
-            load_item_icon(assets, "3364"),
+            load_item_icon(assets, core::Item::new(1001)),
+            load_item_icon(assets, core::Item::new(6630)),
+            load_item_icon(assets, core::Item::new(4401)),
+            load_item_icon(assets, core::Item::new(3143)),
+            load_item_icon(assets, core::Item::new(3742)),
+            load_item_icon(assets, core::Item::new(6333)),
+            load_item_icon(assets, core::Item::new(3364)),
         ];
 
         let summoner_icons = [
             load_champion_icon(assets, champion),
-            load_champion_icon(assets, "Annie"),
-            load_champion_icon(assets, "Xerath"),
-            load_champion_icon(assets, "Sion"),
-            load_champion_icon(assets, "Darius"),
-            load_champion_icon(assets, "KSante"),
-            load_champion_icon(assets, "MonkeyKing"),
-            load_champion_icon(assets, "TwistedFate"),
-            load_champion_icon(assets, "Orianna"),
-            load_champion_icon(assets, "Jhin"),
+            load_champion_icon(assets, core::Champion::new(1)),
+            load_champion_icon(assets, core::Champion::new(101)),
+            load_champion_icon(assets, core::Champion::new(14)),
+            load_champion_icon(assets, core::Champion::new(122)),
+            load_champion_icon(assets, core::Champion::new(897)),
+            load_champion_icon(assets, core::Champion::new(62)),
+            load_champion_icon(assets, core::Champion::new(4)),
+            load_champion_icon(assets, core::Champion::new(61)),
+            load_champion_icon(assets, core::Champion::new(202)),
         ];
 
         Game {

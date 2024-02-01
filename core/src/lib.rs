@@ -1,4 +1,6 @@
 pub mod client;
+use std::fmt;
+
 pub use client::Client;
 
 pub mod summoner;
@@ -121,6 +123,18 @@ impl From<String> for Role {
 #[derive(Debug)]
 pub struct Item(u32);
 
+impl Item {
+    pub fn new(id: u32) -> Self {
+        Self(id)
+    }
+}
+
+impl fmt::Display for Item {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 impl TryFrom<i32> for Item {
     type Error = ();
 
@@ -139,8 +153,19 @@ pub struct Trinket(u32);
 #[derive(Debug)]
 pub struct Inventory([Option<Item>; 6]);
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Champion(u32);
+
+impl Champion {
+    pub fn new(id: u32) -> Self {
+        //TODO: verify id
+        Self(id)
+    }
+
+    pub fn identifier(&self) -> Option<&str> {
+        riven::consts::Champion(self.0 as i16).identifier()
+    }
+}
 
 impl From<riven::consts::Champion> for Champion {
     fn from(value: riven::consts::Champion) -> Self {
@@ -148,21 +173,40 @@ impl From<riven::consts::Champion> for Champion {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct SummonerSpell(u32);
+
+impl SummonerSpell {
+    pub fn new(id: u32) -> Self {
+        //TODO: verify id
+        Self(id)
+    }
+    pub fn id(&self) -> u32 {
+        self.0
+    }
+}
 
 #[derive(Debug)]
 pub struct SummonerSpells([SummonerSpell; 2]);
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct RuneKeystone(u32);
+
+impl RuneKeystone {
+    pub fn new(id: u32) -> Self {
+        Self(id)
+    }
+}
+
 #[derive(Debug)]
 pub struct PrimaryRune {
-    keystone: u32,
-    lesser: [u32; 3],
+    keystone: RuneKeystone,
+    lesser: [RuneKeystone; 3],
 }
 
 #[derive(Debug)]
 pub struct SecondaryRune {
-    lesser: [u32; 2],
+    lesser: [RuneKeystone; 2],
 }
 
 #[derive(Debug)]
@@ -216,10 +260,10 @@ impl From<&riven::models::match_v5::Participant> for Participant {
 
         let rune_page = RunePage {
             primary: PrimaryRune {
-                keystone: participant.perks.styles[0].selections[0].perk as u32,
+                keystone: RuneKeystone(participant.perks.styles[0].selections[0].perk as u32),
                 lesser: participant.perks.styles[0].selections[1..=3]
                     .iter()
-                    .map(|s| s.perk as u32)
+                    .map(|s| RuneKeystone(s.perk as u32))
                     .collect::<Vec<_>>()
                     .try_into()
                     .expect("failed to convert runes"),
@@ -227,7 +271,7 @@ impl From<&riven::models::match_v5::Participant> for Participant {
             secondary: SecondaryRune {
                 lesser: participant.perks.styles[1].selections[0..=1]
                     .iter()
-                    .map(|s| s.perk as u32)
+                    .map(|s| RuneKeystone(s.perk as u32))
                     .collect::<Vec<_>>()
                     .try_into()
                     .expect("failed to convert runes"),

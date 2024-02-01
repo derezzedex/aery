@@ -5,6 +5,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::io::Read;
 
+use crate::core;
+
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum DataFile {
     Champion,
@@ -69,7 +71,7 @@ pub type SpriteMap = HashMap<Sprite, image::DynamicImage>;
 
 pub type DataMap = HashMap<DataFile, serde_json::Value>;
 
-pub type RuneMap = HashMap<String, String>;
+pub type RuneMap = HashMap<core::RuneKeystone, String>;
 
 pub type EmblemMap = HashMap<String, Handle>;
 
@@ -139,8 +141,8 @@ impl Assets {
                 .as_str()
                 .unwrap()
                 .trim_start_matches("perk-images/");
-            let name = value["name"].as_str().unwrap();
-            runes.insert(name.to_string(), path.to_string());
+            let id = value["id"].as_u64().unwrap();
+            runes.insert(core::RuneKeystone::new(id as u32), path.to_string());
 
             for slots in value["slots"].as_array().unwrap() {
                 for rune in slots["runes"].as_array().unwrap() {
@@ -148,8 +150,8 @@ impl Assets {
                         .as_str()
                         .unwrap()
                         .trim_start_matches("perk-images/");
-                    let name = rune["name"].as_str().unwrap();
-                    runes.insert(name.to_string(), path.to_string());
+                    let lesser_id = rune["id"].as_u64().unwrap();
+                    runes.insert(core::RuneKeystone::new(lesser_id as u32), path.to_string());
                 }
             }
         }
@@ -181,9 +183,10 @@ impl Assets {
 }
 
 // TODO: use champion id instead of name
-pub fn load_champion_icon(assets: &Assets, champion: &str) -> Handle {
+pub fn load_champion_icon(assets: &Assets, champion: core::Champion) -> Handle {
     let icon_data = assets.data.get(&DataFile::Champion).unwrap();
-    let icon = &icon_data["data"][champion]["image"];
+    let name = champion.identifier().unwrap();
+    let icon = &icon_data["data"][name]["image"];
     let sprite = Sprite::try_from(icon["sprite"].as_str().unwrap().to_string()).unwrap();
     let x = icon["x"].as_u64().unwrap() as u32;
     let y = icon["y"].as_u64().unwrap() as u32;
@@ -196,9 +199,16 @@ pub fn load_champion_icon(assets: &Assets, champion: &str) -> Handle {
     Handle::from_pixels(icon.width(), icon.height(), icon.to_image().into_vec())
 }
 
-pub fn load_summoner_spell_icon(assets: &Assets, summoner_spell: &str) -> Handle {
+pub fn load_summoner_spell_icon(assets: &Assets, summoner_spell: core::SummonerSpell) -> Handle {
     let icon_data = assets.data.get(&DataFile::SummonerSpell).unwrap();
-    let icon = &icon_data["data"][summoner_spell]["image"];
+    let spell = {
+        let data = icon_data["data"].as_object().unwrap();
+        data.iter()
+            .find(|(_, data)| data["key"] == summoner_spell.id().to_string().as_str())
+            .and_then(|(_, data)| data["id"].as_str())
+            .unwrap()
+    };
+    let icon = &icon_data["data"][spell]["image"];
     let sprite = Sprite::try_from(icon["sprite"].as_str().unwrap().to_string()).unwrap();
     let x = icon["x"].as_u64().unwrap() as u32;
     let y = icon["y"].as_u64().unwrap() as u32;
@@ -211,8 +221,8 @@ pub fn load_summoner_spell_icon(assets: &Assets, summoner_spell: &str) -> Handle
     Handle::from_pixels(icon.width(), icon.height(), icon.to_image().into_vec())
 }
 
-pub fn load_runes_icon(assets: &Assets, rune: &str) -> Handle {
-    let rune_path = assets.runes.get(rune).unwrap();
+pub fn load_runes_icon(assets: &Assets, rune: core::RuneKeystone) -> Handle {
+    let rune_path = assets.runes.get(&rune).unwrap();
     let mut path = std::path::PathBuf::from(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "\\assets\\img\\runes\\"
@@ -222,9 +232,9 @@ pub fn load_runes_icon(assets: &Assets, rune: &str) -> Handle {
     Handle::from_path(path)
 }
 
-pub fn load_item_icon(assets: &Assets, item_id: &str) -> Handle {
+pub fn load_item_icon(assets: &Assets, item: core::Item) -> Handle {
     let icon_data = assets.data.get(&DataFile::Item).unwrap();
-    let icon = &icon_data["data"][item_id]["image"];
+    let icon = &icon_data["data"][item.to_string()]["image"];
     let sprite = Sprite::try_from(icon["sprite"].as_str().unwrap().to_string()).unwrap();
     let x = icon["x"].as_u64().unwrap() as u32;
     let y = icon["y"].as_u64().unwrap() as u32;

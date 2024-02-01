@@ -4,6 +4,7 @@ use self::summary::Summary;
 
 use super::game::{self, Game};
 use super::{theme, Role};
+use crate::core;
 use iced::widget::{column, container, scrollable};
 use iced::{Alignment, Element, Length};
 
@@ -22,28 +23,28 @@ impl Timeline {
     pub fn new(assets: &crate::assets::Assets) -> Self {
         let champions = vec![
             summary::Champion {
-                handle: load_champion_icon(assets, "TwistedFate"),
+                handle: load_champion_icon(assets, core::Champion::new(4)),
                 wins: 2,
                 losses: 1,
                 kda: 1.15,
                 lane: Role::Mid.icon(),
             },
             summary::Champion {
-                handle: load_champion_icon(assets, "Orianna"),
+                handle: load_champion_icon(assets, core::Champion::new(61)),
                 wins: 3,
                 losses: 0,
                 kda: 2.0,
                 lane: Role::Bottom.icon(),
             },
             summary::Champion {
-                handle: load_champion_icon(assets, "Annie"),
+                handle: load_champion_icon(assets, core::Champion::new(1)),
                 wins: 2,
                 losses: 2,
                 kda: 3.0,
                 lane: Role::Support.icon(),
             },
             summary::Champion {
-                handle: load_champion_icon(assets, "Sion"),
+                handle: load_champion_icon(assets, core::Champion::new(14)),
                 wins: 0,
                 losses: 3,
                 kda: 0.5,
@@ -57,11 +58,11 @@ impl Timeline {
                 .into_iter()
                 .map(|_| {
                     [
-                        Game::new(true, assets, "Annie"),
-                        Game::new(false, assets, "Sion"),
-                        Game::new(true, assets, "Darius"),
-                        Game::new(false, assets, "KSante"),
-                        Game::new(false, assets, "MonkeyKing"),
+                        Game::new(true, assets, core::Champion::new(1)),
+                        Game::new(false, assets, core::Champion::new(14)),
+                        Game::new(true, assets, core::Champion::new(122)),
+                        Game::new(false, assets, core::Champion::new(897)),
+                        Game::new(false, assets, core::Champion::new(62)),
                     ]
                 })
                 .flatten()
