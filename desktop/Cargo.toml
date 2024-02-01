@@ -7,11 +7,11 @@ edition = "2021"
 
 [dependencies]
 aery_core = { path = "../core" }
-iced = { git = "https://github.com/iced-rs/iced", rev = "5540ac07e4695cc4e268979eca4efeb604b7c77f", features = ["image", "advanced", "tokio"] }
-tracing = "0.1.37"
-tracing-subscriber = "0.3.17"
-time = "0.3.29"
-image = "0.24.6"
-serde_json = "1.0.107"
-dotenv = "0.15.0"
+iced = { git = "https://github.com/iced-rs/iced", rev = "759f0e922598504705b543185bc7140a652b726a", features = ["image", "advanced", "tokio"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+time = "0.3"
+image = "0.24"
+serde_json = "1.0"
+dotenv = "0.15"
 futures = "0.3"

@@ -210,15 +210,14 @@ mod modal {
             state: &'b mut widget::Tree,
             layout: Layout<'_>,
             _renderer: &Renderer,
+            translation: Vector,
         ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
-            Some(overlay::Element::new(
-                layout.position(),
-                Box::new(Overlay {
-                    content: &mut self.level,
-                    tree: &mut state.children[1],
-                    size: layout.bounds().size(),
-                }),
-            ))
+            Some(overlay::Element::new(Box::new(Overlay {
+                position: layout.position() + translation,
+                content: &mut self.level,
+                tree: &mut state.children[1],
+                size: layout.bounds().size(),
+            })))
         }
 
         fn mouse_interaction(
@@ -252,6 +251,7 @@ mod modal {
     }
 
     struct Overlay<'a, 'b, Message, Theme, Renderer> {
+        position: Point,
         content: &'b mut Element<'a, Message, Theme, Renderer>,
         tree: &'b mut widget::Tree,
         size: Size,
@@ -263,13 +263,7 @@ mod modal {
         Renderer: advanced::Renderer,
         Message: Clone,
     {
-        fn layout(
-            &mut self,
-            renderer: &Renderer,
-            _bounds: Size,
-            position: Point,
-            _translation: Vector,
-        ) -> layout::Node {
+        fn layout(&mut self, renderer: &Renderer, _bounds: Size) -> layout::Node {
             let limits = layout::Limits::new(Size::ZERO, self.size)
                 .width(Length::Fill)
                 .height(Length::Fill);
@@ -285,7 +279,7 @@ mod modal {
                     // .pad([0.0, 0.0, child.size().height / 2.0, 0.0].into()),
                 );
 
-            layout::Node::with_children(self.size, vec![child]).move_to(position)
+            layout::Node::with_children(self.size, vec![child]).move_to(self.position)
         }
 
         fn on_event(
@@ -367,6 +361,7 @@ mod modal {
                 self.tree,
                 layout.children().next().unwrap(),
                 renderer,
+                Vector::ZERO,
             )
         }
     }
