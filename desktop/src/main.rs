@@ -33,6 +33,7 @@ pub fn main() -> iced::Result {
 
 struct Aery {
     client: core::Client,
+    assets: Assets,
     profile: Option<Profile>,
 
     timeline: Timeline,
@@ -77,6 +78,7 @@ impl Application for Aery {
                 summoner: Summoner::new(5843),
                 search_bar: SearchBar::new(),
                 ranked_overview: RankedOverview::new(&assets),
+                assets,
             },
             Command::none(),
         )
@@ -89,6 +91,7 @@ impl Application for Aery {
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
             Message::FetchedProfile(Ok(profile)) => {
+                self.timeline = Timeline::from_profile(&self.assets, &profile);
                 self.profile = Some(profile);
             }
             Message::FetchedProfile(Err(error)) => panic!("failed: {error}"),

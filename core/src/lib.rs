@@ -9,7 +9,7 @@ pub use summoner::Summoner;
 pub mod game_match;
 pub use game_match::GameMatch;
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Queue {
     /// CUSTOM
     Custom,
@@ -80,10 +80,72 @@ impl From<riven::consts::Queue> for Queue {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Duration(time::Duration);
+#[derive(Debug, Clone, Copy)]
+pub struct Duration(pub time::Duration);
+
+impl ToString for Duration {
+    fn to_string(&self) -> String {
+        let minutes = self.0.whole_minutes();
+        let seconds = self.0.whole_seconds();
+
+        format!("{minutes}:{seconds}")
+    }
+}
 
 #[derive(Debug, Clone)]
+pub struct Time(pub time::OffsetDateTime);
+
+impl ToString for Time {
+    fn to_string(&self) -> String {
+        let now = time::OffsetDateTime::now_utc();
+        let duration = now - self.0;
+        let seconds = duration.whole_seconds();
+        let minutes = seconds / 60;
+        let hours = minutes / 60;
+        let days = hours / 24;
+        let weeks = days / 7;
+        let months = days / 30;
+        let years = days / 365;
+
+        if seconds < 60 {
+            String::from("few seconds ago")
+        } else if minutes < 60 {
+            format!(
+                "{} minute{} ago",
+                minutes,
+                if minutes == 1 { "" } else { "s" }
+            )
+        } else if hours < 24 {
+            format!("{} hour{} ago", hours, if hours == 1 { "" } else { "s" })
+        } else if days < 7 {
+            if days == 1 {
+                String::from("yesterday")
+            } else {
+                format!("{} days ago", days)
+            }
+        } else if weeks < 4 {
+            if weeks == 1 {
+                String::from("last week")
+            } else {
+                format!("{} weeks ago", weeks)
+            }
+        } else if months < 12 {
+            if months == 1 {
+                String::from("last month")
+            } else {
+                format!("{} months ago", months)
+            }
+        } else {
+            if years == 1 {
+                return String::from("last year");
+            } else {
+                format!("{} years ago", years)
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum Role {
     Bottom,
     Jungle,
@@ -120,7 +182,7 @@ impl From<String> for Role {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Item(u32);
 
 impl Item {
@@ -147,11 +209,26 @@ impl TryFrom<i32> for Item {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Trinket(u32);
 
-#[derive(Debug)]
+impl Into<Item> for Trinket {
+    fn into(self) -> Item {
+        Item(self.0)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 pub struct Inventory([Option<Item>; 6]);
+
+impl IntoIterator for Inventory {
+    type Item = Option<Item>;
+    type IntoIter = std::array::IntoIter<Self::Item, 6>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Champion(u32);
@@ -186,8 +263,18 @@ impl SummonerSpell {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct SummonerSpells([SummonerSpell; 2]);
+
+impl SummonerSpells {
+    pub fn first(&self) -> SummonerSpell {
+        self.0[0]
+    }
+
+    pub fn second(&self) -> SummonerSpell {
+        self.0[1]
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RuneKeystone(u32);
@@ -198,18 +285,32 @@ impl RuneKeystone {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct PrimaryRune {
     keystone: RuneKeystone,
     lesser: [RuneKeystone; 3],
 }
 
-#[derive(Debug)]
+impl PrimaryRune {
+    pub fn keystone(&self) -> RuneKeystone {
+        self.keystone
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 pub struct SecondaryRune {
     lesser: [RuneKeystone; 2],
 }
 
-#[derive(Debug)]
+impl SecondaryRune {
+    pub fn keystone(&self) -> RuneKeystone {
+        // TODO: verify this, caused by https://github.com/RiotGames/developer-relations/issues/724
+        // this should transform the "lesser" rune id into the "major", by zeroing out the last two digits
+        RuneKeystone((self.lesser[0].0 / 100) * 100)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 pub struct RuneStats {
     defense: u32,
     flex: u32,
@@ -226,25 +327,25 @@ impl From<riven::models::match_v5::PerkStats> for RuneStats {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct RunePage {
-    primary: PrimaryRune,
-    secondary: SecondaryRune,
+    pub primary: PrimaryRune,
+    pub secondary: SecondaryRune,
     stats: RuneStats,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Participant {
-    puuid: String,
+    pub puuid: String,
 
-    won: bool,
-    role: Role,
-    inventory: Inventory,
-    trinket: Trinket,
-    champion: Champion,
-    summoner_spells: SummonerSpells,
-    rune_page: RunePage,
-    stats: ParticipantStats,
+    pub won: bool,
+    pub role: Role,
+    pub inventory: Inventory,
+    pub trinket: Trinket,
+    pub champion: Champion,
+    pub summoner_spells: SummonerSpells,
+    pub rune_page: RunePage,
+    pub stats: ParticipantStats,
 }
 
 impl From<&riven::models::match_v5::Participant> for Participant {
@@ -305,7 +406,7 @@ impl From<&riven::models::match_v5::Participant> for Participant {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ParticipantStats {
     kills: u32,
     deaths: u32,

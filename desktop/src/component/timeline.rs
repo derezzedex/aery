@@ -20,6 +20,50 @@ pub struct Timeline {
 }
 
 impl Timeline {
+    pub fn from_profile(assets: &crate::assets::Assets, profile: &crate::Profile) -> Self {
+        let champions = vec![
+            summary::Champion {
+                handle: load_champion_icon(assets, core::Champion::new(4)),
+                wins: 2,
+                losses: 1,
+                kda: 1.15,
+                lane: Role::Mid.icon(),
+            },
+            summary::Champion {
+                handle: load_champion_icon(assets, core::Champion::new(61)),
+                wins: 3,
+                losses: 0,
+                kda: 2.0,
+                lane: Role::Bottom.icon(),
+            },
+            summary::Champion {
+                handle: load_champion_icon(assets, core::Champion::new(1)),
+                wins: 2,
+                losses: 2,
+                kda: 3.0,
+                lane: Role::Support.icon(),
+            },
+            summary::Champion {
+                handle: load_champion_icon(assets, core::Champion::new(14)),
+                wins: 0,
+                losses: 3,
+                kda: 0.5,
+                lane: Role::Top.icon(),
+            },
+        ];
+
+        let games = profile
+            .games
+            .iter()
+            .map(|game| Game::from_summoner_game(assets, &profile.summoner, game))
+            .collect();
+
+        Timeline {
+            summary: Summary::new(champions),
+            games,
+        }
+    }
+
     pub fn new(assets: &crate::assets::Assets) -> Self {
         let champions = vec![
             summary::Champion {

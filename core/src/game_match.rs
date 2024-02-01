@@ -1,4 +1,4 @@
-use crate::{Client, Duration, Participant, Queue};
+use crate::{Client, Duration, Participant, Queue, Time};
 
 use riven::consts::RegionalRoute;
 
@@ -65,6 +65,15 @@ impl GameMatch {
 
     pub fn queue(&self) -> Queue {
         self.0.info.queue_id.into()
+    }
+
+    pub fn created_at(&self) -> Time {
+        Time(
+            time::OffsetDateTime::from_unix_timestamp_nanos(
+                self.0.info.game_creation as i128 * 1_000_000,
+            )
+            .unwrap(),
+        )
     }
 
     pub fn duration(&self) -> Duration {
