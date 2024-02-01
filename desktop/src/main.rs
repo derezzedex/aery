@@ -18,6 +18,8 @@ use component::search_bar::{self, SearchBar};
 use component::summoner::{self, Summoner};
 use component::timeline::{self, Timeline};
 
+use aery_core as core;
+
 pub fn main() -> iced::Result {
     Aery::run(Settings {
         antialiasing: true,
@@ -30,7 +32,7 @@ pub fn main() -> iced::Result {
 }
 
 struct Aery {
-    client: aery_core::Client,
+    client: core::Client,
     profile: Option<Profile>,
 
     timeline: Timeline,
@@ -41,9 +43,9 @@ struct Aery {
 
 #[derive(Debug, Clone)]
 struct Profile {
-    summoner: aery_core::Summoner,
-    leagues: Vec<aery_core::summoner::League>,
-    games: Vec<aery_core::GameMatch>,
+    summoner: core::Summoner,
+    leagues: Vec<core::summoner::League>,
+    games: Vec<core::GameMatch>,
 }
 
 #[derive(Debug, Clone)]
@@ -68,7 +70,7 @@ impl Application for Aery {
 
         (
             Self {
-                client: aery_core::Client::new(api_key),
+                client: core::Client::new(api_key),
                 profile: None,
 
                 timeline: Timeline::new(&assets),
@@ -98,7 +100,7 @@ impl Application for Aery {
                             let client = self.client.clone();
 
                             return Command::perform(
-                                aery_core::Summoner::from_name(client, name),
+                                core::Summoner::from_name(client, name),
                                 |summoner| {
                                     Message::Summoner(summoner::Message::SummonerFetched(summoner))
                                 },
@@ -160,8 +162,8 @@ impl Application for Aery {
     }
 }
 
-async fn fetch_profile(client: aery_core::Client, name: String) -> Result<Profile, String> {
-    let Ok(summoner) = aery_core::Summoner::from_name(client.clone(), name).await else {
+async fn fetch_profile(client: core::Client, name: String) -> Result<Profile, String> {
+    let Ok(summoner) = core::Summoner::from_name(client.clone(), name).await else {
         return Err(String::from("Summoner not found!"));
     };
 
@@ -181,7 +183,7 @@ async fn fetch_profile(client: aery_core::Client, name: String) -> Result<Profil
         })
         .flat_map(|game_ids| {
             stream::iter(game_ids)
-                .filter_map(|id| aery_core::GameMatch::from_id(&client, id).map(Result::ok))
+                .filter_map(|id| core::GameMatch::from_id(&client, id).map(Result::ok))
         })
         .collect()
         .await;

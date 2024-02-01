@@ -1,3 +1,4 @@
+use crate::core;
 use crate::text;
 use crate::theme;
 use crate::widget::bold;
@@ -10,7 +11,7 @@ use iced::Length;
 #[derive(Debug, Clone)]
 pub enum Message {
     Update,
-    SummonerFetched(Result<aery_core::Summoner, aery_core::summoner::RequestError>),
+    SummonerFetched(Result<core::Summoner, core::summoner::RequestError>),
 }
 
 #[allow(dead_code)]
