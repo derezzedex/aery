@@ -352,7 +352,11 @@ impl Game {
 
         let player_items = {
             row![
-                column![item_icon(self.item_images[0].clone()), item_icon(None)].spacing(2),
+                column![
+                    item_icon(self.item_images[0].clone()),
+                    item_icon(self.item_images[1].clone())
+                ]
+                .spacing(2),
                 column![
                     item_icon(self.item_images[2].clone()),
                     item_icon(self.item_images[3].clone())
