@@ -9,6 +9,7 @@ use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::theme::chevron_up_icon;
 use crate::widget;
+use iced::widget::horizontal_space;
 use iced::widget::image;
 use iced::widget::vertical_space;
 use iced::widget::{button, column, container, row, text, Space};
@@ -433,13 +434,16 @@ impl Game {
         let overview = container(row![
             row![
                 match_stats,
+                horizontal_space(Length::Fill),
                 champion_info,
+                horizontal_space(Length::Fill),
                 player_stats,
+                horizontal_space(Length::Fill),
                 player_items,
+                horizontal_space(Length::Fill),
                 other_players,
             ]
             .width(Length::Fill)
-            .spacing(28)
             .padding(4)
             .align_items(Alignment::Center),
             expand_button.padding(0),
