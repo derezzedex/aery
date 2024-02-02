@@ -240,7 +240,13 @@ impl Champion {
     }
 
     pub fn identifier(&self) -> Option<&str> {
-        riven::consts::Champion(self.0 as i16).identifier()
+        // NOTE: Pretty sure this is a `riven` bug,
+        // checking https://github.com/RiotGames/developer-relations/issues/7
+        // shows that the `champion.json` uses `Fiddlesticks`!
+        match self.0 {
+            9 => Some("Fiddlesticks"),
+            _ => riven::consts::Champion(self.0 as i16).identifier(),
+        }
     }
 }
 
