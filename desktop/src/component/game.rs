@@ -159,7 +159,7 @@ impl Game {
             queue: Queue::RankedFlex,
             time: game.created_at(),
             duration: game.duration(),
-            role: Some(Role::Mid),
+            role,
             champion_image,
             summoner_spell_images,
             runes_images,
