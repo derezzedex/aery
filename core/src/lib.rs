@@ -95,6 +95,12 @@ impl ToString for Duration {
 #[derive(Debug, Clone)]
 pub struct Time(pub time::OffsetDateTime);
 
+impl AsRef<time::OffsetDateTime> for Time {
+    fn as_ref(&self) -> &time::OffsetDateTime {
+        &self.0
+    }
+}
+
 impl ToString for Time {
     fn to_string(&self) -> String {
         let now = time::OffsetDateTime::now_utc();

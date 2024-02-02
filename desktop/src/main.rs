@@ -3,6 +3,8 @@ mod component;
 mod theme;
 mod widget;
 
+use std::cmp::Reverse;
+
 use futures::stream;
 use futures::FutureExt;
 use futures::StreamExt;
@@ -178,7 +180,7 @@ async fn fetch_profile(client: core::Client, name: String) -> Result<Profile, St
         return Err(String::from("Failed to fetch summoner leagues."));
     };
 
-    let games = stream::iter(leagues.iter())
+    let mut games: Vec<core::GameMatch> = stream::iter(leagues.iter())
         .filter_map(|league| {
             summoner
                 .matches(&client, 0..10, league.queue_kind())
@@ -190,6 +192,8 @@ async fn fetch_profile(client: core::Client, name: String) -> Result<Profile, St
         })
         .collect()
         .await;
+
+    games.sort_unstable_by_key(|game| Reverse(*game.created_at().as_ref()));
 
     Ok(Profile {
         summoner,
