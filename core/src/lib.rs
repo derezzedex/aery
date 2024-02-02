@@ -396,6 +396,7 @@ impl From<&riven::models::match_v5::Participant> for Participant {
             deaths: participant.deaths as u32,
             assists: participant.assists as u32,
             creep_score: participant.total_minions_killed as u32,
+            monster_score: participant.neutral_minions_killed as u32,
             vision_score: participant.vision_score as u32,
         };
 
@@ -423,6 +424,7 @@ pub struct ParticipantStats {
     deaths: u32,
     assists: u32,
     creep_score: u32,
+    monster_score: u32,
     vision_score: u32,
 }
 
@@ -445,6 +447,10 @@ impl ParticipantStats {
 
     pub fn creep_score(&self) -> u32 {
         self.creep_score
+    }
+
+    pub fn monster_score(&self) -> u32 {
+        self.monster_score
     }
 
     pub fn vision_score(&self) -> u32 {

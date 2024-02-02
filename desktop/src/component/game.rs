@@ -169,7 +169,8 @@ impl Game {
             player_kills: player.stats.kills() as u16,
             player_deaths: player.stats.deaths() as u16,
             player_assists: player.stats.assists() as u16,
-            player_creep_score: player.stats.creep_score() as u16,
+            player_creep_score: player.stats.creep_score() as u16
+                + player.stats.monster_score() as u16,
             player_vision_score: player.stats.vision_score() as u16,
             summoners: (0..10)
                 .map(|i| Summoner(format!("Summoner {}", i)))
