@@ -354,6 +354,7 @@ pub struct RunePage {
 #[derive(Debug, Clone)]
 pub struct Participant {
     pub puuid: String,
+    pub name: String,
 
     pub won: bool,
     pub role: Role,
@@ -408,6 +409,7 @@ impl From<&riven::models::match_v5::Participant> for Participant {
 
         Self {
             puuid: participant.puuid.clone(),
+            name: participant.summoner_name.clone(),
 
             won: participant.win,
             role: participant.team_position.clone().into(),

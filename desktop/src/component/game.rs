@@ -88,6 +88,7 @@ pub struct Game {
     player_assists: u16,
     player_creep_score: u16,
     player_vision_score: u16,
+    player_index: usize,
     summoners: Vec<Summoner>,
 
     is_expanded: bool,
@@ -105,10 +106,11 @@ impl Game {
         game: &core::GameMatch,
     ) -> Self {
         let partipants = game.participants();
-        let player = partipants
+        let (player_index, player) = partipants
             .iter()
-            .find(|p| p.puuid == summoner.puuid())
-            .cloned()
+            .enumerate()
+            .find(|(_, p)| p.puuid == summoner.puuid())
+            .map(|(i, p)| (i, p.clone()))
             .unwrap();
 
         let champion_image = load_champion_icon(assets, player.champion);
@@ -132,18 +134,12 @@ impl Game {
 
         let trinket_image = load_item_icon(assets, player.trinket.into());
 
-        let summoner_icons = [
-            load_champion_icon(assets, player.champion),
-            load_champion_icon(assets, core::Champion::new(1)),
-            load_champion_icon(assets, core::Champion::new(101)),
-            load_champion_icon(assets, core::Champion::new(14)),
-            load_champion_icon(assets, core::Champion::new(122)),
-            load_champion_icon(assets, core::Champion::new(897)),
-            load_champion_icon(assets, core::Champion::new(62)),
-            load_champion_icon(assets, core::Champion::new(4)),
-            load_champion_icon(assets, core::Champion::new(61)),
-            load_champion_icon(assets, core::Champion::new(202)),
-        ];
+        let summoner_icons = partipants
+            .iter()
+            .map(|participant| load_champion_icon(assets, participant.champion))
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap();
 
         let role = match player.role {
             core::Role::Bottom => Some(Role::Bottom),
@@ -172,8 +168,10 @@ impl Game {
             player_creep_score: player.stats.creep_score() as u16
                 + player.stats.monster_score() as u16,
             player_vision_score: player.stats.vision_score() as u16,
-            summoners: (0..10)
-                .map(|i| Summoner(format!("Summoner {}", i)))
+            player_index,
+            summoners: partipants
+                .iter()
+                .map(|participant| Summoner(participant.name.clone()))
                 .collect(),
 
             is_expanded: false,
@@ -232,6 +230,7 @@ impl Game {
             player_assists: 12,
             player_creep_score: 151,
             player_vision_score: 18,
+            player_index: 0,
             summoners: (0..10)
                 .map(|i| Summoner(format!("Summoner {}", i)))
                 .collect(),
@@ -373,19 +372,22 @@ impl Game {
             .spacing(2)
         };
 
-        let player_i = 0;
         let mut left_players: Vec<Element<_>> = self
             .summoners
             .iter()
             .enumerate()
             .map(|(i, summoner)| {
                 let summoner_icon = image(self.summoner_icons[i].clone())
-                    .width(14.0)
-                    .height(14.0);
-                let summoner_name = if player_i == i {
-                    widget::bold(summoner.to_string()).size(8.0)
+                    .width(16.0)
+                    .height(16.0);
+                let summoner_name = if i == self.player_index {
+                    text(summoner.to_string())
+                        .size(8.0)
+                        .line_height(iced::Pixels(12.0))
                 } else {
                     widget::small_text(summoner.to_string())
+                        .size(8.0)
+                        .line_height(iced::Pixels(12.0))
                 };
 
                 row![summoner_icon, summoner_name]
