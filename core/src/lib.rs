@@ -85,10 +85,10 @@ pub struct Duration(pub time::Duration);
 
 impl ToString for Duration {
     fn to_string(&self) -> String {
-        let minutes = self.0.whole_minutes();
-        let seconds = self.0.whole_seconds();
+        let minutes = self.0.whole_minutes().to_string();
+        let seconds = self.0.whole_seconds().to_string();
 
-        format!("{minutes}:{seconds}")
+        format!("{minutes:.2}m {seconds:.2}s")
     }
 }
 
