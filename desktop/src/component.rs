@@ -6,6 +6,7 @@ pub mod search_bar;
 pub mod summoner;
 pub mod timeline;
 
+use crate::core;
 use crate::theme;
 use iced::widget::image::Handle;
 
@@ -25,13 +26,28 @@ impl ToString for Queue {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Role {
     Bottom,
     Jungle,
     Mid,
     Support,
     Top,
+}
+
+impl TryFrom<core::Role> for Role {
+    type Error = ();
+
+    fn try_from(role: core::Role) -> Result<Self, Self::Error> {
+        match role {
+            core::Role::Bottom => Ok(Self::Bottom),
+            core::Role::Jungle => Ok(Self::Jungle),
+            core::Role::Mid => Ok(Self::Mid),
+            core::Role::Support => Ok(Self::Support),
+            core::Role::Top => Ok(Self::Top),
+            core::Role::Unknown => Err(()),
+        }
+    }
 }
 
 impl Role {

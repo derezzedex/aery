@@ -21,36 +21,7 @@ pub struct Timeline {
 
 impl Timeline {
     pub fn from_profile(assets: &crate::assets::Assets, profile: &crate::Profile) -> Self {
-        let champions = vec![
-            summary::Champion {
-                handle: load_champion_icon(assets, core::Champion::new(4)),
-                wins: 2,
-                losses: 1,
-                kda: 1.15,
-                lane: Role::Mid.icon(),
-            },
-            summary::Champion {
-                handle: load_champion_icon(assets, core::Champion::new(61)),
-                wins: 3,
-                losses: 0,
-                kda: 2.0,
-                lane: Role::Bottom.icon(),
-            },
-            summary::Champion {
-                handle: load_champion_icon(assets, core::Champion::new(1)),
-                wins: 2,
-                losses: 2,
-                kda: 3.0,
-                lane: Role::Support.icon(),
-            },
-            summary::Champion {
-                handle: load_champion_icon(assets, core::Champion::new(14)),
-                wins: 0,
-                losses: 3,
-                kda: 0.5,
-                lane: Role::Top.icon(),
-            },
-        ];
+        let summary = Summary::from_games(assets, &profile.summoner, &profile.games);
 
         let games = profile
             .games
@@ -58,10 +29,7 @@ impl Timeline {
             .map(|game| Game::from_summoner_game(assets, &profile.summoner, game))
             .collect();
 
-        Timeline {
-            summary: Summary::new(champions),
-            games,
-        }
+        Timeline { summary, games }
     }
 
     pub fn new(assets: &crate::assets::Assets) -> Self {
@@ -157,7 +125,9 @@ impl Timeline {
 pub mod summary {
     use super::theme;
     use super::Message;
+    use crate::assets;
     use crate::component::Role;
+    use crate::core;
     use crate::text;
     use crate::widget;
     use iced::alignment;
@@ -168,6 +138,7 @@ pub mod summary {
         column, container, horizontal_rule, horizontal_space, progress_bar, row, text,
     };
     use iced::{Alignment, Element};
+    use itertools::Itertools;
 
     trait Fit {
         fn fit(self, size: u16) -> Self;
@@ -185,46 +156,114 @@ pub mod summary {
     pub struct Champion {
         pub handle: Handle,
         pub lane: Handle,
-        pub wins: i16,
-        pub losses: i16,
+        pub wins: usize,
+        pub losses: usize,
         pub kda: f32,
+    }
+
+    #[derive(Debug, Clone, Default)]
+    pub struct RoleStats {
+        wins: usize,
+        losses: usize,
+        kills: usize,
+        deaths: usize,
+        assists: usize,
     }
 
     #[derive(Debug, Clone)]
     pub struct Summary {
-        wins: i8,
-        losses: i8,
-        ratio: f32,
-        kill_ratio: f32,
-        death_ratio: f32,
-        assist_ratio: f32,
+        wins: usize,
+        losses: usize,
+
+        role: Role,
+        role_stats: RoleStats,
 
         champions: Vec<Champion>,
     }
 
     impl Summary {
-        pub fn new(champions: Vec<Champion>) -> Summary {
-            let wins = 6;
-            let losses = 4;
-            let ratio = (wins as f32 / (wins + losses) as f32) * 100.0;
-            let kill_ratio = 2.7;
-            let death_ratio = 6.7;
-            let assist_ratio = 7.0;
+        pub fn from_games(
+            assets: &crate::Assets,
+            player: &core::Summoner,
+            games: &Vec<core::GameMatch>,
+        ) -> Summary {
+            let games = games
+                .iter()
+                .map(|game| game.participant(player.puuid()).unwrap())
+                .collect_vec();
 
-            Summary {
+            let wins = games.iter().filter(|game| game.won).count();
+            let losses = games.len() - wins;
+
+            let (role, role_stats) = games
+                .iter()
+                .filter(|p| p.role != core::Role::Unknown)
+                .into_grouping_map_by(|p| Role::try_from(p.role).unwrap())
+                .fold(RoleStats::default(), |acc, _role, p| RoleStats {
+                    wins: acc.wins + p.won as usize,
+                    losses: acc.losses + p.won as usize,
+                    kills: acc.kills + p.stats.kills() as usize,
+                    deaths: acc.deaths + p.stats.deaths() as usize,
+                    assists: acc.assists + p.stats.assists() as usize,
+                })
+                .into_iter()
+                .max_by(|(_, a), (_, b)| a.wins.cmp(&b.wins))
+                .unwrap();
+
+            let champions = games
+                .iter()
+                .filter_map(|p| Some((Role::try_from(p.role).ok()?, p)))
+                .into_grouping_map_by(|&(r, p)| (r, p.champion))
+                .fold(RoleStats::default(), |acc, _, (_, p)| RoleStats {
+                    wins: acc.wins + p.won as usize,
+                    losses: acc.losses + p.won as usize,
+                    kills: acc.kills + p.stats.kills() as usize,
+                    deaths: acc.deaths + p.stats.deaths() as usize,
+                    assists: acc.assists + p.stats.assists() as usize,
+                })
+                .into_iter()
+                .sorted_unstable_by(|(_, a), (_, b)| b.wins.cmp(&a.wins))
+                .take(4)
+                .map(|((role, champion), stats)| Champion {
+                    handle: assets::load_champion_icon(assets, champion),
+                    lane: role.icon(),
+                    wins: stats.wins,
+                    losses: stats.losses,
+                    kda: stats.kills as f32 + stats.assists as f32 / stats.deaths as f32,
+                })
+                .collect_vec();
+
+            Self {
                 wins,
                 losses,
-                ratio,
-                kill_ratio,
-                death_ratio,
-                assist_ratio,
+
+                role,
+                role_stats,
+
+                champions,
+            }
+        }
+
+        pub fn new(champions: Vec<Champion>) -> Summary {
+            Summary {
+                wins: 6,
+                losses: 4,
+                role: Role::Mid,
+                role_stats: RoleStats {
+                    wins: 6,
+                    losses: 4,
+                    kills: 25,
+                    deaths: 4,
+                    assists: 50,
+                },
                 champions,
             }
         }
 
         pub fn view(&self) -> Element<Message> {
             let total = self.wins + self.losses;
-            let is_positive_ratio = self.ratio > 50.0;
+            let ratio = (self.wins as f32 / total as f32) * 100.0;
+            let is_positive_ratio = self.wins > self.losses;
 
             let title_bar = row![
                 widget::bold("Recent summary").size(12),
@@ -251,14 +290,14 @@ pub mod summary {
                     ]
                     .spacing(4),
                     text("·").fit(18).style(theme::sub_text()),
-                    text!("{:.1}%", self.ratio)
+                    text!("{:.1}%", ratio)
                         .fit(12)
                         .style(theme::win_color(is_positive_ratio)),
                 ]
                 .align_items(Alignment::Center)
                 .spacing(4);
 
-                let ratio_bar = progress_bar(0.0..=100.0, self.ratio)
+                let ratio_bar = progress_bar(0.0..=100.0, ratio)
                     .width(80.0)
                     .height(4.0)
                     .style(theme::ratio_bar());
@@ -273,44 +312,52 @@ pub mod summary {
             };
 
             let summary_lane = {
-                let lane_icon = image(Role::Mid.icon())
+                let lane_icon = image(self.role.icon())
                     .width(24.0)
                     .height(24.0)
                     .content_fit(iced::ContentFit::Fill);
+
+                let total = self.role_stats.wins + self.role_stats.losses;
+                let lane_ratio = (self.role_stats.wins as f32 / total as f32) * 100.0;
+                let kill_ratio = self.role_stats.kills as f32 / total as f32;
+                let death_ratio = self.role_stats.deaths as f32 / total as f32;
+                let assist_ratio = self.role_stats.assists as f32 / total as f32;
 
                 let lane_info = column![
                     row![
                         row![
                             row![
-                                text!("{}", self.wins).fit(12),
+                                text!("{}", self.role_stats.wins).fit(12),
                                 text("W").fit(12).style(theme::gray_text())
                             ]
                             .spacing(1),
                             row![
-                                text!("{}", self.losses).fit(12),
+                                text!("{}", self.role_stats.losses).fit(12),
                                 text("L").fit(12).style(theme::gray_text())
                             ]
                         ]
                         .spacing(4),
                         text("·").fit(18).style(theme::sub_text()),
-                        text!("{:.1}%", self.ratio)
+                        text!("{:.1}%", lane_ratio)
                             .fit(12)
-                            .style(theme::win_color(is_positive_ratio)),
+                            .style(theme::win_color(lane_ratio > 50.0)),
                     ]
                     .align_items(Alignment::Center)
                     .spacing(4),
                     row![
-                        text!("{:.1}", self.kill_ratio).size(10),
+                        text!("{:.1}", kill_ratio).size(10),
                         text("/").size(10).style(theme::gray_text()),
-                        text!("{:.1}", self.death_ratio).size(10),
+                        text!("{:.1}", death_ratio).size(10),
                         text("/").size(10).style(theme::gray_text()),
-                        text!("{:.1}", self.assist_ratio).size(10),
+                        text!("{:.1}", assist_ratio).size(10),
                         horizontal_space(2),
                         row![
                             text("(").size(10).style(theme::red_text()),
                             text!(
                                 "{:.1} KDA",
-                                self.death_ratio + self.assist_ratio / self.kill_ratio
+                                ((self.role_stats.kills as f32 + self.role_stats.assists as f32)
+                                    / self.role_stats.deaths as f32)
+                                    / total as f32,
                             )
                             .size(10)
                             .style(theme::red_text()),

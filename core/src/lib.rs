@@ -151,7 +151,7 @@ impl ToString for Time {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Role {
     Bottom,
     Jungle,
@@ -236,7 +236,7 @@ impl IntoIterator for Inventory {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Champion(u32);
 
 impl Champion {

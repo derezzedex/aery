@@ -125,11 +125,12 @@ impl GameMatch {
             })
     }
 
-    pub fn participant(&self, puuid: &str) -> Option<&riven::models::match_v5::Participant> {
+    pub fn participant(&self, puuid: &str) -> Option<Participant> {
         self.0
             .info
             .participants
             .iter()
             .find(|participant| participant.puuid == puuid)
+            .map(Participant::from)
     }
 }

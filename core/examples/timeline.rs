@@ -23,11 +23,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .participant(summoner.puuid())
                 .expect("Participant missing");
 
-            let result = if player.win { "Win" } else { "Lose" };
+            let result = if player.won { "Win" } else { "Lose" };
 
             println!(
                 "[{}] {}: {}/{}/{}",
-                result, player.champion_name, player.kills, player.deaths, player.assists
+                result,
+                player.champion.identifier().unwrap(),
+                player.stats.kills(),
+                player.stats.deaths(),
+                player.stats().assists()
             );
 
             future::ready(())
