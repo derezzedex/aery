@@ -4,7 +4,7 @@ use iced::{
 };
 
 use crate::component::Queue;
-use crate::summoner::{Division, Tier};
+use crate::summoner::Tier;
 use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::widget;
@@ -103,45 +103,86 @@ fn ranked_container<'a>(
     .into()
 }
 
+fn unranked_container<'a>(queue: Queue) -> Element<'a, Message> {
+    let left_bar = container(horizontal_space(2))
+        .style(theme::left_bar_container())
+        .height(18);
+
+    container(
+        row![
+            left_bar,
+            horizontal_space(4),
+            widget::bold(queue.to_string()).size(14),
+            horizontal_space(Length::Fill),
+            text("Unranked").style(theme::sub_text()).size(12)
+        ]
+        .align_items(Alignment::Center),
+    )
+    .padding(10)
+    .style(theme::dark_container())
+    .width(280)
+    .into()
+}
+
 #[derive(Debug, Clone)]
 pub enum Message {
     Expand,
 }
 
+struct Stats {
+    tier: Tier,
+    wins: u16,
+    losses: u16,
+
+    handle: image::Handle,
+}
+
 pub struct RankedOverview {
-    ranked_solo_image: image::Handle,
-    ranked_flex_image: image::Handle,
+    solo_duo: Option<Stats>,
+    flex: Option<Stats>,
 }
 
 impl RankedOverview {
     pub fn new(assets: &crate::assets::Assets) -> RankedOverview {
         RankedOverview {
-            ranked_solo_image: assets.emblems.get("emblem-challenger.png").unwrap().clone(),
-            ranked_flex_image: assets.emblems.get("emblem-iron.png").unwrap().clone(),
+            solo_duo: Some(Stats {
+                handle: assets.emblems.get("emblem-challenger.png").unwrap().clone(),
+                tier: Tier::Challenger(650),
+                wins: 295,
+                losses: 208,
+            }),
+            flex: None,
         }
     }
 
     pub fn update(&mut self, _message: Message) {}
 
     pub fn view(&self) -> Element<Message> {
-        column![
-            ranked_container(
+        let solo_duo = match &self.solo_duo {
+            Some(stats) => ranked_container(
                 Queue::RankedSolo,
-                Tier::Challenger(650),
-                295,
-                208,
-                self.ranked_solo_image.clone()
+                stats.tier,
+                stats.wins,
+                stats.losses,
+                stats.handle.clone(),
             ),
-            ranked_container(
+            None => unranked_container(Queue::RankedSolo),
+        };
+
+        let flex = match &self.flex {
+            Some(stats) => ranked_container(
                 Queue::RankedFlex,
-                Tier::Iron(Division::Four(39)),
-                21,
-                13,
-                self.ranked_flex_image.clone()
+                stats.tier,
+                stats.wins,
+                stats.losses,
+                stats.handle.clone(),
             ),
-        ]
-        .spacing(4)
-        .align_items(Alignment::Center)
-        .into()
+            None => unranked_container(Queue::RankedFlex),
+        };
+
+        column![solo_duo, flex,]
+            .spacing(4)
+            .align_items(Alignment::Center)
+            .into()
     }
 }
