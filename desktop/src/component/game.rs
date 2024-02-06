@@ -4,7 +4,7 @@ use crate::assets::load_item_icon;
 use crate::assets::load_runes_icon;
 use crate::assets::load_summoner_spell_icon;
 use crate::core;
-use crate::core::{Duration, Time};
+use crate::core::{Duration, Queue, Time};
 use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::theme::chevron_up_icon;
@@ -154,7 +154,7 @@ impl Game {
 
         Game {
             win: player.won,
-            queue: Queue::RankedFlex,
+            queue: game.queue(),
             time: game.created_at(),
             duration: game.duration(),
             role,

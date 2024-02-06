@@ -10,22 +10,6 @@ use crate::core;
 use crate::theme;
 use iced::widget::image::Handle;
 
-#[derive(Debug, Clone)]
-enum Queue {
-    RankedFlex,
-    RankedSolo,
-}
-
-impl ToString for Queue {
-    fn to_string(&self) -> String {
-        match self {
-            Queue::RankedFlex => "Ranked Flex",
-            Queue::RankedSolo => "Ranked Solo",
-        }
-        .to_string()
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Role {
     Bottom,

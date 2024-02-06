@@ -34,6 +34,26 @@ pub enum Queue {
     Unknown(u16),
 }
 
+impl ToString for Queue {
+    fn to_string(&self) -> String {
+        match self {
+            Queue::Custom => "Custom",
+            Queue::Blind => "Blind Pick",
+            Queue::Draft => "Draft Pick",
+            Queue::RankedSolo => "Ranked Solo",
+            Queue::RankedFlex => "Ranked Flex",
+            Queue::Clash => "Clash",
+            Queue::ARAM => "ARAM",
+            Queue::BotIntro => "Bot (Introduction)",
+            Queue::BotBeginner => "Bot (Beginner)",
+            Queue::BotIntermediate => "Bot (Intermediate)",
+            Queue::Other(_) => "Event",
+            Queue::Unknown(_) => "Unknown",
+        }
+        .to_string()
+    }
+}
+
 impl From<Queue> for riven::consts::Queue {
     fn from(queue: Queue) -> riven::consts::Queue {
         match queue {

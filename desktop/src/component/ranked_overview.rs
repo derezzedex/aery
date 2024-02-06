@@ -3,9 +3,8 @@ use iced::{
     Alignment, Element, Length,
 };
 
-use crate::component::Queue;
 use crate::core;
-use crate::core::Tier;
+use crate::core::{Queue, Tier};
 use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::widget;
@@ -26,6 +25,7 @@ fn ranked_container<'a>(
     let size = match queue {
         Queue::RankedSolo => 100.0,
         Queue::RankedFlex => 80.0,
+        _ => unreachable!(),
     };
     let emblem_size = match queue {
         Queue::RankedSolo => match tier {
@@ -40,6 +40,7 @@ fn ranked_container<'a>(
             Tier::Platinum(_) | Tier::Gold(_) | Tier::Silver(_) => 60.0,
             Tier::Bronze(_) | Tier::Iron(_) => 50.0,
         },
+        _ => unreachable!(),
     };
     let lp = tier.points();
     let tier = match tier {
