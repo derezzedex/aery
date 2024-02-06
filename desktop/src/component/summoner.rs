@@ -329,6 +329,25 @@ pub struct Summoner {
 }
 
 impl Summoner {
+    pub fn from_profile(profile: &crate::Profile) -> Self {
+        let name = profile.summoner.name().to_string();
+        let level = profile.summoner.level();
+        let icon = profile.summoner.icon_id() as u32;
+        let path = format!(
+            "{}{}.png",
+            concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\profileicon\\"),
+            icon
+        );
+        let icon_image = Some(iced::widget::image::Handle::from_path(path));
+
+        Self {
+            name,
+            level,
+            icon,
+            icon_image,
+        }
+    }
+
     pub fn new(icon: u32) -> Self {
         Summoner {
             name: String::from("loading..."),

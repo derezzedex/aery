@@ -93,6 +93,7 @@ impl Application for Aery {
     fn update(&mut self, message: Message) -> Command<Message> {
         match message {
             Message::FetchedProfile(Ok(profile)) => {
+                self.summoner = Summoner::from_profile(&profile);
                 self.timeline = Timeline::from_profile(&self.assets, &profile);
                 self.ranked_overview = RankedOverview::from_profile(&self.assets, &profile);
                 self.profile = Some(profile);
