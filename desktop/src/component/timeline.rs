@@ -111,7 +111,7 @@ impl Timeline {
                 .width(Length::Fill)
                 .height(Length::FillPortion(9))
         ]
-        .max_width(640)
+        .max_width(680)
         .align_items(Alignment::Center)
         .spacing(4);
 
