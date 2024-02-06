@@ -9,8 +9,6 @@ pub enum Container {
     Icon,
     LeftBorder(bool),
     Timeline,
-    PastRank,
-    PastRankBadge,
     SummonerIcon,
     SummonerLevel,
     SearchBar,
@@ -66,10 +64,6 @@ pub fn timeline_container() -> theme::Container {
     theme::Container::Custom(Box::new(Container::Timeline))
 }
 
-pub fn past_rank_container() -> theme::Container {
-    theme::Container::Custom(Box::new(Container::PastRank))
-}
-
 pub fn summoner_icon_container() -> theme::Container {
     theme::Container::Custom(Box::new(Container::SummonerIcon))
 }
@@ -88,10 +82,6 @@ pub fn icon_container() -> theme::Container {
 
 pub fn left_border_container(win: bool) -> theme::Container {
     theme::Container::Custom(Box::new(Container::LeftBorder(win)))
-}
-
-pub fn past_rank_badge_container() -> theme::Container {
-    theme::Container::Custom(Box::new(Container::PastRankBadge))
 }
 
 pub fn ratio_bar() -> theme::ProgressBar {
@@ -160,8 +150,6 @@ impl widget::container::StyleSheet for Container {
         let background = match self {
             Container::Timeline => Background::Color(DARKER_BACKGROUND),
             Container::Dark => Background::Color(DARK_BACKGROUND),
-            Container::PastRankBadge => Background::Color(LIGHTER_BACKGROUND),
-            Container::PastRank => Background::Color(Color::from_rgb(0.1, 0.1, 0.1)),
             Container::Icon => Background::Color(LIGHT_BACKGROUND),
             Container::LeftBorder(win) => Background::Color(win_color(*win)),
             Container::SummonerIcon => Background::Color(LIGHT_BACKGROUND), // todo: switch to image
@@ -174,8 +162,6 @@ impl widget::container::StyleSheet for Container {
             Container::Dark
             | Container::LeftBorder(_)
             | Container::Timeline
-            | Container::PastRank
-            | Container::PastRankBadge
             | Container::SummonerIcon
             | Container::SummonerLevel
             | Container::LeftBar => Color::WHITE,
@@ -185,22 +171,17 @@ impl widget::container::StyleSheet for Container {
 
         let border_radius = match self {
             Container::Dark => 4.0.into(),
-            Container::PastRank => 2.0.into(),
             Container::SummonerLevel => 2.0.into(),
             Container::SummonerIcon => 2.0.into(),
             Container::Timeline | Container::Icon => 0.0.into(),
             Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
-            Container::PastRankBadge => [2.0, 0.0, 0.0, 2.0].into(),
             Container::SearchBar | Container::LeftBar => 0.0.into(),
         };
 
         let border_color = match self {
-            Container::Dark
-            | Container::PastRank
-            | Container::PastRankBadge
-            | Container::Timeline
-            | Container::LeftBorder(_)
-            | Container::Icon => Color::TRANSPARENT,
+            Container::Dark | Container::Timeline | Container::LeftBorder(_) | Container::Icon => {
+                Color::TRANSPARENT
+            }
             Container::SummonerIcon | Container::SummonerLevel => GOLD,
             Container::SearchBar => Color::TRANSPARENT,
             Container::LeftBar => Color::TRANSPARENT,
@@ -208,8 +189,6 @@ impl widget::container::StyleSheet for Container {
 
         let border_width = match self {
             Container::Dark
-            | Container::PastRank
-            | Container::PastRankBadge
             | Container::Timeline
             | Container::LeftBorder(_)
             | Container::Icon
