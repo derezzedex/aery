@@ -201,7 +201,7 @@ pub mod summary {
                 .into_grouping_map_by(|p| Role::try_from(p.role).unwrap())
                 .fold(RoleStats::default(), |acc, _role, p| RoleStats {
                     wins: acc.wins + p.won as usize,
-                    losses: acc.losses + p.won as usize,
+                    losses: acc.losses + !p.won as usize,
                     kills: acc.kills + p.stats.kills() as usize,
                     deaths: acc.deaths + p.stats.deaths() as usize,
                     assists: acc.assists + p.stats.assists() as usize,
@@ -216,7 +216,7 @@ pub mod summary {
                 .into_grouping_map_by(|&(r, p)| (r, p.champion))
                 .fold(RoleStats::default(), |acc, _, (_, p)| RoleStats {
                     wins: acc.wins + p.won as usize,
-                    losses: acc.losses + p.won as usize,
+                    losses: acc.losses + !p.won as usize,
                     kills: acc.kills + p.stats.kills() as usize,
                     deaths: acc.deaths + p.stats.deaths() as usize,
                     assists: acc.assists + p.stats.assists() as usize,
