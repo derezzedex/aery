@@ -80,6 +80,94 @@ impl From<riven::consts::Queue> for Queue {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum Tier {
+    Iron(Division),
+    Bronze(Division),
+    Silver(Division),
+    Gold(Division),
+    Platinum(Division),
+    Emerald(Division),
+    Diamond(Division),
+    Master(u16),
+    Grandmaster(u16),
+    Challenger(u16),
+}
+
+impl Tier {
+    pub fn points(&self) -> u16 {
+        match self {
+            Tier::Challenger(points) | Tier::Grandmaster(points) | Tier::Master(points) => *points,
+            Tier::Iron(division)
+            | Tier::Bronze(division)
+            | Tier::Silver(division)
+            | Tier::Gold(division)
+            | Tier::Platinum(division)
+            | Tier::Emerald(division)
+            | Tier::Diamond(division) => match division {
+                Division::One(points)
+                | Division::Two(points)
+                | Division::Three(points)
+                | Division::Four(points) => *points as u16,
+            },
+        }
+    }
+
+    pub fn division(&self) -> String {
+        match self {
+            Tier::Iron(division)
+            | Tier::Bronze(division)
+            | Tier::Silver(division)
+            | Tier::Gold(division)
+            | Tier::Platinum(division)
+            | Tier::Emerald(division)
+            | Tier::Diamond(division) => division.to_string(),
+            Tier::Master(points) | Tier::Grandmaster(points) | Tier::Challenger(points) => {
+                points.to_string()
+            }
+        }
+    }
+}
+
+impl ToString for Tier {
+    fn to_string(&self) -> String {
+        match self {
+            Tier::Iron(_) => "Iron",
+            Tier::Bronze(_) => "Bronze",
+            Tier::Silver(_) => "Silver",
+            Tier::Gold(_) => "Gold",
+            Tier::Platinum(_) => "Platinum",
+            Tier::Emerald(_) => "Emerald",
+            Tier::Diamond(_) => "Diamond",
+            Tier::Master(_) => "Master",
+            Tier::Grandmaster(_) => "Grandmaster",
+            Tier::Challenger(_) => "Challenger",
+        }
+        .to_string()
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Copy, Clone)]
+pub enum Division {
+    One(u8),
+    Two(u8),
+    Three(u8),
+    Four(u8),
+}
+
+impl ToString for Division {
+    fn to_string(&self) -> String {
+        match self {
+            Division::One(_) => "1",
+            Division::Two(_) => "2",
+            Division::Three(_) => "3",
+            Division::Four(_) => "4",
+        }
+        .to_string()
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Duration(pub time::Duration);
 

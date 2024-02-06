@@ -94,6 +94,7 @@ impl Application for Aery {
         match message {
             Message::FetchedProfile(Ok(profile)) => {
                 self.timeline = Timeline::from_profile(&self.assets, &profile);
+                self.ranked_overview = RankedOverview::from_profile(&self.assets, &profile);
                 self.profile = Some(profile);
             }
             Message::FetchedProfile(Err(error)) => panic!("failed: {error}"),

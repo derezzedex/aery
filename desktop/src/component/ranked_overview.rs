@@ -4,7 +4,8 @@ use iced::{
 };
 
 use crate::component::Queue;
-use crate::summoner::Tier;
+use crate::core;
+use crate::core::Tier;
 use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::widget;
@@ -29,13 +30,13 @@ fn ranked_container<'a>(
     let emblem_size = match queue {
         Queue::RankedSolo => match tier {
             Tier::Challenger(_) | Tier::Grandmaster(_) | Tier::Master(_) => 100.0,
-            Tier::Diamond(_) => 90.0,
+            Tier::Emerald(_) | Tier::Diamond(_) => 90.0,
             Tier::Platinum(_) | Tier::Gold(_) | Tier::Silver(_) => 80.0,
             Tier::Bronze(_) | Tier::Iron(_) => 70.0,
         },
         Queue::RankedFlex => match tier {
             Tier::Challenger(_) | Tier::Grandmaster(_) | Tier::Master(_) => 80.0,
-            Tier::Diamond(_) => 70.0,
+            Tier::Emerald(_) | Tier::Diamond(_) => 70.0,
             Tier::Platinum(_) | Tier::Gold(_) | Tier::Silver(_) => 60.0,
             Tier::Bronze(_) | Tier::Iron(_) => 50.0,
         },
@@ -143,6 +144,50 @@ pub struct RankedOverview {
 }
 
 impl RankedOverview {
+    pub fn from_profile(assets: &crate::assets::Assets, profile: &crate::Profile) -> Self {
+        let solo_duo = profile
+            .leagues
+            .iter()
+            .find(|league| league.queue_kind() == core::Queue::RankedSolo)
+            .filter(|league| league.tier().is_some())
+            .map(|league| Stats {
+                tier: league.tier().unwrap(),
+                wins: league.wins() as u16,
+                losses: league.losses() as u16,
+
+                handle: assets
+                    .emblems
+                    .get(&format!(
+                        "emblem-{}.png",
+                        league.tier().unwrap().to_string().to_lowercase()
+                    ))
+                    .unwrap()
+                    .clone(),
+            });
+
+        let flex = profile
+            .leagues
+            .iter()
+            .find(|league| league.queue_kind() == core::Queue::RankedFlex)
+            .filter(|league| league.tier().is_some())
+            .map(|league| Stats {
+                tier: league.tier().unwrap(),
+                wins: league.wins() as u16,
+                losses: league.losses() as u16,
+
+                handle: assets
+                    .emblems
+                    .get(&format!(
+                        "emblem-{}.png",
+                        league.tier().unwrap().to_string().to_lowercase()
+                    ))
+                    .unwrap()
+                    .clone(),
+            });
+
+        Self { solo_duo, flex }
+    }
+
     pub fn new(assets: &crate::assets::Assets) -> RankedOverview {
         RankedOverview {
             solo_duo: Some(Stats {

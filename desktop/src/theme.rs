@@ -106,17 +106,18 @@ pub fn expand_button() -> theme::Button {
     theme::Button::Custom(Box::new(Button::Expand))
 }
 
-pub fn tier_color(tier: crate::summoner::Tier) -> Color {
+pub fn tier_color(tier: crate::core::Tier) -> Color {
     match tier {
-        crate::component::summoner::Tier::Iron(_) => Color::from_rgb8(87, 77, 79),
-        crate::component::summoner::Tier::Bronze(_) => Color::from_rgb8(140, 82, 58),
-        crate::component::summoner::Tier::Silver(_) => Color::from_rgb8(128, 152, 157),
-        crate::component::summoner::Tier::Gold(_) => Color::from_rgb8(205, 136, 55),
-        crate::component::summoner::Tier::Platinum(_) => Color::from_rgb8(78, 153, 150),
-        crate::component::summoner::Tier::Diamond(_) => Color::from_rgb8(87, 107, 206),
-        crate::component::summoner::Tier::Master(_) => Color::from_rgb8(157, 72, 224),
-        crate::component::summoner::Tier::Grandmaster(_) => Color::from_rgb8(205, 69, 69),
-        crate::component::summoner::Tier::Challenger(_) => Color::from_rgb8(244, 200, 116),
+        crate::core::Tier::Iron(_) => Color::from_rgb8(87, 77, 79),
+        crate::core::Tier::Bronze(_) => Color::from_rgb8(140, 82, 58),
+        crate::core::Tier::Silver(_) => Color::from_rgb8(128, 152, 157),
+        crate::core::Tier::Gold(_) => Color::from_rgb8(205, 136, 55),
+        crate::core::Tier::Platinum(_) => Color::from_rgb8(78, 153, 150),
+        crate::core::Tier::Emerald(_) => Color::from_rgb8(20, 156, 58),
+        crate::core::Tier::Diamond(_) => Color::from_rgb8(87, 107, 206),
+        crate::core::Tier::Master(_) => Color::from_rgb8(157, 72, 224),
+        crate::core::Tier::Grandmaster(_) => Color::from_rgb8(205, 69, 69),
+        crate::core::Tier::Challenger(_) => Color::from_rgb8(244, 200, 116),
     }
 }
 

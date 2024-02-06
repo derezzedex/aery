@@ -96,12 +96,40 @@ impl League {
         }
     }
 
-    pub fn tier(&self) -> Option<riven::consts::Tier> {
-        self.0.tier
+    pub fn tier(&self) -> Option<crate::Tier> {
+        let points = self.points() as u16;
+        let division = self.division();
+
+        self.0
+            .tier
+            .filter(|&t| t != riven::consts::Tier::UNRANKED)
+            .map(|tier| match tier {
+                riven::consts::Tier::UNRANKED => unreachable!(),
+                riven::consts::Tier::IRON => crate::Tier::Iron(division.unwrap()),
+                riven::consts::Tier::BRONZE => crate::Tier::Bronze(division.unwrap()),
+                riven::consts::Tier::SILVER => crate::Tier::Silver(division.unwrap()),
+                riven::consts::Tier::GOLD => crate::Tier::Gold(division.unwrap()),
+                riven::consts::Tier::PLATINUM => crate::Tier::Platinum(division.unwrap()),
+                riven::consts::Tier::EMERALD => crate::Tier::Emerald(division.unwrap()),
+                riven::consts::Tier::DIAMOND => crate::Tier::Diamond(division.unwrap()),
+                riven::consts::Tier::MASTER => crate::Tier::Master(points),
+                riven::consts::Tier::GRANDMASTER => crate::Tier::Grandmaster(points),
+                riven::consts::Tier::CHALLENGER => crate::Tier::Challenger(points),
+            })
     }
 
-    pub fn division(&self) -> Option<riven::consts::Division> {
-        self.0.rank
+    #[allow(deprecated)]
+    pub fn division(&self) -> Option<crate::Division> {
+        self.0
+            .rank
+            .filter(|&d| d != riven::consts::Division::V)
+            .map(|division| match division {
+                riven::consts::Division::I => crate::Division::One(self.0.league_points as u8),
+                riven::consts::Division::II => crate::Division::Two(self.0.league_points as u8),
+                riven::consts::Division::III => crate::Division::Three(self.0.league_points as u8),
+                riven::consts::Division::IV => crate::Division::Four(self.0.league_points as u8),
+                _ => unreachable!(),
+            })
     }
 
     pub fn points(&self) -> u32 {
