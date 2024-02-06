@@ -1,6 +1,4 @@
 use crate::core;
-use crate::core::{Division, Tier};
-use crate::text;
 use crate::theme;
 use crate::widget::bold;
 use iced::alignment;
@@ -370,87 +368,29 @@ impl Summoner {
 
     pub fn view(&self) -> Element<Message> {
         let icon = summoner_icon(self.icon_image.clone(), self.level);
-        let past_ranks = {
-            let ranks = [
-                (12, Tier::Iron(Division::One(0))),
-                (11, Tier::Bronze(Division::Four(100))),
-                (10, Tier::Silver(Division::One(0))),
-                (9, Tier::Gold(Division::Four(100))),
-                (8, Tier::Platinum(Division::One(0))),
-                (7, Tier::Diamond(Division::Four(100))),
-                (6, Tier::Master(150)),
-                (5, Tier::Grandmaster(600)),
-                (4, Tier::Challenger(2000)),
-            ];
-
-            row(ranks.into_iter().map(|(season, rank)| {
-                let division = rank.division();
-                let tier = rank.to_string();
-
-                container(
-                    row![
-                        container(text(format!("S{season}")).size(10))
-                            .padding(2)
-                            .style(theme::past_rank_badge_container()),
-                        container(
-                            text!("{tier} {division}")
-                                .size(10)
-                                .style(theme::tier_color(rank))
-                        )
-                        .padding(2),
-                    ]
-                    .align_items(iced::Alignment::Center)
-                    .spacing(2),
-                )
-                .style(theme::past_rank_container())
-                .into()
-            }))
-            .spacing(2)
-        };
 
         let name = text(&self.name)
             .size(24)
             .vertical_alignment(alignment::Vertical::Center);
 
-        let rank = 241768;
-        let ladder_rank = rank
-            .to_string()
-            .as_bytes()
-            .rchunks(3)
-            .rev()
-            .map(std::str::from_utf8)
-            .collect::<Result<Vec<&str>, _>>()
-            .unwrap()
-            .join(",");
-        let rank_percentage = 24.7;
-        let ladder = row![
-            text("Ladder rank").size(12).style(theme::gray_text()),
-            text!("{ladder_rank}").size(12),
-            text!("(top {rank_percentage}%)")
-                .size(12)
-                .style(theme::gray_text()),
-        ]
-        .spacing(4);
+        // TODO: display ladder rank and past season ranks
 
         let update_button = button("Update")
             .style(theme::update_button())
             .on_press(Message::Update);
 
         container(
-            column![
-                past_ranks,
-                row![
-                    icon,
-                    column![
-                        column![name, ladder],
-                        container(update_button)
-                            .height(48)
-                            .align_y(alignment::Vertical::Bottom)
-                    ]
-                    .spacing(1)
+            column![row![
+                icon,
+                column![
+                    name,
+                    container(update_button)
+                        .height(48)
+                        .align_y(alignment::Vertical::Bottom)
                 ]
-                .spacing(16)
+                .spacing(1)
             ]
+            .spacing(16)]
             .spacing(8)
             .width(Length::Fill)
             .max_width(920)
