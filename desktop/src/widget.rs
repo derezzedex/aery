@@ -16,9 +16,12 @@ pub fn bold<'a>(text: impl ToString) -> iced::widget::Text<'a> {
     })
 }
 
-pub fn left_border<'a, Message: 'a>(win: bool) -> iced::widget::Container<'a, Message> {
+pub fn left_border<'a, Message: 'a>(
+    win: bool,
+    remake: bool,
+) -> iced::widget::Container<'a, Message> {
     container(Space::new(6.0, 0.0))
-        .style(theme::left_border_container(win))
+        .style(theme::left_border_container(win, remake))
         .height(Length::Fill)
 }
 

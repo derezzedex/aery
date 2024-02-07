@@ -292,7 +292,7 @@ pub mod summary {
                     text("·").fit(18).style(theme::sub_text()),
                     text!("{:.1}%", ratio)
                         .fit(12)
-                        .style(theme::win_color(is_positive_ratio)),
+                        .style(theme::win_color(is_positive_ratio, false)),
                 ]
                 .align_items(Alignment::Center)
                 .spacing(4);
@@ -340,7 +340,7 @@ pub mod summary {
                         text("·").fit(18).style(theme::sub_text()),
                         text!("{:.1}%", lane_ratio)
                             .fit(12)
-                            .style(theme::win_color(lane_ratio > 50.0)),
+                            .style(theme::win_color(lane_ratio > 50.0, false)),
                     ]
                     .align_items(Alignment::Center)
                     .spacing(4),
@@ -394,7 +394,7 @@ pub mod summary {
                             row![
                                 text!("{:.1}%", winrate)
                                     .size(10)
-                                    .style(theme::win_color(winrate > 50.0)),
+                                    .style(theme::win_color(winrate > 50.0, false)),
                                 text!("({}W {}L)", champion.wins, champion.losses)
                                     .size(10)
                                     .style(theme::gray_text())

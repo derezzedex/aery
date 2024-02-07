@@ -75,6 +75,7 @@ fn item_icon<'a>(handle: Option<image::Handle>) -> Element<'a, Message> {
 #[derive(Debug, Clone)]
 pub struct Game {
     win: bool,
+    remake: bool,
     queue: Queue,
     time: Time,
     duration: Duration,
@@ -154,6 +155,7 @@ impl Game {
 
         Game {
             win: player.won,
+            remake: player.remake,
             queue: game.queue(),
             time: game.created_at(),
             duration: game.duration(),
@@ -215,6 +217,7 @@ impl Game {
 
         Game {
             win,
+            remake: false,
             queue: Queue::RankedFlex,
             time: Time(time::OffsetDateTime::now_utc().saturating_sub(time::Duration::days(1))),
             duration: Duration(
@@ -275,8 +278,8 @@ impl Game {
             };
 
             column![
-                widget::bold(formatting::win(self.win))
-                    .style(theme::win_color(self.win))
+                widget::bold(formatting::win(self.win, self.remake))
+                    .style(theme::win_color(self.win, self.remake))
                     .size(18),
                 column![
                     text(self.queue.to_string()).size(11),
@@ -453,13 +456,13 @@ impl Game {
             let match_details = container(Space::new(0.0, 400.0));
 
             container(row![
-                widget::left_border(self.win),
+                widget::left_border(self.win, self.remake),
                 column![overview, match_details,]
             ])
             .max_height(600.0)
         } else {
             container(row![
-                widget::left_border(self.win).max_height(100.0),
+                widget::left_border(self.win, self.remake).max_height(100.0),
                 overview,
             ])
             .max_height(100.0)

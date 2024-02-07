@@ -78,18 +78,30 @@ impl ToString for Summoner {
 }
 
 mod formatting {
-    pub fn win(win: bool) -> String {
-        if win { "Victory" } else { "Defeat" }.to_string()
+    pub fn win(win: bool, remake: bool) -> String {
+        if remake {
+            "Remake"
+        } else if win {
+            "Victory"
+        } else {
+            "Defeat"
+        }
+        .to_string()
     }
 
     pub fn kda(kills: u16, deaths: u16, assists: u16) -> String {
-        let kda = (kills as f32 + assists as f32) / deaths as f32;
+        let mut kda = (kills as f32 + assists as f32) / deaths as f32;
+        if !kda.is_normal() {
+            kda = 0.0;
+        }
         format!("{kda:.2} KDA")
     }
 
     pub fn creep_score(creep_score: u16, minutes: u16) -> String {
-        let cs_per_minute = creep_score as f32 / minutes as f32;
-
+        let mut cs_per_minute = creep_score as f32 / minutes as f32;
+        if !cs_per_minute.is_normal() {
+            cs_per_minute = 0.0;
+        }
         format!("{creep_score} CS ({cs_per_minute:.1})")
     }
 

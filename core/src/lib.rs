@@ -471,6 +471,7 @@ pub struct Participant {
     pub name: String,
 
     pub won: bool,
+    pub remake: bool,
     pub role: Role,
     pub inventory: Inventory,
     pub trinket: Trinket,
@@ -526,6 +527,7 @@ impl From<&riven::models::match_v5::Participant> for Participant {
             name: participant.summoner_name.clone(),
 
             won: participant.win,
+            remake: participant.game_ended_in_early_surrender,
             role: participant.team_position.clone().into(),
             inventory,
             trinket: Trinket(participant.item6 as u32),
