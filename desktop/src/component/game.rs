@@ -383,15 +383,14 @@ impl Game {
             .iter()
             .enumerate()
             .map(|(i, summoner)| {
+                let name = truncate(summoner.to_string(), 10);
                 let summoner_icon = image(self.summoner_icons[i].clone())
                     .width(16.0)
                     .height(16.0);
                 let summoner_name = if i == self.player_index {
-                    text(summoner.to_string())
-                        .size(8.0)
-                        .line_height(iced::Pixels(12.0))
+                    text(name).size(8.0).line_height(iced::Pixels(12.0))
                 } else {
-                    widget::small_text(summoner.to_string())
+                    widget::small_text(name)
                         .size(8.0)
                         .line_height(iced::Pixels(12.0))
                 };
@@ -471,5 +470,12 @@ impl Game {
             .height(Length::Shrink)
             .style(theme::dark_container())
             .into()
+    }
+}
+
+fn truncate(string: String, max: usize) -> String {
+    match string.char_indices().nth(max) {
+        None => string,
+        Some((idx, _)) => format!("{string:.idx$}…"),
     }
 }
