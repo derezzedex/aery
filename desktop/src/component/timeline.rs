@@ -229,7 +229,7 @@ pub mod summary {
                     lane: role.icon(),
                     wins: stats.wins,
                     losses: stats.losses,
-                    kda: stats.kills as f32 + stats.assists as f32 / stats.deaths as f32,
+                    kda: (stats.kills as f32 + stats.assists as f32) / stats.deaths as f32,
                 })
                 .collect_vec();
 
