@@ -466,9 +466,16 @@ pub struct RunePage {
 }
 
 #[derive(Debug, Clone)]
+pub struct RiotId {
+    pub name: Option<String>, // 3~16 chars
+    pub tagline: String,      // 3~5 chars
+}
+
+#[derive(Debug, Clone)]
 pub struct Participant {
     pub puuid: String,
     pub name: String,
+    pub riot_id: RiotId,
 
     pub won: bool,
     pub remake: bool,
@@ -525,6 +532,10 @@ impl From<&riven::models::match_v5::Participant> for Participant {
         Self {
             puuid: participant.puuid.clone(),
             name: participant.summoner_name.clone(),
+            riot_id: RiotId {
+                name: participant.riot_id_game_name.clone(),
+                tagline: participant.riot_id_tagline.clone(),
+            },
 
             won: participant.win,
             remake: participant.game_ended_in_early_surrender,
@@ -583,6 +594,10 @@ impl ParticipantStats {
 }
 
 impl Participant {
+    pub fn riot_id(&self) -> &RiotId {
+        &self.riot_id
+    }
+
     pub fn puuid(&self) -> &str {
         &self.puuid
     }

@@ -322,7 +322,8 @@ pub enum Event {
 }
 
 pub struct Summoner {
-    name: String,
+    summoner_name: String,
+    riot_id: Option<core::RiotId>,
     level: u32,
     icon: u32,
     icon_image: Option<image::Handle>,
@@ -330,7 +331,11 @@ pub struct Summoner {
 
 impl Summoner {
     pub fn from_profile(profile: &crate::Profile) -> Self {
-        let name = profile.summoner.name().to_string();
+        let riot_id = profile
+            .games
+            .first()
+            .map(|game| game.participant(profile.summoner.puuid()).unwrap().riot_id);
+        let summoner_name = profile.summoner.name().to_string();
         let level = profile.summoner.level();
         let icon = profile.summoner.icon_id() as u32;
         let path = format!(
@@ -341,7 +346,8 @@ impl Summoner {
         let icon_image = Some(iced::widget::image::Handle::from_path(path));
 
         Self {
-            name,
+            summoner_name,
+            riot_id,
             level,
             icon,
             icon_image,
@@ -350,7 +356,8 @@ impl Summoner {
 
     pub fn new(icon: u32) -> Self {
         Summoner {
-            name: String::from("loading..."),
+            summoner_name: String::from("Summoner"),
+            riot_id: None,
             level: 111,
             icon,
             icon_image: None,
@@ -368,9 +375,9 @@ impl Summoner {
 
     pub fn update(&mut self, message: Message) -> Option<Event> {
         match message {
-            Message::Update => Some(Event::UpdateProfile(self.name.clone())),
+            Message::Update => Some(Event::UpdateProfile(self.summoner_name.clone())),
             Message::SummonerFetched(Ok(summoner)) => {
-                self.name = summoner.name().to_string();
+                self.summoner_name = summoner.name().to_string();
                 self.level = summoner.level();
                 self.icon = summoner.icon_id() as u32;
                 self.load_icon();
@@ -388,32 +395,65 @@ impl Summoner {
     pub fn view(&self) -> Element<Message> {
         let icon = summoner_icon(self.icon_image.clone(), self.level);
 
-        let name = text(&self.name)
-            .size(24)
-            .vertical_alignment(alignment::Vertical::Center);
-
-        // TODO: display ladder rank and past season ranks
+        let (name, previously): (Element<_>, Option<Element<_>>) = match &self.riot_id {
+            Some(riot_id) => match &riot_id.name {
+                Some(riot_name) => (
+                    row![
+                        text(riot_name).size(24),
+                        text(format!("#{}", riot_id.tagline))
+                            .size(24)
+                            .style(theme::sub_text())
+                    ]
+                    .spacing(8)
+                    .align_items(iced::Alignment::Center)
+                    .into(),
+                    Some(
+                        text(format!("Prev. {}", &self.summoner_name))
+                            .style(theme::sub_text())
+                            .size(12)
+                            .into(),
+                    ),
+                ),
+                None => (
+                    row![
+                        text(&self.summoner_name).size(24),
+                        text(format!("#{}", riot_id.tagline))
+                            .size(20)
+                            .style(theme::gray_text())
+                    ]
+                    .spacing(2)
+                    .align_items(iced::Alignment::Center)
+                    .into(),
+                    None,
+                ),
+            },
+            None => (text(&self.summoner_name).size(24).into(), None),
+        };
 
         let update_button = button("Update")
             .style(theme::update_button())
             .on_press(Message::Update);
 
+        let mut inner = column![name];
+
+        if let Some(text) = previously {
+            inner = inner.push(text);
+        }
+
+        inner = inner.push(
+            container(update_button)
+                .height(48)
+                .align_y(alignment::Vertical::Bottom),
+        );
+
+        // TODO: display ladder rank and past season ranks
+
         container(
-            column![row![
-                icon,
-                column![
-                    name,
-                    container(update_button)
-                        .height(48)
-                        .align_y(alignment::Vertical::Bottom)
-                ]
-                .spacing(1)
-            ]
-            .spacing(16)]
-            .spacing(8)
-            .width(Length::Fill)
-            .max_width(920)
-            .padding([8, 0, 8, 0]),
+            column![row![icon, inner.spacing(1)].spacing(16)]
+                .spacing(8)
+                .width(Length::Fill)
+                .max_width(920)
+                .padding([8, 0, 8, 0]),
         )
         .center_x()
         .width(Length::Fill)
