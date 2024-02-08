@@ -408,7 +408,6 @@ impl RuneKeystone {
 #[derive(Debug, Clone, Copy)]
 pub struct PrimaryRune {
     keystone: RuneKeystone,
-    lesser: [RuneKeystone; 3],
 }
 
 impl PrimaryRune {
@@ -484,12 +483,6 @@ impl From<&riven::models::match_v5::Participant> for Participant {
         let rune_page = RunePage {
             primary: PrimaryRune {
                 keystone: RuneKeystone(participant.perks.styles[0].selections[0].perk as u32),
-                lesser: participant.perks.styles[0].selections[1..=3]
-                    .iter()
-                    .map(|s| RuneKeystone(s.perk as u32))
-                    .collect::<Vec<_>>()
-                    .try_into()
-                    .expect("failed to convert runes"),
             },
             secondary: SecondaryRune {
                 lesser: participant.perks.styles[1].selections[0..=1]
