@@ -457,7 +457,7 @@ impl Game {
 
             container(row![
                 widget::left_border(self.win, self.remake),
-                column![overview, match_details,]
+                column![overview.height(Length::Shrink), match_details,]
             ])
             .max_height(600.0)
         } else {
