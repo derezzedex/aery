@@ -442,27 +442,9 @@ impl SecondaryRune {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct RuneStats {
-    defense: u32,
-    flex: u32,
-    offense: u32,
-}
-
-impl From<riven::models::match_v5::PerkStats> for RuneStats {
-    fn from(stats: riven::models::match_v5::PerkStats) -> Self {
-        Self {
-            defense: stats.defense as u32,
-            flex: stats.flex as u32,
-            offense: stats.offense as u32,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
 pub struct RunePage {
     pub primary: PrimaryRune,
     pub secondary: SecondaryRune,
-    stats: RuneStats,
 }
 
 #[derive(Debug, Clone)]
@@ -517,7 +499,6 @@ impl From<&riven::models::match_v5::Participant> for Participant {
                     .try_into()
                     .expect("failed to convert runes"),
             },
-            stats: participant.perks.stat_perks.clone().into(),
         };
 
         let stats = ParticipantStats {
