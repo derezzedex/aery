@@ -73,25 +73,85 @@ fn item_icon<'a>(handle: Option<image::Handle>) -> Element<'a, Message> {
 }
 
 #[derive(Debug, Clone)]
+pub struct PlayerAssets {
+    champion_image: image::Handle,
+    summoner_spell_images: [image::Handle; 2],
+    runes_images: [image::Handle; 2],
+    item_images: [Option<image::Handle>; 6],
+    trinket_image: image::Handle,
+}
+
+impl PlayerAssets {
+    fn from_participant(assets: &crate::Assets, participant: &core::Participant) -> Self {
+        let champion_image = load_champion_icon(assets, participant.champion);
+
+        let summoner_spell_images = [
+            load_summoner_spell_icon(assets, participant.summoner_spells.first()),
+            load_summoner_spell_icon(assets, participant.summoner_spells.second()),
+        ];
+        let runes_images = [
+            load_runes_icon(assets, participant.rune_page.primary.keystone()),
+            load_runes_icon(assets, participant.rune_page.secondary.keystone()),
+        ];
+
+        let item_images = participant
+            .inventory
+            .into_iter()
+            .map(|item| item.map(|item| load_item_icon(assets, item)))
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap();
+
+        let trinket_image = load_item_icon(assets, participant.trinket.into());
+
+        Self {
+            champion_image,
+            summoner_spell_images,
+            runes_images,
+            item_images,
+            trinket_image,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Player {
+    assets: PlayerAssets,
+    role: Option<Role>,
+    stats: core::ParticipantStats,
+}
+
+impl Player {
+    pub fn from_participant(assets: &crate::Assets, participant: &core::Participant) -> Self {
+        let assets = PlayerAssets::from_participant(assets, participant);
+        let stats = participant.stats().clone();
+        let role = match participant.role {
+            core::Role::Bottom => Some(Role::Bottom),
+            core::Role::Top => Some(Role::Top),
+            core::Role::Jungle => Some(Role::Jungle),
+            core::Role::Support => Some(Role::Support),
+            core::Role::Mid => Some(Role::Mid),
+            core::Role::Unknown => None,
+        };
+
+        Self {
+            assets,
+            role,
+            stats,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct Game {
     win: bool,
     remake: bool,
     queue: Queue,
     time: Time,
     duration: Duration,
-    role: Option<Role>,
-    champion_image: image::Handle,
-    summoner_spell_images: [image::Handle; 2],
-    runes_images: [image::Handle; 2],
-    item_images: [Option<image::Handle>; 6],
-    trinket_image: image::Handle,
-    summoner_icons: [image::Handle; 10],
-    player_kills: u16,
-    player_deaths: u16,
-    player_assists: u16,
-    player_creep_score: u16,
-    player_vision_score: u16,
+    player: Player,
     player_index: usize,
+    summoner_icons: [image::Handle; 10],
     summoners: Vec<Summoner>,
 
     is_expanded: bool,
@@ -116,26 +176,9 @@ impl Game {
             .map(|(i, p)| (i, p.clone()))
             .unwrap();
 
-        let champion_image = load_champion_icon(assets, player.champion);
-
-        let summoner_spell_images = [
-            load_summoner_spell_icon(assets, player.summoner_spells.first()),
-            load_summoner_spell_icon(assets, player.summoner_spells.second()),
-        ];
-        let runes_images = [
-            load_runes_icon(assets, player.rune_page.primary.keystone()),
-            load_runes_icon(assets, player.rune_page.secondary.keystone()),
-        ];
-
-        let item_images = player
-            .inventory
-            .into_iter()
-            .map(|item| item.map(|item| load_item_icon(assets, item)))
-            .collect::<Vec<_>>()
-            .try_into()
-            .unwrap();
-
-        let trinket_image = load_item_icon(assets, player.trinket.into());
+        let win = player.won;
+        let remake = player.remake;
+        let player = Player::from_participant(assets, &player);
 
         let summoner_icons = partipants
             .iter()
@@ -144,35 +187,15 @@ impl Game {
             .try_into()
             .unwrap();
 
-        let role = match player.role {
-            core::Role::Bottom => Some(Role::Bottom),
-            core::Role::Top => Some(Role::Top),
-            core::Role::Jungle => Some(Role::Jungle),
-            core::Role::Support => Some(Role::Support),
-            core::Role::Mid => Some(Role::Mid),
-            core::Role::Unknown => None,
-        };
-
         Game {
-            win: player.won,
-            remake: player.remake,
+            win,
+            remake,
             queue: game.queue(),
             time: game.created_at(),
             duration: game.duration(),
-            role,
-            champion_image,
-            summoner_spell_images,
-            runes_images,
-            item_images,
-            trinket_image,
-            summoner_icons,
-            player_kills: player.stats.kills() as u16,
-            player_deaths: player.stats.deaths() as u16,
-            player_assists: player.stats.assists() as u16,
-            player_creep_score: player.stats.creep_score() as u16
-                + player.stats.monster_score() as u16,
-            player_vision_score: player.stats.vision_score() as u16,
+            player,
             player_index,
+            summoner_icons,
             summoners: partipants
                 .iter()
                 .map(|participant| Summoner(participant.name.clone()))
@@ -215,6 +238,29 @@ impl Game {
             load_champion_icon(assets, core::Champion::new(202)),
         ];
 
+        let assets = PlayerAssets {
+            champion_image,
+            summoner_spell_images,
+            runes_images,
+            item_images,
+            trinket_image,
+        };
+
+        let stats = core::ParticipantStats {
+            kills: 1,
+            deaths: 6,
+            assists: 12,
+            creep_score: 151,
+            monster_score: 10,
+            vision_score: 18,
+            damage_dealt: 12456,
+            damage_taken: 20520,
+            gold: 13521,
+            control_wards: 5,
+            wards_placed: 10,
+            wards_removed: 3,
+        };
+
         Game {
             win,
             remake: false,
@@ -223,18 +269,12 @@ impl Game {
             duration: Duration(
                 time::Duration::minutes(28).saturating_add(time::Duration::seconds(33)),
             ),
-            role: Some(Role::Mid),
-            champion_image,
-            summoner_spell_images,
-            runes_images,
-            item_images,
-            trinket_image,
             summoner_icons,
-            player_kills: 1,
-            player_deaths: 6,
-            player_assists: 12,
-            player_creep_score: 151,
-            player_vision_score: 18,
+            player: Player {
+                assets,
+                role: Some(Role::Mid),
+                stats,
+            },
             player_index: 0,
             summoners: (0..10)
                 .map(|i| Summoner(format!("Summoner {}", i)))
@@ -257,7 +297,7 @@ impl Game {
             //     .spacing(2)
             //     .align_items(Alignment::Center);
 
-            let role: Element<_> = if let Some(role) = &self.role {
+            let role: Element<_> = if let Some(role) = &self.player.role {
                 column![
                     row![
                         image(role.icon()).width(12.0).height(12.0),
@@ -298,17 +338,17 @@ impl Game {
         };
 
         let champion_info = {
-            let champion_icon = champion_icon(self.champion_image.clone());
+            let champion_icon = champion_icon(self.player.assets.champion_image.clone());
 
             let champion_spells = row![
-                summoner_spell_icon(self.summoner_spell_images[0].clone()),
-                summoner_spell_icon(self.summoner_spell_images[1].clone())
+                summoner_spell_icon(self.player.assets.summoner_spell_images[0].clone()),
+                summoner_spell_icon(self.player.assets.summoner_spell_images[1].clone())
             ]
             .spacing(2);
 
             let champion_runes = row![
-                summoner_rune_icon(self.runes_images[0].clone()),
-                summoner_rune2_icon(self.runes_images[1].clone())
+                summoner_rune_icon(self.player.assets.runes_images[0].clone()),
+                summoner_rune2_icon(self.player.assets.runes_images[1].clone())
             ]
             .spacing(2);
 
@@ -321,36 +361,40 @@ impl Game {
 
         let player_stats = {
             let kda = row![
-                text(self.player_kills).size(15),
+                text(self.player.stats.kills).size(15),
                 text("/").style(theme::gray_text()).size(15),
-                text(self.player_deaths).style(theme::red_text()).size(15),
+                text(self.player.stats.deaths)
+                    .style(theme::red_text())
+                    .size(15),
                 text("/").style(theme::gray_text()).size(15),
-                text(self.player_assists).size(15)
+                text(self.player.stats.assists).size(15)
             ]
             .align_items(Alignment::Center)
             .spacing(2);
 
             let other_stats = column![
                 row![text(formatting::kda(
-                    self.player_kills,
-                    self.player_deaths,
-                    self.player_assists
+                    self.player.stats.kills,
+                    self.player.stats.deaths,
+                    self.player.stats.assists
                 ))
                 .size(10)
                 .style(theme::sub_text())]
                 .spacing(4)
                 .align_items(Alignment::Center),
                 row![text(formatting::creep_score(
-                    self.player_creep_score,
-                    self.duration.0.whole_minutes() as u16
+                    self.player.stats.creep_score,
+                    self.duration.0.whole_minutes() as u32
                 ))
                 .size(10)
                 .style(theme::sub_text())]
                 .spacing(4)
                 .align_items(Alignment::Center),
-                row![text(formatting::vision_score(self.player_vision_score))
-                    .size(10)
-                    .style(theme::sub_text())]
+                row![
+                    text(formatting::vision_score(self.player.stats.vision_score))
+                        .size(10)
+                        .style(theme::sub_text())
+                ]
                 .spacing(4)
                 .align_items(Alignment::Center),
             ]
@@ -362,21 +406,21 @@ impl Game {
         let player_items = {
             row![
                 column![
-                    item_icon(self.item_images[0].clone()),
-                    item_icon(self.item_images[1].clone())
+                    item_icon(self.player.assets.item_images[0].clone()),
+                    item_icon(self.player.assets.item_images[1].clone())
                 ]
                 .spacing(2),
                 column![
-                    item_icon(self.item_images[2].clone()),
-                    item_icon(self.item_images[3].clone())
+                    item_icon(self.player.assets.item_images[2].clone()),
+                    item_icon(self.player.assets.item_images[3].clone())
                 ]
                 .spacing(2),
                 column![
-                    item_icon(self.item_images[4].clone()),
-                    item_icon(self.item_images[5].clone())
+                    item_icon(self.player.assets.item_images[4].clone()),
+                    item_icon(self.player.assets.item_images[5].clone())
                 ]
                 .spacing(2),
-                item_icon(Some(self.trinket_image.clone())),
+                item_icon(Some(self.player.assets.trinket_image.clone())),
             ]
             .spacing(2)
         };

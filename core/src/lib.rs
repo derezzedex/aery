@@ -501,6 +501,14 @@ impl From<&riven::models::match_v5::Participant> for Participant {
             creep_score: participant.total_minions_killed as u32,
             monster_score: participant.neutral_minions_killed as u32,
             vision_score: participant.vision_score as u32,
+
+            damage_dealt: participant.total_damage_dealt_to_champions as u32,
+            damage_taken: participant.total_damage_taken as u32,
+            gold: participant.gold_earned as u32,
+
+            control_wards: participant.vision_wards_bought_in_game as u32,
+            wards_placed: participant.wards_placed as u32,
+            wards_removed: participant.wards_killed as u32,
         };
 
         Self {
@@ -529,12 +537,20 @@ impl From<&riven::models::match_v5::Participant> for Participant {
 
 #[derive(Debug, Clone, Copy)]
 pub struct ParticipantStats {
-    kills: u32,
-    deaths: u32,
-    assists: u32,
-    creep_score: u32,
-    monster_score: u32,
-    vision_score: u32,
+    pub kills: u32,
+    pub deaths: u32,
+    pub assists: u32,
+    pub creep_score: u32,
+    pub monster_score: u32,
+    pub vision_score: u32,
+
+    pub damage_dealt: u32,
+    pub damage_taken: u32,
+    pub gold: u32,
+
+    pub control_wards: u32,
+    pub wards_placed: u32,
+    pub wards_removed: u32,
 }
 
 impl ParticipantStats {

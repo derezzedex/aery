@@ -89,7 +89,7 @@ mod formatting {
         .to_string()
     }
 
-    pub fn kda(kills: u16, deaths: u16, assists: u16) -> String {
+    pub fn kda(kills: u32, deaths: u32, assists: u32) -> String {
         let mut kda = (kills as f32 + assists as f32) / deaths as f32;
         if !kda.is_normal() {
             kda = 0.0;
@@ -97,7 +97,7 @@ mod formatting {
         format!("{kda:.2} KDA")
     }
 
-    pub fn creep_score(creep_score: u16, minutes: u16) -> String {
+    pub fn creep_score(creep_score: u32, minutes: u32) -> String {
         let mut cs_per_minute = creep_score as f32 / minutes as f32;
         if !cs_per_minute.is_normal() {
             cs_per_minute = 0.0;
@@ -105,7 +105,7 @@ mod formatting {
         format!("{creep_score} CS ({cs_per_minute:.1})")
     }
 
-    pub fn vision_score(vision_score: u16) -> String {
+    pub fn vision_score(vision_score: u32) -> String {
         format!("{vision_score} vision")
     }
 }
