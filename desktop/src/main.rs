@@ -33,15 +33,37 @@ pub fn main() -> iced::Result {
     })
 }
 
-struct Aery {
-    client: core::Client,
-    assets: Assets,
-    profile: Option<Profile>,
+enum Aery {
+    Loading,
+    Loaded {
+        client: core::Client,
+        assets: Assets,
+        profile: Option<Profile>,
 
-    timeline: Timeline,
-    summoner: Summoner,
-    search_bar: SearchBar,
-    ranked_overview: RankedOverview,
+        timeline: Timeline,
+        summoner: Summoner,
+        search_bar: SearchBar,
+        ranked_overview: RankedOverview,
+    },
+}
+
+impl Aery {
+    fn with_assets(assets: Assets) -> Self {
+        let api_key =
+            dotenv::var("RGAPI_KEY").expect("Unable to find `RGAPI_KEY` environment variable");
+
+        let client = core::Client::new(api_key);
+
+        Self::Loaded {
+            client,
+            profile: None,
+            timeline: Timeline::new(&assets),
+            summoner: Summoner::new(5843),
+            search_bar: SearchBar::new(),
+            ranked_overview: RankedOverview::new(&assets),
+            assets,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -53,6 +75,8 @@ struct Profile {
 
 #[derive(Debug, Clone)]
 enum Message {
+    LoadedAssets(Assets),
+
     FetchedProfile(Result<Profile, String>),
     Timeline(timeline::Message),
     Summoner(summoner::Message),
@@ -67,22 +91,9 @@ impl Application for Aery {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
-        let api_key =
-            dotenv::var("RGAPI_KEY").expect("Unable to find `RGAPI_KEY` environment variable");
-        let assets = Assets::new();
-
         (
-            Self {
-                client: core::Client::new(api_key),
-                profile: None,
-
-                timeline: Timeline::new(&assets),
-                summoner: Summoner::new(5843),
-                search_bar: SearchBar::new(),
-                ranked_overview: RankedOverview::new(&assets),
-                assets,
-            },
-            Command::none(),
+            Self::Loading,
+            Command::perform(Assets::new(), Message::LoadedAssets),
         )
     }
 
@@ -91,81 +102,122 @@ impl Application for Aery {
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
-        match message {
-            Message::FetchedProfile(Ok(profile)) => {
-                self.summoner = Summoner::from_profile(&profile);
-                self.timeline = Timeline::from_profile(&self.assets, &profile);
-                self.ranked_overview = RankedOverview::from_profile(&self.assets, &profile);
-                self.profile = Some(profile);
-            }
-            Message::FetchedProfile(Err(error)) => panic!("failed: {error}"),
-            Message::Timeline(message) => self.timeline.update(message),
-            Message::Summoner(message) => {
-                if let Some(event) = self.summoner.update(message) {
-                    match event {
-                        summoner::Event::UpdateProfile(name) => {
-                            let client = self.client.clone();
-
-                            return Command::perform(
-                                core::Summoner::from_name(client, name),
-                                |summoner| {
-                                    Message::Summoner(summoner::Message::SummonerFetched(summoner))
-                                },
-                            );
-                        }
-                    }
+        match self {
+            Self::Loading => {
+                if let Message::LoadedAssets(assets) = message {
+                    *self = Self::with_assets(assets);
+                    Command::none()
+                } else {
+                    Command::none()
                 }
             }
-            Message::SearchBar(message) => match self.search_bar.update(message) {
-                Some(event) => match event {
-                    search_bar::Event::SearchRequested(name) => {
-                        let client = self.client.clone();
+            Self::Loaded {
+                client,
+                assets,
 
-                        return Command::perform(
-                            fetch_profile(client, name),
-                            Message::FetchedProfile,
-                        );
-                    } // search_bar::Event::SearchRequested(content) => {
-                      //     let client = self.client.clone();
+                profile,
+                timeline,
+                ranked_overview,
+                summoner,
+                search_bar,
+            } => {
+                match message {
+                    Message::LoadedAssets(_) => {}
+                    Message::FetchedProfile(Ok(new_profile)) => {
+                        *summoner = Summoner::from_profile(&new_profile);
+                        *timeline = Timeline::from_profile(assets, &new_profile);
+                        *ranked_overview = RankedOverview::from_profile(assets, &new_profile);
+                        *profile = Some(new_profile);
+                    }
+                    Message::FetchedProfile(Err(error)) => panic!("failed: {error}"),
+                    Message::Timeline(message) => timeline.update(message),
+                    Message::Summoner(message) => {
+                        if let Some(event) = summoner.update(message) {
+                            match event {
+                                summoner::Event::UpdateProfile(name) => {
+                                    let client = client.clone();
 
-                      //     return Command::perform(
-                      //         aery_core::Summoner::from_name(client, content),
-                      //         |summoner| {
-                      //             Message::Summoner(summoner::Message::SummonerFetched(summoner))
-                      //         },
-                      //     );
-                      // }
-                },
-                None => {}
-            },
-            Message::RankedOverview(message) => self.ranked_overview.update(message),
+                                    return Command::perform(
+                                        core::Summoner::from_name(client, name),
+                                        |summoner| {
+                                            Message::Summoner(summoner::Message::SummonerFetched(
+                                                summoner,
+                                            ))
+                                        },
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    Message::SearchBar(message) => match search_bar.update(message) {
+                        Some(event) => match event {
+                            search_bar::Event::SearchRequested(name) => {
+                                let client = client.clone();
+
+                                return Command::perform(
+                                    fetch_profile(client, name),
+                                    Message::FetchedProfile,
+                                );
+                            } // search_bar::Event::SearchRequested(content) => {
+                              //     let client = self.client.clone();
+
+                              //     return Command::perform(
+                              //         aery_core::Summoner::from_name(client, content),
+                              //         |summoner| {
+                              //             Message::Summoner(summoner::Message::SummonerFetched(summoner))
+                              //         },
+                              //     );
+                              // }
+                        },
+                        None => {}
+                    },
+                    Message::RankedOverview(message) => ranked_overview.update(message),
+                }
+
+                Command::none()
+            }
         }
-
-        Command::none()
     }
 
     fn view(&self) -> Element<Message> {
-        let timeline = container(
-            row![
-                self.ranked_overview.view().map(Message::RankedOverview),
-                self.timeline.view().map(Message::Timeline),
-            ]
-            .padding(8)
-            .spacing(8),
-        )
-        .center_x()
-        .width(Length::Fill);
-
-        container(
-            column![
-                self.search_bar.view().map(Message::SearchBar),
-                self.summoner.view().map(Message::Summoner),
+        match self {
+            Self::Loading => container(text!("Loading").size(24))
+                .style(theme::timeline_container())
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .center_x()
+                .center_y()
+                .into(),
+            Self::Loaded {
                 timeline,
-            ]
-            .spacing(16),
-        )
-        .style(theme::timeline_container())
-        .into()
+                summoner,
+                search_bar,
+                ranked_overview,
+                ..
+            } => {
+                let timeline = container(
+                    row![
+                        ranked_overview.view().map(Message::RankedOverview),
+                        timeline.view().map(Message::Timeline),
+                    ]
+                    .padding(8)
+                    .spacing(8),
+                )
+                .center_x()
+                .width(Length::Fill);
+
+                container(
+                    column![
+                        search_bar.view().map(Message::SearchBar),
+                        summoner.view().map(Message::Summoner),
+                        timeline,
+                    ]
+                    .spacing(16),
+                )
+                .style(theme::timeline_container())
+                .into()
+            }
+        }
     }
 }
 

@@ -75,6 +75,7 @@ pub type RuneMap = HashMap<core::RuneKeystone, String>;
 
 pub type EmblemMap = HashMap<String, Handle>;
 
+#[derive(Debug, Clone)]
 pub struct Assets {
     pub sprites: SpriteMap,
     pub data: DataMap,
@@ -92,7 +93,7 @@ impl Assets {
     const EMBLEMS_PATH: &'static str =
         concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\emblems");
 
-    pub fn new() -> Assets {
+    pub async fn new() -> Assets {
         let timer = std::time::Instant::now();
         let mut sprites = HashMap::default();
         let img_path = fs::read_dir(Assets::SPRITE_PATH).unwrap();
