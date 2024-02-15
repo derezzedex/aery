@@ -3,8 +3,10 @@ use crate::assets::load_champion_icon;
 use self::summary::Summary;
 
 use super::game::{self, Game};
-use super::{theme, Role};
+use crate::component::Role;
 use crate::core;
+use crate::profile;
+use crate::theme;
 use iced::widget::{column, container, scrollable};
 use iced::{Alignment, Element, Length};
 
@@ -20,7 +22,7 @@ pub struct Timeline {
 }
 
 impl Timeline {
-    pub fn from_profile(assets: &crate::assets::Assets, profile: &crate::Profile) -> Self {
+    pub fn from_profile(assets: &crate::assets::Assets, profile: &profile::Data) -> Self {
         let summary = Summary::from_games(assets, &profile.summoner, &profile.games);
 
         let games = profile

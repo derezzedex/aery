@@ -5,6 +5,7 @@ use iced::{
 
 use crate::core;
 use crate::core::{Queue, Tier};
+use crate::profile;
 use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::widget;
@@ -145,7 +146,7 @@ pub struct RankedOverview {
 }
 
 impl RankedOverview {
-    pub fn from_profile(assets: &crate::assets::Assets, profile: &crate::Profile) -> Self {
+    pub fn from_profile(assets: &crate::assets::Assets, profile: &profile::Data) -> Self {
         let solo_duo = profile
             .leagues
             .iter()

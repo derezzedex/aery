@@ -1,8 +1,8 @@
-use super::*;
 use crate::assets::load_champion_icon;
 use crate::assets::load_item_icon;
 use crate::assets::load_runes_icon;
 use crate::assets::load_summoner_spell_icon;
+use crate::component::*;
 use crate::core;
 use crate::core::{Duration, Queue, Time};
 use crate::theme;

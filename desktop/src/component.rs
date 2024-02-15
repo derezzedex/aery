@@ -1,17 +1,8 @@
-#![allow(dead_code)]
-
-pub mod game;
-pub mod ranked_overview;
-pub mod search_bar;
-pub mod summoner;
-pub mod timeline;
-
 use crate::core;
-use crate::theme;
 use iced::widget::image::Handle;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum Role {
+pub enum Role {
     Bottom,
     Jungle,
     Mid,
@@ -63,13 +54,13 @@ impl ToString for Role {
 pub struct Champion(u16);
 
 #[derive(Debug, Clone, Copy)]
-struct Item(u16);
+pub struct Item(u16);
 
 #[derive(Debug, Clone)]
-struct Inventory([Option<Item>; 6]);
+pub struct Inventory([Option<Item>; 6]);
 
 #[derive(Debug, Clone)]
-struct Summoner(String);
+pub struct Summoner(pub String);
 
 impl ToString for Summoner {
     fn to_string(&self) -> String {
@@ -77,7 +68,7 @@ impl ToString for Summoner {
     }
 }
 
-mod formatting {
+pub mod formatting {
     pub fn win(win: bool, remake: bool) -> String {
         if remake {
             "Remake"

@@ -1,4 +1,5 @@
 use crate::core;
+use crate::profile;
 use crate::theme;
 use crate::widget::bold;
 use iced::alignment;
@@ -330,7 +331,7 @@ pub struct Summoner {
 }
 
 impl Summoner {
-    pub fn from_profile(profile: &crate::Profile) -> Self {
+    pub fn from_profile(profile: &profile::Data) -> Self {
         let riot_id = profile
             .games
             .first()
