@@ -298,7 +298,7 @@ fn summoner_icon<'a>(icon: Option<image::Handle>, level: u32) -> Element<'a, Mes
     let image: Element<Message> = if let Some(handle) = icon {
         image(handle).into()
     } else {
-        vertical_space(96.0).into()
+        vertical_space().height(96).into()
     };
 
     modal::Modal::new(

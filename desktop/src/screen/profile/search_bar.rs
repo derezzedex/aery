@@ -53,7 +53,7 @@ impl SearchBar {
 
         container(row![
             logo(),
-            horizontal_space(Length::FillPortion(2)),
+            horizontal_space().width(Length::FillPortion(2)),
             container(
                 row![
                     text_input("Search for a summoner or champion", &self.text)
@@ -74,7 +74,7 @@ impl SearchBar {
             )
             .style(theme::search_bar_container())
             .width(Length::FillPortion(4)),
-            horizontal_space(Length::FillPortion(2))
+            horizontal_space().width(Length::FillPortion(2)),
         ])
         .padding(8)
         .style(theme::dark_container())

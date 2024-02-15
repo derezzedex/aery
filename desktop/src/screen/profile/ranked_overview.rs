@@ -17,7 +17,7 @@ fn ranked_container<'a>(
     losses: u16,
     handle: image::Handle,
 ) -> Element<'a, Message> {
-    let left_bar = container(horizontal_space(2))
+    let left_bar = container(horizontal_space().width(2))
         .style(theme::left_bar_container())
         .height(18);
 
@@ -54,9 +54,9 @@ fn ranked_container<'a>(
     container(column![
         row![
             left_bar,
-            horizontal_space(4),
+            horizontal_space().width(4),
             widget::bold(queue.to_string()).size(14),
-            horizontal_space(Length::Fill),
+            horizontal_space().width(Length::Fill),
             button(chevron_down)
                 .style(theme::expand_button())
                 .padding(4)
@@ -107,16 +107,16 @@ fn ranked_container<'a>(
 }
 
 fn unranked_container<'a>(queue: Queue) -> Element<'a, Message> {
-    let left_bar = container(horizontal_space(2))
+    let left_bar = container(horizontal_space().width(2))
         .style(theme::left_bar_container())
         .height(18);
 
     container(
         row![
             left_bar,
-            horizontal_space(4),
+            horizontal_space().width(4),
             widget::bold(queue.to_string()).size(14),
-            horizontal_space(Length::Fill),
+            horizontal_space().width(Length::Fill),
             text("Unranked").style(theme::sub_text()).size(12)
         ]
         .align_items(Alignment::Center),

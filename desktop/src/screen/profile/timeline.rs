@@ -306,7 +306,7 @@ pub mod summary {
 
                 column![
                     text("Winrate").fit(10).style(theme::gray_text()),
-                    vertical_space(2),
+                    vertical_space().height(2),
                     ratio_text,
                     ratio_bar,
                 ]
@@ -352,7 +352,7 @@ pub mod summary {
                         text!("{:.1}", death_ratio).size(10),
                         text("/").size(10).style(theme::gray_text()),
                         text!("{:.1}", assist_ratio).size(10),
-                        horizontal_space(2),
+                        horizontal_space().width(2),
                         row![
                             text("(").size(10).style(theme::red_text()),
                             text!(
@@ -372,7 +372,7 @@ pub mod summary {
 
                 column![
                     text("Lane").size(10).height(13).style(theme::gray_text()),
-                    vertical_space(1),
+                    vertical_space().height(1),
                     row![lane_icon, lane_info]
                         .align_items(Alignment::Center)
                         .spacing(4)

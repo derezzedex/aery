@@ -298,22 +298,34 @@ struct Scrollable;
 impl widget::scrollable::StyleSheet for Scrollable {
     type Style = iced::Theme;
 
-    fn active(&self, _theme: &iced::Theme) -> widget::scrollable::Scrollbar {
-        widget::scrollable::Scrollbar {
-            background: Some(Background::Color(Color::from_rgb(0.1, 0.1, 0.1))),
-            scroller: widget::scrollable::Scroller {
-                color: Color::from_rgb(0.2, 0.2, 0.2),
+    fn active(&self, _theme: &iced::Theme) -> widget::scrollable::Appearance {
+        widget::scrollable::Appearance {
+            container: widget::container::Appearance {
+                background: None,
                 border: iced::Border {
                     radius: 2.0.into(),
                     width: 0.0,
                     color: Color::TRANSPARENT,
                 },
+                ..Default::default()
             },
-            border: iced::Border {
-                radius: 2.0.into(),
-                width: 0.0,
-                color: Color::TRANSPARENT,
+            scrollbar: widget::scrollable::Scrollbar {
+                background: None,
+                border: iced::Border {
+                    radius: 2.0.into(),
+                    width: 0.0,
+                    color: Color::TRANSPARENT,
+                },
+                scroller: widget::scrollable::Scroller {
+                    color: Color::from_rgb(0.2, 0.2, 0.2),
+                    border: iced::Border {
+                        radius: 2.0.into(),
+                        width: 0.0,
+                        color: Color::TRANSPARENT,
+                    },
+                },
             },
+            gap: None,
         }
     }
 
@@ -321,15 +333,18 @@ impl widget::scrollable::StyleSheet for Scrollable {
         &self,
         style: &Self::Style,
         is_mouse_over_scrollbar: bool,
-    ) -> widget::scrollable::Scrollbar {
+    ) -> widget::scrollable::Appearance {
         let active = self.active(style);
 
         if is_mouse_over_scrollbar {
-            widget::scrollable::Scrollbar {
-                background: Some(Background::Color(Color::from_rgb(0.1, 0.1, 0.1))),
-                scroller: widget::scrollable::Scroller {
-                    color: Color::from_rgba(0.4, 0.4, 0.4, 0.9),
-                    ..active.scroller
+            widget::scrollable::Appearance {
+                scrollbar: widget::scrollable::Scrollbar {
+                    background: Some(Background::Color(Color::from_rgb(0.1, 0.1, 0.1))),
+                    scroller: widget::scrollable::Scroller {
+                        color: Color::from_rgba(0.4, 0.4, 0.4, 0.9),
+                        ..active.scrollbar.scroller
+                    },
+                    ..active.scrollbar
                 },
                 ..active
             }

@@ -329,7 +329,7 @@ impl Game {
                             .size(10)
                     ),
                 ],
-                vertical_space(Length::Fill),
+                vertical_space().height(Length::Fill),
                 role,
             ]
             .align_items(Alignment::Start)
@@ -480,13 +480,13 @@ impl Game {
         let overview = container(row![
             row![
                 match_stats,
-                horizontal_space(Length::Fill),
+                horizontal_space().width(Length::Fill),
                 champion_info,
-                horizontal_space(Length::Fill),
+                horizontal_space().width(Length::Fill),
                 player_stats,
-                horizontal_space(Length::Fill),
+                horizontal_space().width(Length::Fill),
                 player_items,
-                horizontal_space(Length::Fill),
+                horizontal_space().width(Length::Fill),
                 other_players,
             ]
             .width(Length::Fill)
