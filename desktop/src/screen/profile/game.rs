@@ -11,6 +11,7 @@ use crate::theme::chevron_up_icon;
 use crate::widget;
 use iced::widget::horizontal_space;
 use iced::widget::image;
+use iced::widget::svg;
 use iced::widget::vertical_space;
 use iced::widget::{button, column, container, row, text, Space};
 use iced::{alignment, Alignment, Element, Length};
@@ -303,13 +304,18 @@ impl Game {
                         image(role.icon()).width(12.0).height(12.0),
                         text(role.to_string()).style(theme::sub_text()).size(10),
                     ]
-                    .align_items(Alignment::End)
-                    .spacing(2),
-                    container(
-                        text(self.duration.to_string())
-                            .size(10)
-                            .style(theme::sub_text())
-                    ),
+                    .align_items(Alignment::Center)
+                    .spacing(4),
+                    row![
+                        svg(theme::clock_icon()).width(12.0).height(12.0),
+                        container(
+                            text(self.duration.to_string())
+                                .size(10)
+                                .style(theme::sub_text())
+                        ),
+                    ]
+                    .align_items(Alignment::Center)
+                    .spacing(4),
                 ]
                 .spacing(2)
                 .into()

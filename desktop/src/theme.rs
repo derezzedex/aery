@@ -1,3 +1,4 @@
+use iced::advanced::svg;
 use iced::theme;
 use iced::widget;
 use iced::widget::image;
@@ -46,6 +47,14 @@ pub fn search_icon() -> image::Handle {
         "\\assets\\img\\icons\\search-white.png"
     );
     image::Handle::from_path(path)
+}
+
+pub fn clock_icon() -> svg::Handle {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "\\assets\\img\\icons\\clock.svg"
+    );
+    svg::Handle::from_path(path)
 }
 
 pub fn search_bar_text_input() -> theme::TextInput {
