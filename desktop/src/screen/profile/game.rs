@@ -83,6 +83,39 @@ pub struct PlayerAssets {
 }
 
 impl PlayerAssets {
+    fn dummy(assets: &crate::Assets, champion: core::Champion) -> Self {
+        let champion_image = load_champion_icon(assets, champion);
+
+        let summoner_spell_images = [
+            load_summoner_spell_icon(assets, core::SummonerSpell::new(14)),
+            load_summoner_spell_icon(assets, core::SummonerSpell::new(4)),
+        ];
+
+        let runes_images = [
+            load_runes_icon(assets, core::RuneKeystone::new(8010)),
+            load_runes_icon(assets, core::RuneKeystone::new(8400)),
+        ];
+
+        let item_images = [
+            Some(load_item_icon(assets, core::Item::new(1001))),
+            Some(load_item_icon(assets, core::Item::new(6630))),
+            Some(load_item_icon(assets, core::Item::new(4401))),
+            Some(load_item_icon(assets, core::Item::new(3143))),
+            Some(load_item_icon(assets, core::Item::new(3742))),
+            Some(load_item_icon(assets, core::Item::new(6333))),
+        ];
+
+        let trinket_image = load_item_icon(assets, core::Item::new(3364));
+
+        Self {
+            champion_image,
+            summoner_spell_images,
+            runes_images,
+            item_images,
+            trinket_image,
+        }
+    }
+
     fn from_participant(assets: &crate::Assets, participant: &core::Participant) -> Self {
         let champion_image = load_champion_icon(assets, participant.champion);
 
@@ -123,6 +156,31 @@ pub struct Player {
 }
 
 impl Player {
+    fn dummy(assets: &crate::Assets, champion: core::Champion) -> Self {
+        let assets = PlayerAssets::dummy(assets, champion);
+        let role = Some(Role::Mid);
+        let stats = core::ParticipantStats {
+            kills: 1,
+            deaths: 6,
+            assists: 12,
+            creep_score: 151,
+            monster_score: 10,
+            vision_score: 18,
+            damage_dealt: 12456,
+            damage_taken: 20520,
+            gold: 13521,
+            control_wards: 5,
+            wards_placed: 10,
+            wards_removed: 3,
+        };
+
+        Self {
+            assets,
+            role,
+            stats,
+        }
+    }
+
     pub fn from_participant(assets: &crate::Assets, participant: &core::Participant) -> Self {
         let assets = PlayerAssets::from_participant(assets, participant);
         let stats = participant.stats().clone();
@@ -205,25 +263,6 @@ impl Game {
     }
 
     pub fn new(win: bool, assets: &crate::assets::Assets, champion: core::Champion) -> Self {
-        let champion_image = load_champion_icon(assets, champion);
-        let summoner_spell_images = [
-            load_summoner_spell_icon(assets, core::SummonerSpell::new(14)),
-            load_summoner_spell_icon(assets, core::SummonerSpell::new(4)),
-        ];
-        let runes_images = [
-            load_runes_icon(assets, core::RuneKeystone::new(8010)),
-            load_runes_icon(assets, core::RuneKeystone::new(8400)),
-        ];
-        let item_images = [
-            Some(load_item_icon(assets, core::Item::new(1001))),
-            Some(load_item_icon(assets, core::Item::new(6630))),
-            Some(load_item_icon(assets, core::Item::new(4401))),
-            Some(load_item_icon(assets, core::Item::new(3143))),
-            Some(load_item_icon(assets, core::Item::new(3742))),
-            Some(load_item_icon(assets, core::Item::new(6333))),
-        ];
-        let trinket_image = load_item_icon(assets, core::Item::new(3364));
-
         let summoner_icons = [
             load_champion_icon(assets, champion),
             load_champion_icon(assets, core::Champion::new(1)),
@@ -237,28 +276,7 @@ impl Game {
             load_champion_icon(assets, core::Champion::new(202)),
         ];
 
-        let assets = PlayerAssets {
-            champion_image,
-            summoner_spell_images,
-            runes_images,
-            item_images,
-            trinket_image,
-        };
-
-        let stats = core::ParticipantStats {
-            kills: 1,
-            deaths: 6,
-            assists: 12,
-            creep_score: 151,
-            monster_score: 10,
-            vision_score: 18,
-            damage_dealt: 12456,
-            damage_taken: 20520,
-            gold: 13521,
-            control_wards: 5,
-            wards_placed: 10,
-            wards_removed: 3,
-        };
+        let player = Player::dummy(assets, champion);
 
         Game {
             result: if win {
@@ -272,11 +290,7 @@ impl Game {
                 time::Duration::minutes(28).saturating_add(time::Duration::seconds(33)),
             ),
             summoner_icons,
-            player: Player {
-                assets,
-                role: Some(Role::Mid),
-                stats,
-            },
+            player,
             player_index: 0,
             summoners: (0..10)
                 .map(|i| Summoner(format!("Summoner {}", i)))
