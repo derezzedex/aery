@@ -459,12 +459,21 @@ pub struct RiotId {
     pub tagline: String,      // 3~5 chars
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Team(usize);
+
+impl Team {
+    pub const BLUE: Team = Team(100);
+    pub const RED: Team = Team(200);
+}
+
 #[derive(Debug, Clone)]
 pub struct Participant {
     pub puuid: String,
     pub name: String,
     pub riot_id: RiotId,
 
+    pub team: Team,
     pub result: GameResult,
     pub role: Role,
     pub inventory: Inventory,
@@ -535,6 +544,7 @@ impl From<&riven::models::match_v5::Participant> for Participant {
                 tagline: participant.riot_id_tagline.clone(),
             },
 
+            team: Team(participant.team_id as usize),
             result,
             role: participant.team_position.clone().into(),
             inventory,

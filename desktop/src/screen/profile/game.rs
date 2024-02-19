@@ -17,6 +17,7 @@ use iced::widget::svg;
 use iced::widget::vertical_space;
 use iced::widget::{button, column, container, row, text, Space};
 use iced::{alignment, Alignment, Element, Length};
+use itertools::Itertools;
 
 fn champion_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
     let icon = iced::widget::image(handle)
@@ -124,6 +125,17 @@ pub struct Player {
 }
 
 impl Player {
+    fn dummy_with_puuid(assets: &crate::Assets, champion: core::Champion, puuid: String) -> Self {
+        let dummy = Self::dummy(assets, champion);
+        Self {
+            info: core::Participant {
+                puuid,
+                ..dummy.info
+            },
+            ..dummy
+        }
+    }
+
     fn dummy(assets: &crate::Assets, champion: core::Champion) -> Self {
         let info = core::Participant {
             puuid: String::from("dummy"),
@@ -132,6 +144,7 @@ impl Player {
                 name: None,
                 tagline: String::from("dummy"),
             },
+            team: core::Team::BLUE,
             result: core::GameResult::Victory,
             role: core::Role::Mid,
             inventory: core::Inventory([
@@ -188,15 +201,19 @@ impl Player {
 }
 
 #[derive(Debug, Clone)]
+struct Team {
+    id: core::Team,
+    players: Vec<Player>,
+}
+
+#[derive(Debug, Clone)]
 pub struct Game {
     result: core::GameResult,
     queue: Queue,
     time: Time,
     duration: Duration,
     player: Player,
-    player_index: usize,
-    summoner_icons: [image::Handle; 10],
-    summoners: Vec<Summoner>,
+    teams: Vec<Team>,
 
     is_expanded: bool,
 }
@@ -213,23 +230,26 @@ impl Game {
         game: &core::GameMatch,
     ) -> Self {
         let participants = game.participants();
-        let (player_index, player) = participants
+        let player = participants
             .iter()
-            .enumerate()
-            .find(|(_, p)| p.puuid == summoner.puuid())
-            .map(|(i, p)| (i, p.clone()))
+            .find(|p| p.puuid == summoner.puuid())
+            .cloned()
             .unwrap();
 
         let result = player.result();
 
         let player = Player::from_participant(assets, &player);
 
-        let summoner_icons = participants
+        let teams = participants
             .iter()
-            .map(|participant| load_champion_icon(assets, participant.champion))
-            .collect::<Vec<_>>()
-            .try_into()
-            .unwrap();
+            .into_grouping_map_by(|p| p.team)
+            .fold(Vec::new(), |mut players, _team, participant| {
+                players.push(Player::from_participant(assets, participant));
+                players
+            })
+            .into_iter()
+            .map(|(id, players)| Team { id, players })
+            .collect();
 
         Game {
             result,
@@ -237,32 +257,27 @@ impl Game {
             time: game.created_at(),
             duration: game.duration(),
             player,
-            player_index,
-            summoner_icons,
-            summoners: participants
-                .iter()
-                .map(|participant| Summoner(participant.name.clone()))
-                .collect(),
+            teams,
 
             is_expanded: false,
         }
     }
 
     pub fn new(win: bool, assets: &crate::assets::Assets, champion: core::Champion) -> Self {
-        let summoner_icons = [
-            load_champion_icon(assets, champion),
-            load_champion_icon(assets, core::Champion::new(1)),
-            load_champion_icon(assets, core::Champion::new(101)),
-            load_champion_icon(assets, core::Champion::new(14)),
-            load_champion_icon(assets, core::Champion::new(122)),
-            load_champion_icon(assets, core::Champion::new(897)),
-            load_champion_icon(assets, core::Champion::new(62)),
-            load_champion_icon(assets, core::Champion::new(4)),
-            load_champion_icon(assets, core::Champion::new(61)),
-            load_champion_icon(assets, core::Champion::new(202)),
-        ];
+        let puuid = String::from("player");
+        let player = Player::dummy_with_puuid(assets, champion, puuid);
+        let dummy = |id| Player::dummy(assets, core::Champion::new(id));
 
-        let player = Player::dummy(assets, champion);
+        let teams = vec![
+            Team {
+                id: core::Team::BLUE,
+                players: vec![player.clone(), dummy(1), dummy(101), dummy(14), dummy(122)],
+            },
+            Team {
+                id: core::Team::RED,
+                players: vec![dummy(897), dummy(62), dummy(4), dummy(61), dummy(202)],
+            },
+        ];
 
         Game {
             result: if win {
@@ -275,12 +290,8 @@ impl Game {
             duration: Duration(
                 time::Duration::minutes(28).saturating_add(time::Duration::seconds(33)),
             ),
-            summoner_icons,
             player,
-            player_index: 0,
-            summoners: (0..10)
-                .map(|i| Summoner(format!("Summoner {}", i)))
-                .collect(),
+            teams,
 
             is_expanded: false,
         }
@@ -432,39 +443,37 @@ impl Game {
             .spacing(2)
         };
 
-        let mut left_players: Vec<Element<_>> = self
-            .summoners
-            .iter()
-            .enumerate()
-            .map(|(i, summoner)| {
-                let name = truncate(summoner.to_string(), 10);
-                let summoner_icon = image(self.summoner_icons[i].clone())
-                    .width(16.0)
-                    .height(16.0);
-                let summoner_name = if i == self.player_index {
-                    text(name).size(8.0).line_height(iced::Pixels(12.0))
-                } else {
-                    widget::small_text(name)
-                        .size(8.0)
-                        .line_height(iced::Pixels(12.0))
-                };
+        let player_name_view = |player: &Player| {
+            let name = truncate(player.info.name.to_string(), 10);
+            let summoner_icon = image(player.assets.champion_image.clone())
+                .width(16.0)
+                .height(16.0);
+            let summoner_name = if self.player.info.puuid == player.info.puuid {
+                text(name).size(8.0).line_height(iced::Pixels(12.0))
+            } else {
+                widget::small_text(name)
+                    .size(8.0)
+                    .line_height(iced::Pixels(12.0))
+            };
 
-                row![summoner_icon, summoner_name]
-                    .align_items(Alignment::Center)
-                    .spacing(4)
-                    .into()
-            })
-            .collect();
-
-        let right_players = left_players.split_off(5);
-
-        let other_players = {
-            row![
-                column(left_players).spacing(2),
-                column(right_players).spacing(2),
-            ]
-            .spacing(8)
+            row![summoner_icon, summoner_name]
+                .align_items(Alignment::Center)
+                .spacing(4)
+                .into()
         };
+
+        let blue_team = self
+            .teams
+            .first()
+            .map(|team| team.players.iter().map(player_name_view))
+            .unwrap();
+        let red_team = self
+            .teams
+            .last()
+            .map(|team| team.players.iter().map(player_name_view))
+            .unwrap();
+
+        let teams = row![column(blue_team).spacing(2), column(red_team).spacing(2),].spacing(8);
 
         let chevron_icon = if self.is_expanded {
             chevron_up_icon()
@@ -494,7 +503,7 @@ impl Game {
                 horizontal_space().width(Length::Fill),
                 player_items,
                 horizontal_space().width(Length::Fill),
-                other_players,
+                teams,
             ]
             .width(Length::Fill)
             .padding(4)
