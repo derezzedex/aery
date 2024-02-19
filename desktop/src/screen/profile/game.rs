@@ -168,8 +168,8 @@ impl Game {
         summoner: &core::Summoner,
         game: &core::GameMatch,
     ) -> Self {
-        let partipants = game.participants();
-        let (player_index, player) = partipants
+        let participants = game.participants();
+        let (player_index, player) = participants
             .iter()
             .enumerate()
             .find(|(_, p)| p.puuid == summoner.puuid())
@@ -180,7 +180,7 @@ impl Game {
 
         let player = Player::from_participant(assets, &player);
 
-        let summoner_icons = partipants
+        let summoner_icons = participants
             .iter()
             .map(|participant| load_champion_icon(assets, participant.champion))
             .collect::<Vec<_>>()
@@ -195,7 +195,7 @@ impl Game {
             player,
             player_index,
             summoner_icons,
-            summoners: partipants
+            summoners: participants
                 .iter()
                 .map(|participant| Summoner(participant.name.clone()))
                 .collect(),
