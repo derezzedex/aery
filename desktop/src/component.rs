@@ -69,13 +69,13 @@ impl ToString for Summoner {
 }
 
 pub mod formatting {
-    pub fn win(win: bool, remake: bool) -> String {
-        if remake {
-            "Remake"
-        } else if win {
-            "Victory"
-        } else {
-            "Defeat"
+    use crate::core;
+
+    pub fn win(result: core::GameResult) -> String {
+        match result {
+            core::GameResult::Remake => "Remake",
+            core::GameResult::Defeat | core::GameResult::Surrender => "Defeat",
+            core::GameResult::Victory => "Victory",
         }
         .to_string()
     }

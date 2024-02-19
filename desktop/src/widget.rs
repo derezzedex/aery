@@ -1,3 +1,4 @@
+use crate::core;
 use crate::theme;
 use iced::widget::{container, Space};
 use iced::Length;
@@ -17,11 +18,10 @@ pub fn bold<'a>(text: impl ToString) -> iced::widget::Text<'a> {
 }
 
 pub fn left_border<'a, Message: 'a>(
-    win: bool,
-    remake: bool,
+    result: core::GameResult,
 ) -> iced::widget::Container<'a, Message> {
     container(Space::new(6.0, 0.0))
-        .style(theme::left_border_container(win, remake))
+        .style(theme::left_border_container(result))
         .height(Length::Fill)
 }
 

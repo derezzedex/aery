@@ -55,6 +55,33 @@ impl Event {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GameResult {
+    Defeat,
+    Remake,
+    Surrender,
+    Victory,
+}
+
+impl From<bool> for GameResult {
+    fn from(won: bool) -> Self {
+        match won {
+            true => Self::Victory,
+            false => Self::Defeat,
+        }
+    }
+}
+
+impl GameResult {
+    pub fn won(&self) -> bool {
+        *self == Self::Victory
+    }
+
+    pub fn lost(&self) -> bool {
+        *self == Self::Defeat || *self == Self::Surrender
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct GameMatch(riven::models::match_v5::Match);
 

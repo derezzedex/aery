@@ -194,16 +194,16 @@ pub mod summary {
                 .map(|game| game.participant(player.puuid()).unwrap())
                 .collect_vec();
 
-            let wins = games.iter().filter(|game| game.won).count();
-            let losses = games.len() - wins;
+            let wins = games.iter().filter(|game| game.result.won()).count();
+            let losses = games.iter().filter(|game| game.result.lost()).count();
 
             let (role, role_stats) = games
                 .iter()
                 .filter(|p| p.role != core::Role::Unknown)
                 .into_grouping_map_by(|p| Role::try_from(p.role).unwrap())
                 .fold(RoleStats::default(), |acc, _role, p| RoleStats {
-                    wins: acc.wins + p.won as usize,
-                    losses: acc.losses + !p.won as usize,
+                    wins: acc.wins + p.result.won() as usize,
+                    losses: acc.losses + p.result.lost() as usize,
                     kills: acc.kills + p.stats.kills() as usize,
                     deaths: acc.deaths + p.stats.deaths() as usize,
                     assists: acc.assists + p.stats.assists() as usize,
@@ -217,8 +217,8 @@ pub mod summary {
                 .filter_map(|p| Some((Role::try_from(p.role).ok()?, p)))
                 .into_grouping_map_by(|&(r, p)| (r, p.champion))
                 .fold(RoleStats::default(), |acc, _, (_, p)| RoleStats {
-                    wins: acc.wins + p.won as usize,
-                    losses: acc.losses + !p.won as usize,
+                    wins: acc.wins + p.result.won() as usize,
+                    losses: acc.losses + p.result.lost() as usize,
                     kills: acc.kills + p.stats.kills() as usize,
                     deaths: acc.deaths + p.stats.deaths() as usize,
                     assists: acc.assists + p.stats.assists() as usize,
@@ -294,7 +294,7 @@ pub mod summary {
                     text("·").fit(18).style(theme::sub_text()),
                     text!("{:.1}%", ratio)
                         .fit(12)
-                        .style(theme::win_color(is_positive_ratio, false)),
+                        .style(theme::win_color(is_positive_ratio)),
                 ]
                 .align_items(Alignment::Center)
                 .spacing(4);
@@ -342,7 +342,7 @@ pub mod summary {
                         text("·").fit(18).style(theme::sub_text()),
                         text!("{:.1}%", lane_ratio)
                             .fit(12)
-                            .style(theme::win_color(lane_ratio > 50.0, false)),
+                            .style(theme::win_color(lane_ratio > 50.0)),
                     ]
                     .align_items(Alignment::Center)
                     .spacing(4),
@@ -396,7 +396,7 @@ pub mod summary {
                             row![
                                 text!("{:.1}%", winrate)
                                     .size(10)
-                                    .style(theme::win_color(winrate > 50.0, false)),
+                                    .style(theme::win_color(winrate > 50.0)),
                                 text!("({}W {}L)", champion.wins, champion.losses)
                                     .size(10)
                                     .style(theme::gray_text())

@@ -145,8 +145,7 @@ impl Player {
 
 #[derive(Debug, Clone)]
 pub struct Game {
-    win: bool,
-    remake: bool,
+    result: core::GameResult,
     queue: Queue,
     time: Time,
     duration: Duration,
@@ -177,8 +176,8 @@ impl Game {
             .map(|(i, p)| (i, p.clone()))
             .unwrap();
 
-        let win = player.won;
-        let remake = player.remake;
+        let result = player.result();
+
         let player = Player::from_participant(assets, &player);
 
         let summoner_icons = partipants
@@ -189,8 +188,7 @@ impl Game {
             .unwrap();
 
         Game {
-            win,
-            remake,
+            result,
             queue: game.queue(),
             time: game.created_at(),
             duration: game.duration(),
@@ -263,8 +261,11 @@ impl Game {
         };
 
         Game {
-            win,
-            remake: false,
+            result: if win {
+                core::GameResult::Victory
+            } else {
+                core::GameResult::Defeat
+            },
             queue: Queue::RankedFlex,
             time: Time(time::OffsetDateTime::now_utc().saturating_sub(time::Duration::days(1))),
             duration: Duration(
@@ -324,8 +325,8 @@ impl Game {
             };
 
             column![
-                widget::bold(formatting::win(self.win, self.remake))
-                    .style(theme::win_color(self.win, self.remake))
+                widget::bold(formatting::win(self.result))
+                    .style(theme::win_color(self.result))
                     .size(18),
                 column![
                     text(self.queue.to_string()).size(11),
@@ -506,13 +507,13 @@ impl Game {
             let match_details = container(Space::new(0.0, 400.0));
 
             container(row![
-                widget::left_border(self.win, self.remake),
+                widget::left_border(self.result),
                 column![overview.height(Length::Shrink), match_details,]
             ])
             .max_height(600.0)
         } else {
             container(row![
-                widget::left_border(self.win, self.remake).max_height(100.0),
+                widget::left_border(self.result).max_height(100.0),
                 overview,
             ])
             .max_height(100.0)

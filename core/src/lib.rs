@@ -8,6 +8,7 @@ pub use summoner::Summoner;
 
 pub mod game_match;
 pub use game_match::GameMatch;
+pub use game_match::GameResult;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Queue {
@@ -458,8 +459,7 @@ pub struct Participant {
     pub name: String,
     pub riot_id: RiotId,
 
-    pub won: bool,
-    pub remake: bool,
+    pub result: GameResult,
     pub role: Role,
     pub inventory: Inventory,
     pub trinket: Trinket,
@@ -511,6 +511,16 @@ impl From<&riven::models::match_v5::Participant> for Participant {
             wards_removed: participant.wards_killed as u32,
         };
 
+        let result = if participant.game_ended_in_early_surrender {
+            GameResult::Remake
+        } else if participant.game_ended_in_surrender {
+            GameResult::Surrender
+        } else if participant.win {
+            GameResult::Victory
+        } else {
+            GameResult::Defeat
+        };
+
         Self {
             puuid: participant.puuid.clone(),
             name: participant.summoner_name.clone(),
@@ -519,8 +529,7 @@ impl From<&riven::models::match_v5::Participant> for Participant {
                 tagline: participant.riot_id_tagline.clone(),
             },
 
-            won: participant.win,
-            remake: participant.game_ended_in_early_surrender,
+            result,
             role: participant.team_position.clone().into(),
             inventory,
             trinket: Trinket(participant.item6 as u32),
@@ -592,8 +601,8 @@ impl Participant {
         &self.puuid
     }
 
-    pub fn won(&self) -> bool {
-        self.won
+    pub fn result(&self) -> GameResult {
+        self.result
     }
 
     pub fn role(&self) -> &Role {

@@ -1,3 +1,5 @@
+use crate::core;
+
 use iced::advanced::svg;
 use iced::theme;
 use iced::widget;
@@ -8,7 +10,7 @@ use iced::Color;
 pub enum Container {
     Dark,
     Icon,
-    LeftBorder(bool, bool),
+    LeftBorder(core::GameResult),
     Timeline,
     SummonerIcon,
     SummonerLevel,
@@ -89,8 +91,8 @@ pub fn icon_container() -> theme::Container {
     theme::Container::Custom(Box::new(Container::Icon))
 }
 
-pub fn left_border_container(win: bool, remake: bool) -> theme::Container {
-    theme::Container::Custom(Box::new(Container::LeftBorder(win, remake)))
+pub fn left_border_container(result: core::GameResult) -> theme::Container {
+    theme::Container::Custom(Box::new(Container::LeftBorder(result)))
 }
 
 pub fn ratio_bar() -> theme::ProgressBar {
@@ -105,13 +107,11 @@ pub fn expand_button() -> theme::Button {
     theme::Button::Custom(Box::new(Button::Expand))
 }
 
-pub fn win_color(win: bool, remake: bool) -> Color {
-    if remake {
-        Color::from_rgb(0.8, 0.8, 0.8)
-    } else if win {
-        BLUE
-    } else {
-        RED
+pub fn win_color(result: impl Into<core::GameResult>) -> Color {
+    match result.into() {
+        core::GameResult::Remake => Color::from_rgb(0.8, 0.8, 0.8),
+        core::GameResult::Surrender | core::GameResult::Defeat => RED,
+        core::GameResult::Victory => BLUE,
     }
 }
 
@@ -147,7 +147,7 @@ impl widget::container::StyleSheet for Container {
             Container::Timeline => Background::Color(DARKER_BACKGROUND),
             Container::Dark => Background::Color(DARK_BACKGROUND),
             Container::Icon => Background::Color(LIGHT_BACKGROUND),
-            Container::LeftBorder(win, remake) => Background::Color(win_color(*win, *remake)),
+            Container::LeftBorder(result) => Background::Color(win_color(*result)),
             Container::SummonerIcon => Background::Color(LIGHT_BACKGROUND), // todo: switch to image
             Container::SummonerLevel => Background::Color(DARK_BACKGROUND),
             Container::SearchBar => Background::Color(LIGHTER_BACKGROUND),
@@ -156,7 +156,7 @@ impl widget::container::StyleSheet for Container {
 
         let text_color = match self {
             Container::Dark
-            | Container::LeftBorder(_, _)
+            | Container::LeftBorder(_)
             | Container::Timeline
             | Container::SummonerIcon
             | Container::SummonerLevel
@@ -170,15 +170,14 @@ impl widget::container::StyleSheet for Container {
             Container::SummonerLevel => 2.0.into(),
             Container::SummonerIcon => 2.0.into(),
             Container::Timeline | Container::Icon => 0.0.into(),
-            Container::LeftBorder(_, _) => [4.0, 0.0, 0.0, 4.0].into(),
+            Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
             Container::SearchBar | Container::LeftBar => 0.0.into(),
         };
 
         let border_color = match self {
-            Container::Dark
-            | Container::Timeline
-            | Container::LeftBorder(_, _)
-            | Container::Icon => Color::TRANSPARENT,
+            Container::Dark | Container::Timeline | Container::LeftBorder(_) | Container::Icon => {
+                Color::TRANSPARENT
+            }
             Container::SummonerIcon | Container::SummonerLevel => GOLD,
             Container::SearchBar => Color::TRANSPARENT,
             Container::LeftBar => Color::TRANSPARENT,
@@ -187,7 +186,7 @@ impl widget::container::StyleSheet for Container {
         let border_width = match self {
             Container::Dark
             | Container::Timeline
-            | Container::LeftBorder(_, _)
+            | Container::LeftBorder(_)
             | Container::Icon
             | Container::SearchBar => 0.0,
             Container::SummonerIcon => 2.0,
