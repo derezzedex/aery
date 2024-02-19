@@ -52,7 +52,7 @@ pub fn search_icon() -> image::Handle {
 pub fn clock_icon() -> svg::Handle {
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "\\assets\\img\\icons\\clock.svg"
+        "\\assets\\img\\icons\\clock2.svg"
     );
     svg::Handle::from_path(path)
 }
