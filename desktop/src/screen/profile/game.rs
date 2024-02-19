@@ -1,3 +1,5 @@
+use core::RuneKeystone;
+
 use crate::assets::load_champion_icon;
 use crate::assets::load_item_icon;
 use crate::assets::load_runes_icon;
@@ -83,39 +85,6 @@ pub struct PlayerAssets {
 }
 
 impl PlayerAssets {
-    fn dummy(assets: &crate::Assets, champion: core::Champion) -> Self {
-        let champion_image = load_champion_icon(assets, champion);
-
-        let summoner_spell_images = [
-            load_summoner_spell_icon(assets, core::SummonerSpell::new(14)),
-            load_summoner_spell_icon(assets, core::SummonerSpell::new(4)),
-        ];
-
-        let runes_images = [
-            load_runes_icon(assets, core::RuneKeystone::new(8010)),
-            load_runes_icon(assets, core::RuneKeystone::new(8400)),
-        ];
-
-        let item_images = [
-            Some(load_item_icon(assets, core::Item::new(1001))),
-            Some(load_item_icon(assets, core::Item::new(6630))),
-            Some(load_item_icon(assets, core::Item::new(4401))),
-            Some(load_item_icon(assets, core::Item::new(3143))),
-            Some(load_item_icon(assets, core::Item::new(3742))),
-            Some(load_item_icon(assets, core::Item::new(6333))),
-        ];
-
-        let trinket_image = load_item_icon(assets, core::Item::new(3364));
-
-        Self {
-            champion_image,
-            summoner_spell_images,
-            runes_images,
-            item_images,
-            trinket_image,
-        }
-    }
-
     fn from_participant(assets: &crate::Assets, participant: &core::Participant) -> Self {
         let champion_image = load_champion_icon(assets, participant.champion);
 
@@ -151,52 +120,69 @@ impl PlayerAssets {
 #[derive(Debug, Clone)]
 pub struct Player {
     assets: PlayerAssets,
-    role: Option<Role>,
-    stats: core::ParticipantStats,
+    info: core::Participant,
 }
 
 impl Player {
     fn dummy(assets: &crate::Assets, champion: core::Champion) -> Self {
-        let assets = PlayerAssets::dummy(assets, champion);
-        let role = Some(Role::Mid);
-        let stats = core::ParticipantStats {
-            kills: 1,
-            deaths: 6,
-            assists: 12,
-            creep_score: 151,
-            monster_score: 10,
-            vision_score: 18,
-            damage_dealt: 12456,
-            damage_taken: 20520,
-            gold: 13521,
-            control_wards: 5,
-            wards_placed: 10,
-            wards_removed: 3,
+        let info = core::Participant {
+            puuid: String::from("dummy"),
+            name: String::from("dummy"),
+            riot_id: core::RiotId {
+                name: None,
+                tagline: String::from("dummy"),
+            },
+            result: core::GameResult::Victory,
+            role: core::Role::Mid,
+            inventory: core::Inventory([
+                Some(core::Item::new(1001)),
+                Some(core::Item::new(6630)),
+                Some(core::Item::new(4401)),
+                Some(core::Item::new(3143)),
+                Some(core::Item::new(3742)),
+                Some(core::Item::new(6333)),
+            ]),
+            trinket: core::Trinket(3364),
+            champion,
+            summoner_spells: core::SummonerSpells::from([
+                core::SummonerSpell::new(14),
+                core::SummonerSpell::new(4),
+            ]),
+            rune_page: core::RunePage {
+                primary: core::PrimaryRune {
+                    keystone: core::RuneKeystone::new(8010),
+                },
+                secondary: core::SecondaryRune {
+                    lesser: [RuneKeystone::new(8400); 2],
+                },
+            },
+            stats: core::ParticipantStats {
+                kills: 1,
+                deaths: 6,
+                assists: 12,
+                creep_score: 151,
+                monster_score: 10,
+                vision_score: 18,
+                damage_dealt: 12456,
+                damage_taken: 20520,
+                gold: 13521,
+                control_wards: 5,
+                wards_placed: 10,
+                wards_removed: 3,
+            },
         };
 
-        Self {
-            assets,
-            role,
-            stats,
-        }
+        let assets = PlayerAssets::from_participant(assets, &info);
+
+        Self { assets, info }
     }
 
     pub fn from_participant(assets: &crate::Assets, participant: &core::Participant) -> Self {
         let assets = PlayerAssets::from_participant(assets, participant);
-        let stats = participant.stats().clone();
-        let role = match participant.role {
-            core::Role::Bottom => Some(Role::Bottom),
-            core::Role::Top => Some(Role::Top),
-            core::Role::Jungle => Some(Role::Jungle),
-            core::Role::Support => Some(Role::Support),
-            core::Role::Mid => Some(Role::Mid),
-            core::Role::Unknown => None,
-        };
 
         Self {
             assets,
-            role,
-            stats,
+            info: participant.clone(),
         }
     }
 }
@@ -313,7 +299,7 @@ impl Game {
             //     .spacing(2)
             //     .align_items(Alignment::Center);
 
-            let role: Element<_> = if let Some(role) = &self.player.role {
+            let role: Element<_> = if let Some(role) = Role::try_from(self.player.info.role).ok() {
                 column![
                     row![
                         image(role.icon()).width(12.0).height(12.0),
@@ -382,40 +368,40 @@ impl Game {
 
         let player_stats = {
             let kda = row![
-                text(self.player.stats.kills).size(15),
+                text(self.player.info.stats.kills).size(15),
                 text("/").style(theme::gray_text()).size(15),
-                text(self.player.stats.deaths)
+                text(self.player.info.stats.deaths)
                     .style(theme::red_text())
                     .size(15),
                 text("/").style(theme::gray_text()).size(15),
-                text(self.player.stats.assists).size(15)
+                text(self.player.info.stats.assists).size(15)
             ]
             .align_items(Alignment::Center)
             .spacing(2);
 
             let other_stats = column![
                 row![text(formatting::kda(
-                    self.player.stats.kills,
-                    self.player.stats.deaths,
-                    self.player.stats.assists
+                    self.player.info.stats.kills,
+                    self.player.info.stats.deaths,
+                    self.player.info.stats.assists
                 ))
                 .size(10)
                 .style(theme::sub_text())]
                 .spacing(4)
                 .align_items(Alignment::Center),
                 row![text(formatting::creep_score(
-                    self.player.stats.creep_score,
+                    self.player.info.stats.creep_score,
                     self.duration.0.whole_minutes() as u32
                 ))
                 .size(10)
                 .style(theme::sub_text())]
                 .spacing(4)
                 .align_items(Alignment::Center),
-                row![
-                    text(formatting::vision_score(self.player.stats.vision_score))
-                        .size(10)
-                        .style(theme::sub_text())
-                ]
+                row![text(formatting::vision_score(
+                    self.player.info.stats.vision_score
+                ))
+                .size(10)
+                .style(theme::sub_text())]
                 .spacing(4)
                 .align_items(Alignment::Center),
             ]

@@ -325,7 +325,7 @@ impl TryFrom<i32> for Item {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Trinket(u32);
+pub struct Trinket(pub u32);
 
 impl Into<Item> for Trinket {
     fn into(self) -> Item {
@@ -334,7 +334,7 @@ impl Into<Item> for Trinket {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Inventory([Option<Item>; 6]);
+pub struct Inventory(pub [Option<Item>; 6]);
 
 impl IntoIterator for Inventory {
     type Item = Option<Item>;
@@ -385,7 +385,7 @@ impl SummonerSpell {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct SummonerSpells([SummonerSpell; 2]);
+pub struct SummonerSpells(pub [SummonerSpell; 2]);
 
 impl SummonerSpells {
     pub fn first(&self) -> SummonerSpell {
@@ -394,6 +394,12 @@ impl SummonerSpells {
 
     pub fn second(&self) -> SummonerSpell {
         self.0[1]
+    }
+}
+
+impl From<[SummonerSpell; 2]> for SummonerSpells {
+    fn from(spells: [SummonerSpell; 2]) -> Self {
+        Self(spells)
     }
 }
 
@@ -408,7 +414,7 @@ impl RuneKeystone {
 
 #[derive(Debug, Clone, Copy)]
 pub struct PrimaryRune {
-    keystone: RuneKeystone,
+    pub keystone: RuneKeystone,
 }
 
 impl PrimaryRune {
@@ -419,7 +425,7 @@ impl PrimaryRune {
 
 #[derive(Debug, Clone, Copy)]
 pub struct SecondaryRune {
-    lesser: [RuneKeystone; 2],
+    pub lesser: [RuneKeystone; 2],
 }
 
 impl SecondaryRune {
