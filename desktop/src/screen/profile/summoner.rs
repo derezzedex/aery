@@ -35,6 +35,8 @@ fn summoner_icon<'a>(icon: Option<image::Handle>, level: u32) -> Element<'a, Mes
             .center_y()
             .style(theme::summoner_level_container()),
     )
+    .horizontal_alignment(iced::Alignment::Center)
+    .vertical_alignment(iced::Alignment::End)
     .into()
 }
 

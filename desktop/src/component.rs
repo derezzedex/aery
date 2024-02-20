@@ -117,6 +117,8 @@ pub mod modal {
     pub struct Modal<'a, Message, Theme, Renderer> {
         image: Element<'a, Message, Theme, Renderer>,
         level: Element<'a, Message, Theme, Renderer>,
+        horizontal_alignment: Alignment,
+        vertical_alignment: Alignment,
     }
 
     impl<'a, Message, Theme, Renderer> Modal<'a, Message, Theme, Renderer> {
@@ -128,6 +130,22 @@ pub mod modal {
             Self {
                 image: image.into(),
                 level: level.into(),
+                horizontal_alignment: Alignment::Center,
+                vertical_alignment: Alignment::Center,
+            }
+        }
+
+        pub fn horizontal_alignment(self, aligment: Alignment) -> Self {
+            Self {
+                horizontal_alignment: aligment,
+                ..self
+            }
+        }
+
+        pub fn vertical_alignment(self, aligment: Alignment) -> Self {
+            Self {
+                vertical_alignment: aligment,
+                ..self
             }
         }
     }
@@ -220,6 +238,8 @@ pub mod modal {
                 content: &mut self.level,
                 tree: &mut state.children[1],
                 size: layout.bounds().size(),
+                horizontal_alignment: self.horizontal_alignment,
+                vertical_alignment: self.vertical_alignment,
             })))
         }
 
@@ -255,6 +275,8 @@ pub mod modal {
 
     struct Overlay<'a, 'b, Message, Theme, Renderer> {
         position: Point,
+        horizontal_alignment: Alignment,
+        vertical_alignment: Alignment,
         content: &'b mut Element<'a, Message, Theme, Renderer>,
         tree: &'b mut widget::Tree,
         size: Size,
@@ -276,10 +298,9 @@ pub mod modal {
                 .as_widget()
                 .layout(self.tree, renderer, &limits)
                 .align(
-                    Alignment::Center,
-                    Alignment::End,
+                    self.horizontal_alignment,
+                    self.vertical_alignment,
                     limits.max(),
-                    // .pad([0.0, 0.0, child.size().height / 2.0, 0.0].into()),
                 );
 
             layout::Node::with_children(self.size, vec![child]).move_to(self.position)
