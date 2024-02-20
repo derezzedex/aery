@@ -361,6 +361,14 @@ impl Game {
 
         let champion_info = {
             let champion_icon = champion_icon(self.player.assets.champion_image.clone());
+            let champion_level = container(widget::bold(self.player.info.stats.level).size(10))
+                .padding([2, 4, 0, 4])
+                .style(theme::summoner_level_container());
+
+            // TODO: fix `champion_level` overlay not being clipped on the `scrollable`
+            let champion = Modal::new(champion_icon, champion_level)
+                .horizontal_alignment(Alignment::Start)
+                .vertical_alignment(Alignment::End);
 
             let champion_spells = row![
                 summoner_spell_icon(self.player.assets.summoner_spell_images[0].clone()),
@@ -375,7 +383,7 @@ impl Game {
             .spacing(2);
 
             row![
-                champion_icon,
+                champion,
                 column![champion_spells, champion_runes].spacing(2),
             ]
             .spacing(2)
