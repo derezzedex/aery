@@ -510,6 +510,8 @@ impl From<&riven::models::match_v5::Participant> for Participant {
         };
 
         let stats = ParticipantStats {
+            level: participant.champ_level as u32,
+
             kills: participant.kills as u32,
             deaths: participant.deaths as u32,
             assists: participant.assists as u32,
@@ -562,9 +564,12 @@ impl From<&riven::models::match_v5::Participant> for Participant {
 
 #[derive(Debug, Clone, Copy)]
 pub struct ParticipantStats {
+    pub level: u32,
+
     pub kills: u32,
     pub deaths: u32,
     pub assists: u32,
+
     pub creep_score: u32,
     pub monster_score: u32,
     pub vision_score: u32,

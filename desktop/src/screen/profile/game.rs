@@ -173,6 +173,7 @@ impl Player {
                 },
             },
             stats: core::ParticipantStats {
+                level: 5,
                 kills: 1,
                 deaths: 6,
                 assists: 12,
