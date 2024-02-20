@@ -82,7 +82,7 @@ pub struct PlayerAssets {
     summoner_spell_images: [image::Handle; 2],
     runes_images: [image::Handle; 2],
     item_images: [Option<image::Handle>; 6],
-    trinket_image: image::Handle,
+    trinket_image: Option<image::Handle>,
 }
 
 impl PlayerAssets {
@@ -106,7 +106,10 @@ impl PlayerAssets {
             .try_into()
             .unwrap();
 
-        let trinket_image = load_item_icon(assets, participant.trinket.into());
+        let trinket_image = match participant.trinket {
+            core::Trinket(0) => None,
+            trinket => Some(load_item_icon(assets, trinket.into())),
+        };
 
         Self {
             champion_image,
@@ -438,7 +441,7 @@ impl Game {
                     item_icon(self.player.assets.item_images[5].clone())
                 ]
                 .spacing(2),
-                item_icon(Some(self.player.assets.trinket_image.clone())),
+                item_icon(self.player.assets.trinket_image.clone()),
             ]
             .spacing(2)
         };
