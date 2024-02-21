@@ -71,6 +71,15 @@ impl ToString for Summoner {
 pub mod formatting {
     use crate::core;
 
+    pub fn team(team: core::Team) -> String {
+        match team {
+            core::Team::BLUE => "Blue team",
+            core::Team::RED => "Red team",
+            _ => unimplemented!(),
+        }
+        .to_string()
+    }
+
     pub fn win(result: core::GameResult) -> String {
         match result {
             core::GameResult::Remake => "Remake",

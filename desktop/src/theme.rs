@@ -16,6 +16,8 @@ pub enum Container {
     SummonerLevel,
     SearchBar,
     LeftBar,
+    TeamPlayer(core::GameResult, bool),
+    TeamHeader,
 }
 
 pub const DARKER_BACKGROUND: Color = Color::from_rgb(0.05, 0.05, 0.05);
@@ -26,6 +28,12 @@ pub const LIGHT_BACKGROUND: Color = Color::from_rgb(0.95, 0.95, 0.95);
 pub const RED: Color = Color::from_rgb(1.0, 0.34, 0.2);
 pub const BLUE: Color = Color::from_rgb(0.0, 0.58, 1.0);
 pub const GOLD: Color = Color::from_rgb(205.0 / 255.0, 136.0 / 255.0, 55.0 / 255.0);
+
+pub const RED_DARK: Color = Color::from_rgb(0.349, 0.204, 0.231);
+pub const RED_DARK_HIGHLIGHT: Color = Color::from_rgb(0.439, 0.235, 0.278);
+
+pub const BLUE_DARK: Color = Color::from_rgb(0.094, 0.224, 0.333);
+pub const BLUE_DARK_HIGHLIGHT: Color = Color::from_rgb(0.067, 0.282, 0.51);
 
 pub fn chevron_down_icon() -> image::Handle {
     let path = concat!(
@@ -95,8 +103,20 @@ pub fn left_border_container(result: core::GameResult) -> theme::Container {
     theme::Container::Custom(Box::new(Container::LeftBorder(result)))
 }
 
+pub fn team_header_container() -> theme::Container {
+    theme::Container::Custom(Box::new(Container::TeamHeader))
+}
+
+pub fn team_player_container(result: core::GameResult, is_player: bool) -> theme::Container {
+    theme::Container::Custom(Box::new(Container::TeamPlayer(result, is_player)))
+}
+
 pub fn ratio_bar() -> theme::ProgressBar {
     theme::ProgressBar::Custom(Box::new(RatioBar))
+}
+
+pub fn fill_bar(fill_color: Color) -> theme::ProgressBar {
+    theme::ProgressBar::Custom(Box::new(FillBar(fill_color)))
 }
 
 pub fn region_button() -> theme::Button {
@@ -145,13 +165,29 @@ impl widget::container::StyleSheet for Container {
     fn appearance(&self, _theme: &iced::Theme) -> widget::container::Appearance {
         let background = match self {
             Container::Timeline => Background::Color(DARKER_BACKGROUND),
-            Container::Dark => Background::Color(DARK_BACKGROUND),
+            Container::Dark | Container::TeamHeader => Background::Color(DARK_BACKGROUND),
             Container::Icon => Background::Color(LIGHT_BACKGROUND),
             Container::LeftBorder(result) => Background::Color(win_color(*result)),
             Container::SummonerIcon => Background::Color(LIGHT_BACKGROUND), // todo: switch to image
             Container::SummonerLevel => Background::Color(DARK_BACKGROUND),
             Container::SearchBar => Background::Color(LIGHTER_BACKGROUND),
             Container::LeftBar => Background::Color(BLUE),
+            Container::TeamPlayer(core::GameResult::Defeat, false)
+            | Container::TeamPlayer(core::GameResult::Surrender, false) => {
+                Background::Color(RED_DARK)
+            }
+            Container::TeamPlayer(core::GameResult::Defeat, true)
+            | Container::TeamPlayer(core::GameResult::Surrender, true) => {
+                Background::Color(RED_DARK_HIGHLIGHT)
+            }
+            Container::TeamPlayer(core::GameResult::Victory, false) => Background::Color(BLUE_DARK),
+            Container::TeamPlayer(core::GameResult::Victory, true) => {
+                Background::Color(BLUE_DARK_HIGHLIGHT)
+            }
+            Container::TeamPlayer(core::GameResult::Remake, false) => {
+                Background::Color(gray_text())
+            }
+            Container::TeamPlayer(core::GameResult::Remake, true) => Background::Color(sub_text()),
         };
 
         let text_color = match self {
@@ -160,7 +196,9 @@ impl widget::container::StyleSheet for Container {
             | Container::Timeline
             | Container::SummonerIcon
             | Container::SummonerLevel
-            | Container::LeftBar => Color::WHITE,
+            | Container::LeftBar
+            | Container::TeamPlayer(_, _)
+            | Container::TeamHeader => Color::WHITE,
             Container::Icon => Color::BLACK,
             Container::SearchBar => sub_text(),
         };
@@ -171,7 +209,10 @@ impl widget::container::StyleSheet for Container {
             Container::SummonerIcon => 2.0.into(),
             Container::Timeline | Container::Icon => 0.0.into(),
             Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
-            Container::SearchBar | Container::LeftBar => 0.0.into(),
+            Container::SearchBar
+            | Container::LeftBar
+            | Container::TeamPlayer(_, _)
+            | Container::TeamHeader => 0.0.into(),
         };
 
         let border_color = match self {
@@ -181,6 +222,8 @@ impl widget::container::StyleSheet for Container {
             Container::SummonerIcon | Container::SummonerLevel => GOLD,
             Container::SearchBar => Color::TRANSPARENT,
             Container::LeftBar => Color::TRANSPARENT,
+            Container::TeamPlayer(_, _) => Color::TRANSPARENT,
+            Container::TeamHeader => Color::TRANSPARENT,
         };
 
         let border_width = match self {
@@ -192,6 +235,8 @@ impl widget::container::StyleSheet for Container {
             Container::SummonerIcon => 2.0,
             Container::SummonerLevel => 1.0,
             Container::LeftBar => 0.0,
+            Container::TeamPlayer(_, _) => 0.0,
+            Container::TeamHeader => 0.0,
         };
 
         widget::container::Appearance {
@@ -277,6 +322,20 @@ impl widget::progress_bar::StyleSheet for RatioBar {
         widget::progress_bar::Appearance {
             background: Background::Color(RED),
             bar: Background::Color(BLUE),
+            border_radius: 0.0.into(),
+        }
+    }
+}
+
+struct FillBar(Color);
+
+impl widget::progress_bar::StyleSheet for FillBar {
+    type Style = iced::Theme;
+
+    fn appearance(&self, _theme: &iced::Theme) -> widget::progress_bar::Appearance {
+        widget::progress_bar::Appearance {
+            background: Background::Color(LIGHTER_BACKGROUND),
+            bar: Background::Color(self.0),
             border_radius: 0.0.into(),
         }
     }
