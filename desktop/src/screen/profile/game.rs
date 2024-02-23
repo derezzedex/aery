@@ -527,6 +527,7 @@ impl Game {
                 player_items,
                 horizontal_space().width(Length::Fill),
                 teams,
+                horizontal_space().width(Length::Fill),
             ]
             .width(Length::Fill)
             .padding(4)
@@ -610,6 +611,7 @@ fn team<'a>(
         small_text("CS"),
         horizontal_space().width(Length::Fill),
         small_text("Items"),
+        horizontal_space().width(Length::Fill),
     ]
     .padding(4);
 
@@ -737,6 +739,7 @@ fn team<'a>(
 
         let content = row![
             champion,
+            horizontal_space().width(4),
             spell_and_runes,
             horizontal_space().width(8),
             name,
@@ -752,6 +755,7 @@ fn team<'a>(
             items,
             horizontal_space().width(4),
             ward,
+            horizontal_space().width(16),
         ]
         .width(Length::Fill)
         .align_items(Alignment::Center);
