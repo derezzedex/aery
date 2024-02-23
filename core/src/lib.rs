@@ -6,9 +6,9 @@ pub use client::Client;
 pub mod summoner;
 pub use summoner::Summoner;
 
-pub mod game_match;
-pub use game_match::GameMatch;
-pub use game_match::GameResult;
+pub mod game;
+pub use game::GameMatch;
+pub use game::GameResult;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Queue {
@@ -459,21 +459,13 @@ pub struct RiotId {
     pub tagline: String,      // 3~5 chars
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Team(usize);
-
-impl Team {
-    pub const BLUE: Team = Team(100);
-    pub const RED: Team = Team(200);
-}
-
 #[derive(Debug, Clone)]
 pub struct Participant {
     pub puuid: String,
     pub name: String,
     pub riot_id: RiotId,
 
-    pub team: Team,
+    pub team: team::Id,
     pub result: GameResult,
     pub role: Role,
     pub inventory: Inventory,
@@ -546,7 +538,7 @@ impl From<&riven::models::match_v5::Participant> for Participant {
                 tagline: participant.riot_id_tagline.clone(),
             },
 
-            team: Team(participant.team_id as usize),
+            team: team::Id::from(participant.team_id),
             result,
             role: participant.team_position.clone().into(),
             inventory,

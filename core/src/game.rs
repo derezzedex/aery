@@ -1,3 +1,6 @@
+pub mod team;
+pub use team::Team;
+
 use crate::{Client, Duration, Participant, Queue, Time};
 
 use riven::consts::RegionalRoute;
@@ -88,6 +91,16 @@ pub struct GameMatch(riven::models::match_v5::Match);
 impl GameMatch {
     pub fn id(&self) -> Id {
         Id(self.0.metadata.match_id.clone())
+    }
+
+    pub fn teams(&self) -> Vec<crate::Team> {
+        self.0
+            .info
+            .teams
+            .iter()
+            .cloned()
+            .map(crate::Team::from)
+            .collect()
     }
 
     pub fn queue(&self) -> Queue {
