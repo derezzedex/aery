@@ -67,6 +67,14 @@ pub fn clock_icon() -> svg::Handle {
     svg::Handle::from_path(path)
 }
 
+pub fn unranked_icon() -> image::Handle {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "\\assets\\img\\emblems\\minicrests\\unranked.png"
+    );
+    image::Handle::from_path(path)
+}
+
 pub fn search_bar_text_input() -> theme::TextInput {
     theme::TextInput::Custom(Box::new(TextInput::SearchBar))
 }

@@ -117,7 +117,12 @@ fn unranked_container<'a>(queue: Queue) -> Element<'a, Message> {
             horizontal_space().width(4),
             widget::bold(queue.to_string()).size(14),
             horizontal_space().width(Length::Fill),
-            text("Unranked").style(theme::sub_text()).size(12)
+            row![
+                image(theme::unranked_icon()).width(18.0).height(18.0),
+                text("Unranked").style(theme::sub_text()).size(12)
+            ]
+            .align_items(Alignment::Center)
+            .spacing(4),
         ]
         .align_items(Alignment::Center),
     )
