@@ -1,4 +1,7 @@
-use crate::{Client, Duration, Participant, Queue, Time};
+pub mod player;
+pub use player::Player;
+
+use crate::{Client, Duration, Queue, Time};
 
 use riven::consts::RegionalRoute;
 
@@ -112,13 +115,8 @@ impl Game {
         }
     }
 
-    pub fn participants(&self) -> Vec<Participant> {
-        self.0
-            .info
-            .participants
-            .iter()
-            .map(Participant::from)
-            .collect()
+    pub fn participants(&self) -> Vec<Player> {
+        self.0.info.participants.iter().map(Player::from).collect()
     }
 
     pub async fn from_id(client: &Client, id: Id) -> core::result::Result<Self, RequestError> {
@@ -152,12 +150,12 @@ impl Game {
             })
     }
 
-    pub fn participant(&self, puuid: &str) -> Option<Participant> {
+    pub fn participant(&self, puuid: &str) -> Option<Player> {
         self.0
             .info
             .participants
             .iter()
             .find(|participant| participant.puuid == puuid)
-            .map(Participant::from)
+            .map(Player::from)
     }
 }

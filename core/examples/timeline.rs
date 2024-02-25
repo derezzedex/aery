@@ -29,9 +29,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "[{}] {}: {}/{}/{}",
                 result,
                 player.champion.identifier().unwrap(),
-                player.stats.kills(),
-                player.stats.deaths(),
-                player.stats().assists()
+                player.stats.kills,
+                player.stats.deaths,
+                player.stats.assists
             );
 
             future::ready(())

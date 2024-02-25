@@ -204,9 +204,9 @@ pub mod summary {
                 .fold(RoleStats::default(), |acc, _role, p| RoleStats {
                     wins: acc.wins + p.result.won() as usize,
                     losses: acc.losses + p.result.lost() as usize,
-                    kills: acc.kills + p.stats.kills() as usize,
-                    deaths: acc.deaths + p.stats.deaths() as usize,
-                    assists: acc.assists + p.stats.assists() as usize,
+                    kills: acc.kills + p.stats.kills as usize,
+                    deaths: acc.deaths + p.stats.deaths as usize,
+                    assists: acc.assists + p.stats.assists as usize,
                 })
                 .into_iter()
                 .max_by(|(_, a), (_, b)| a.wins.cmp(&b.wins))
@@ -219,9 +219,9 @@ pub mod summary {
                 .fold(RoleStats::default(), |acc, _, (_, p)| RoleStats {
                     wins: acc.wins + p.result.won() as usize,
                     losses: acc.losses + p.result.lost() as usize,
-                    kills: acc.kills + p.stats.kills() as usize,
-                    deaths: acc.deaths + p.stats.deaths() as usize,
-                    assists: acc.assists + p.stats.assists() as usize,
+                    kills: acc.kills + p.stats.kills as usize,
+                    deaths: acc.deaths + p.stats.deaths as usize,
+                    assists: acc.assists + p.stats.assists as usize,
                 })
                 .into_iter()
                 .sorted_unstable_by(|(_, a), (_, b)| b.wins.cmp(&a.wins))

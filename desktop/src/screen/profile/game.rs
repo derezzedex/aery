@@ -88,7 +88,7 @@ pub struct PlayerAssets {
 }
 
 impl PlayerAssets {
-    fn from_participant(assets: &crate::Assets, participant: &core::Participant) -> Self {
+    fn from_participant(assets: &crate::Assets, participant: &game::Player) -> Self {
         let champion_image = load_champion_icon(assets, participant.champion);
 
         let summoner_spell_images = [
@@ -126,14 +126,14 @@ impl PlayerAssets {
 #[derive(Debug, Clone)]
 pub struct Player {
     assets: PlayerAssets,
-    info: core::Participant,
+    info: game::Player,
 }
 
 impl Player {
     fn dummy_with_puuid(assets: &crate::Assets, champion: core::Champion, puuid: String) -> Self {
         let dummy = Self::dummy(assets, champion);
         Self {
-            info: core::Participant {
+            info: game::Player {
                 puuid,
                 ..dummy.info
             },
@@ -142,7 +142,7 @@ impl Player {
     }
 
     fn dummy(assets: &crate::Assets, champion: core::Champion) -> Self {
-        let info = core::Participant {
+        let info = game::Player {
             puuid: String::from("dummy"),
             name: String::from("dummy"),
             riot_id: core::RiotId {
@@ -174,7 +174,7 @@ impl Player {
                     lesser: [RuneKeystone::new(8400); 2],
                 },
             },
-            stats: core::ParticipantStats {
+            stats: game::player::Stats {
                 level: 5,
                 kills: 1,
                 deaths: 6,
@@ -196,7 +196,7 @@ impl Player {
         Self { assets, info }
     }
 
-    pub fn from_participant(assets: &crate::Assets, participant: &core::Participant) -> Self {
+    pub fn from_participant(assets: &crate::Assets, participant: &game::Player) -> Self {
         let assets = PlayerAssets::from_participant(assets, participant);
 
         Self {
@@ -243,7 +243,7 @@ impl Game {
             .cloned()
             .unwrap();
 
-        let result = player.result();
+        let result = player.result;
 
         let player = Player::from_participant(assets, &player);
 

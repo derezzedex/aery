@@ -54,9 +54,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                                 println!(
                                     "{:#?}",
-                                    participants.iter().find(
-                                        |&participant| participant.puuid() == summoner.puuid()
-                                    )
+                                    participants
+                                        .iter()
+                                        .find(|&participant| participant.puuid == summoner.puuid())
                                 );
 
                                 future::ready(())
