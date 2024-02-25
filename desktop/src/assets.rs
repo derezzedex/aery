@@ -144,7 +144,7 @@ impl Assets {
                 .unwrap()
                 .trim_start_matches("perk-images/");
             let id = value["id"].as_u64().unwrap();
-            runes.insert(rune::Rune(id as u32), path.to_string());
+            runes.insert(rune::Rune(id as usize), path.to_string());
 
             for slots in value["slots"].as_array().unwrap() {
                 for rune in slots["runes"].as_array().unwrap() {
@@ -153,7 +153,7 @@ impl Assets {
                         .unwrap()
                         .trim_start_matches("perk-images/");
                     let lesser_id = rune["id"].as_u64().unwrap();
-                    runes.insert(rune::Rune(lesser_id as u32), path.to_string());
+                    runes.insert(rune::Rune(lesser_id as usize), path.to_string());
                 }
             }
         }

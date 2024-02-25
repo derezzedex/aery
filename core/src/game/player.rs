@@ -31,20 +31,6 @@ impl From<&riven::models::match_v5::Participant> for Player {
             Item::try_from(participant.item5).ok(),
         ]);
 
-        let rune_page = rune::Page {
-            primary: rune::Primary {
-                keystone: rune::Rune(participant.perks.styles[0].selections[0].perk as u32),
-            },
-            secondary: rune::Secondary {
-                lesser: participant.perks.styles[1].selections[0..=1]
-                    .iter()
-                    .map(|s| rune::Rune(s.perk as u32))
-                    .collect::<Vec<_>>()
-                    .try_into()
-                    .expect("failed to convert runes"),
-            },
-        };
-
         let stats = Stats {
             level: participant.champ_level as u32,
 
@@ -92,7 +78,7 @@ impl From<&riven::models::match_v5::Participant> for Player {
                 SummonerSpell(participant.summoner1_id as u32),
                 SummonerSpell(participant.summoner2_id as u32),
             ]),
-            rune_page,
+            rune_page: rune::Page::from(participant.perks.clone()),
             stats,
         }
     }

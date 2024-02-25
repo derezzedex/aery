@@ -95,8 +95,8 @@ impl PlayerAssets {
             load_summoner_spell_icon(assets, participant.summoner_spells.second()),
         ];
         let runes_images = [
-            load_runes_icon(assets, participant.rune_page.primary.keystone()),
-            load_runes_icon(assets, participant.rune_page.secondary.keystone()),
+            load_runes_icon(assets, participant.rune_page.primary.keystone.rune),
+            load_runes_icon(assets, participant.rune_page.secondary.path.into()),
         ];
 
         let item_images = participant
@@ -166,11 +166,18 @@ impl Player {
                 core::SummonerSpell::new(4),
             ]),
             rune_page: game::rune::Page {
-                primary: game::rune::Primary {
-                    keystone: game::rune::Rune(8010),
+                primary: game::rune::path::Primary {
+                    path: game::rune::path::Kind::Precision,
+                    keystone: game::rune::Rune(8010).into(),
+                    runes: [
+                        game::rune::Rune(9111),
+                        game::rune::Rune(9105),
+                        game::rune::Rune(8299),
+                    ],
                 },
-                secondary: game::rune::Secondary {
-                    lesser: [game::rune::Rune::new(8400); 2],
+                secondary: game::rune::path::Secondary {
+                    path: game::rune::path::Kind::Resolve,
+                    runes: [game::rune::Rune(8463), game::rune::Rune(8473)],
                 },
             },
             stats: game::player::Stats {
