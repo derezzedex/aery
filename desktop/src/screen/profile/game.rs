@@ -6,7 +6,6 @@ use crate::component::*;
 use crate::core;
 use crate::core::game;
 use crate::core::summoner;
-use crate::core::{Duration, Time};
 use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::theme::chevron_up_icon;
@@ -228,8 +227,8 @@ struct Team {
 pub struct Game {
     result: game::Result,
     queue: game::Queue,
-    time: Time,
-    duration: Duration,
+    time: time::OffsetDateTime,
+    duration: time::Duration,
     player: Player,
     teams: Vec<Team>,
 
@@ -313,10 +312,8 @@ impl Game {
                 game::Result::Defeat
             },
             queue: game::Queue::RankedFlex,
-            time: Time(time::OffsetDateTime::now_utc().saturating_sub(time::Duration::days(1))),
-            duration: Duration(
-                time::Duration::minutes(28).saturating_add(time::Duration::seconds(33)),
-            ),
+            time: time::OffsetDateTime::now_utc().saturating_sub(time::Duration::days(1)),
+            duration: time::Duration::minutes(28).saturating_add(time::Duration::seconds(33)),
             player,
             teams,
 
@@ -330,6 +327,8 @@ impl Game {
     }
 
     pub fn view(&self) -> Element<Message> {
+        let now = time::OffsetDateTime::now_utc();
+
         let match_stats = {
             // TODO: track and display points gained/lost
             // let points_icon: Element<Message> = small_icon().into();
@@ -350,7 +349,7 @@ impl Game {
                     row![
                         svg(theme::clock_icon()).width(12.0).height(12.0),
                         container(
-                            text(self.duration.to_string())
+                            text(formatting::duration(self.duration))
                                 .size(10)
                                 .style(theme::sub_text())
                         ),
@@ -371,7 +370,7 @@ impl Game {
                 column![
                     text(self.queue.to_string()).size(11),
                     container(
-                        text(self.time.to_string())
+                        text(formatting::time_since(now, self.time))
                             .style(theme::sub_text())
                             .size(10)
                     ),
@@ -439,7 +438,7 @@ impl Game {
                 .align_items(Alignment::Center),
                 row![text(formatting::creep_score(
                     self.player.info.stats.creep_score,
-                    self.duration.0.whole_minutes() as u32
+                    self.duration.whole_minutes() as u32
                 ))
                 .size(10)
                 .style(theme::sub_text())]
@@ -601,7 +600,7 @@ fn team<'a>(
     summoner: &Player,
     max_damage_dealt: u32,
     max_damage_taken: u32,
-    game_duration: Duration,
+    game_duration: time::Duration,
 ) -> Element<'a, Message> {
     // TODO: align header with content
     let header = row![
@@ -739,7 +738,7 @@ fn team<'a>(
             smaller_text(player.info.stats.creep_score),
             smaller_text(format!(
                 "{:.1}/m",
-                player.info.stats.creep_score as f32 / game_duration.0.whole_minutes() as f32,
+                player.info.stats.creep_score as f32 / game_duration.whole_minutes() as f32,
             )),
         ]
         .align_items(Alignment::Center);

@@ -20,6 +20,61 @@ pub mod formatting {
     use crate::core;
     use crate::core::game;
 
+    pub fn duration(duration: time::Duration) -> String {
+        let minutes = duration.whole_minutes().to_string();
+        let seconds = duration.whole_seconds().to_string();
+
+        format!("{minutes:.2}m {seconds:.2}s")
+    }
+
+    pub fn time_since(now: time::OffsetDateTime, since: time::OffsetDateTime) -> String {
+        // let now = time::OffsetDateTime::now_utc();
+        let duration = now - since;
+        let seconds = duration.whole_seconds();
+        let minutes = seconds / 60;
+        let hours = minutes / 60;
+        let days = hours / 24;
+        let weeks = days / 7;
+        let months = days / 30;
+        let years = days / 365;
+
+        if seconds < 60 {
+            String::from("few seconds ago")
+        } else if minutes < 60 {
+            format!(
+                "{} minute{} ago",
+                minutes,
+                if minutes == 1 { "" } else { "s" }
+            )
+        } else if hours < 24 {
+            format!("{} hour{} ago", hours, if hours == 1 { "" } else { "s" })
+        } else if days < 7 {
+            if days == 1 {
+                String::from("yesterday")
+            } else {
+                format!("{} days ago", days)
+            }
+        } else if weeks < 4 {
+            if weeks == 1 {
+                String::from("last week")
+            } else {
+                format!("{} weeks ago", weeks)
+            }
+        } else if months < 12 {
+            if months <= 1 {
+                String::from("last month")
+            } else {
+                format!("{} months ago", months)
+            }
+        } else {
+            if years <= 1 {
+                return String::from("last year");
+            } else {
+                format!("{} years ago", years)
+            }
+        }
+    }
+
     pub fn role(role: core::game::Role) -> String {
         match role {
             core::game::Role::Bottom => "Bottom",

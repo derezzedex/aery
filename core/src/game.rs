@@ -3,7 +3,7 @@ pub use player::Player;
 
 pub mod rune;
 
-use crate::{Client, Duration, Time};
+use crate::Client;
 
 use riven::consts::RegionalRoute;
 
@@ -99,21 +99,19 @@ impl Game {
         self.0.info.queue_id.into()
     }
 
-    pub fn created_at(&self) -> Time {
-        Time(
-            time::OffsetDateTime::from_unix_timestamp_nanos(
-                self.0.info.game_creation as i128 * 1_000_000,
-            )
-            .unwrap(),
+    pub fn created_at(&self) -> time::OffsetDateTime {
+        time::OffsetDateTime::from_unix_timestamp_nanos(
+            self.0.info.game_creation as i128 * 1_000_000,
         )
+        .unwrap()
     }
 
-    pub fn duration(&self) -> Duration {
+    pub fn duration(&self) -> time::Duration {
         use time::ext::NumericalDuration;
 
         match self.0.info.game_end_timestamp {
-            Some(_) => Duration(self.0.info.game_duration.seconds()),
-            None => Duration(self.0.info.game_duration.milliseconds()),
+            Some(_) => self.0.info.game_duration.seconds(),
+            None => self.0.info.game_duration.milliseconds(),
         }
     }
 

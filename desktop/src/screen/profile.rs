@@ -150,7 +150,7 @@ async fn fetch_data(client: core::Client, name: String) -> Result<Data, String> 
         .collect()
         .await;
 
-    games.sort_unstable_by_key(|game| Reverse(*game.created_at().as_ref()));
+    games.sort_unstable_by_key(|game| Reverse(game.created_at()));
 
     Ok(Data {
         summoner,
