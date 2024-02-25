@@ -1,5 +1,3 @@
-use core::RuneKeystone;
-
 use crate::assets::load_champion_icon;
 use crate::assets::load_item_icon;
 use crate::assets::load_runes_icon;
@@ -167,12 +165,12 @@ impl Player {
                 core::SummonerSpell::new(14),
                 core::SummonerSpell::new(4),
             ]),
-            rune_page: core::RunePage {
-                primary: core::PrimaryRune {
-                    keystone: core::RuneKeystone::new(8010),
+            rune_page: game::rune::Page {
+                primary: game::rune::Primary {
+                    keystone: game::rune::Keystone(8010),
                 },
-                secondary: core::SecondaryRune {
-                    lesser: [RuneKeystone::new(8400); 2],
+                secondary: game::rune::Secondary {
+                    lesser: [game::rune::Keystone::new(8400); 2],
                 },
             },
             stats: game::player::Stats {

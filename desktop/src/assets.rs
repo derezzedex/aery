@@ -6,6 +6,7 @@ use std::fs;
 use std::io::Read;
 
 use crate::core;
+use crate::core::game::rune;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum DataFile {
@@ -71,7 +72,7 @@ pub type SpriteMap = HashMap<Sprite, image::DynamicImage>;
 
 pub type DataMap = HashMap<DataFile, serde_json::Value>;
 
-pub type RuneMap = HashMap<core::RuneKeystone, String>;
+pub type RuneMap = HashMap<rune::Keystone, String>;
 
 pub type EmblemMap = HashMap<String, Handle>;
 
@@ -143,7 +144,7 @@ impl Assets {
                 .unwrap()
                 .trim_start_matches("perk-images/");
             let id = value["id"].as_u64().unwrap();
-            runes.insert(core::RuneKeystone::new(id as u32), path.to_string());
+            runes.insert(rune::Keystone(id as u32), path.to_string());
 
             for slots in value["slots"].as_array().unwrap() {
                 for rune in slots["runes"].as_array().unwrap() {
@@ -152,7 +153,7 @@ impl Assets {
                         .unwrap()
                         .trim_start_matches("perk-images/");
                     let lesser_id = rune["id"].as_u64().unwrap();
-                    runes.insert(core::RuneKeystone::new(lesser_id as u32), path.to_string());
+                    runes.insert(rune::Keystone(lesser_id as u32), path.to_string());
                 }
             }
         }
@@ -222,7 +223,7 @@ pub fn load_summoner_spell_icon(assets: &Assets, summoner_spell: core::SummonerS
     Handle::from_pixels(icon.width(), icon.height(), icon.to_image().into_vec())
 }
 
-pub fn load_runes_icon(assets: &Assets, rune: core::RuneKeystone) -> Handle {
+pub fn load_runes_icon(assets: &Assets, rune: rune::Keystone) -> Handle {
     let rune_path = assets.runes.get(&rune).unwrap();
     let mut path = std::path::PathBuf::from(concat!(
         env!("CARGO_MANIFEST_DIR"),

@@ -1,6 +1,8 @@
 pub mod player;
 pub use player::Player;
 
+pub mod rune;
+
 use crate::{Client, Duration, Time};
 
 use riven::consts::RegionalRoute;

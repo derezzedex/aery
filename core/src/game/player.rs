@@ -1,9 +1,7 @@
 use crate::game;
+use crate::game::rune;
 use crate::summoner;
-use crate::{
-    Champion, Inventory, Item, PrimaryRune, Role, RuneKeystone, RunePage, SecondaryRune,
-    SummonerSpell, SummonerSpells, Team, Trinket,
-};
+use crate::{Champion, Inventory, Item, Role, SummonerSpell, SummonerSpells, Team, Trinket};
 
 #[derive(Debug, Clone)]
 pub struct Player {
@@ -18,7 +16,7 @@ pub struct Player {
     pub trinket: Trinket,
     pub champion: Champion,
     pub summoner_spells: SummonerSpells,
-    pub rune_page: RunePage,
+    pub rune_page: rune::Page,
     pub stats: Stats,
 }
 
@@ -33,14 +31,14 @@ impl From<&riven::models::match_v5::Participant> for Player {
             Item::try_from(participant.item5).ok(),
         ]);
 
-        let rune_page = RunePage {
-            primary: PrimaryRune {
-                keystone: RuneKeystone(participant.perks.styles[0].selections[0].perk as u32),
+        let rune_page = rune::Page {
+            primary: rune::Primary {
+                keystone: rune::Keystone(participant.perks.styles[0].selections[0].perk as u32),
             },
-            secondary: SecondaryRune {
+            secondary: rune::Secondary {
                 lesser: participant.perks.styles[1].selections[0..=1]
                     .iter()
-                    .map(|s| RuneKeystone(s.perk as u32))
+                    .map(|s| rune::Keystone(s.perk as u32))
                     .collect::<Vec<_>>()
                     .try_into()
                     .expect("failed to convert runes"),

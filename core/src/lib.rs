@@ -312,56 +312,6 @@ impl From<[SummonerSpell; 2]> for SummonerSpells {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RuneKeystone(u32);
-
-impl RuneKeystone {
-    pub fn new(id: u32) -> Self {
-        Self(id)
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct PrimaryRune {
-    pub keystone: RuneKeystone,
-}
-
-impl PrimaryRune {
-    pub fn keystone(&self) -> RuneKeystone {
-        self.keystone
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct SecondaryRune {
-    pub lesser: [RuneKeystone; 2],
-}
-
-impl SecondaryRune {
-    pub fn keystone(&self) -> RuneKeystone {
-        // TODO: verify this, caused by https://github.com/RiotGames/developer-relations/issues/724
-        // this should transform the "lesser" rune id into the "major", by zeroing out the last two digits
-
-        // NOTE: Surprisingly this broke rather easily, who would've guessed?
-        // Obviously Riot Games is cooking something with their whole item `id` "allocation";
-        // This `match` will need to be updated everytime the API changes; but then ideally
-        // I would check the API and make changes myself. Soon the whole `core` API should
-        // follow this, by using constants and enums instead of `u32`.
-        let id = self.lesser[0].0;
-        match id {
-            9923 => RuneKeystone(8100), // HailfOfBlades => Domination,
-            9101 | 9111 | 9104 | 9105 | 9103 => RuneKeystone(8000), // Overheal | Triumph | LegendAlacrity | LegendTenacity | LegendBloodline => Precision,
-            _ => RuneKeystone((id / 100) * 100),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct RunePage {
-    pub primary: PrimaryRune,
-    pub secondary: SecondaryRune,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Team(usize);
 
 impl Team {
