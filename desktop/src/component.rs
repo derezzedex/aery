@@ -17,8 +17,51 @@ impl ToString for Summoner {
 }
 
 pub mod formatting {
+
     use crate::core;
     use crate::core::game;
+    use crate::core::summoner;
+
+    pub fn tier(tier: summoner::Tier) -> String {
+        match tier {
+            summoner::Tier::Iron(_) => "Iron",
+            summoner::Tier::Bronze(_) => "Bronze",
+            summoner::Tier::Silver(_) => "Silver",
+            summoner::Tier::Gold(_) => "Gold",
+            summoner::Tier::Platinum(_) => "Platinum",
+            summoner::Tier::Emerald(_) => "Emerald",
+            summoner::Tier::Diamond(_) => "Diamond",
+            summoner::Tier::Master(_) => "Master",
+            summoner::Tier::Grandmaster(_) => "Grandmaster",
+            summoner::Tier::Challenger(_) => "Challenger",
+        }
+        .to_string()
+    }
+
+    pub fn division_or_points(tier: summoner::Tier) -> String {
+        match tier {
+            summoner::Tier::Iron(division)
+            | summoner::Tier::Bronze(division)
+            | summoner::Tier::Silver(division)
+            | summoner::Tier::Gold(division)
+            | summoner::Tier::Platinum(division)
+            | summoner::Tier::Emerald(division)
+            | summoner::Tier::Diamond(division) => self::division(division),
+            summoner::Tier::Master(points)
+            | summoner::Tier::Grandmaster(points)
+            | summoner::Tier::Challenger(points) => points.to_string(),
+        }
+    }
+
+    pub fn division(division: summoner::Division) -> String {
+        match division {
+            summoner::Division::One(_) => "1",
+            summoner::Division::Two(_) => "2",
+            summoner::Division::Three(_) => "3",
+            summoner::Division::Four(_) => "4",
+        }
+        .to_string()
+    }
 
     pub fn duration(duration: time::Duration) -> String {
         let minutes = duration.whole_minutes().to_string();

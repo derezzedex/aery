@@ -3,12 +3,12 @@ use iced::{
     Alignment, Element, Length,
 };
 
-use crate::core::game;
-use crate::core::Tier;
+use crate::core::summoner::Tier;
 use crate::profile;
 use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::widget;
+use crate::{component::formatting, core::game};
 
 fn ranked_container<'a>(
     queue: game::Queue,
@@ -45,8 +45,12 @@ fn ranked_container<'a>(
     };
     let lp = tier.points();
     let tier = match tier {
-        Tier::Challenger(_) | Tier::Grandmaster(_) | Tier::Master(_) => tier.to_string(),
-        _ => format!("{} {}", tier.to_string(), tier.division()),
+        Tier::Challenger(_) | Tier::Grandmaster(_) | Tier::Master(_) => formatting::tier(tier),
+        _ => format!(
+            "{} {}",
+            formatting::tier(tier),
+            formatting::division_or_points(tier)
+        ),
     };
 
     let win_rate = ((wins as f32 / (wins + losses) as f32) * 100.0).ceil();
@@ -166,7 +170,7 @@ impl RankedOverview {
                     .emblems
                     .get(&format!(
                         "emblem-{}.png",
-                        league.tier().unwrap().to_string().to_lowercase()
+                        formatting::tier(league.tier().unwrap()).to_lowercase()
                     ))
                     .unwrap()
                     .clone(),
@@ -186,7 +190,7 @@ impl RankedOverview {
                     .emblems
                     .get(&format!(
                         "emblem-{}.png",
-                        league.tier().unwrap().to_string().to_lowercase()
+                        formatting::tier(league.tier().unwrap()).to_lowercase()
                     ))
                     .unwrap()
                     .clone(),
