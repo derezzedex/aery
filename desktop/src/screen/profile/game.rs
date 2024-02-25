@@ -179,6 +179,11 @@ impl Player {
                     path: game::rune::path::Kind::Resolve,
                     runes: [game::rune::Rune(8463), game::rune::Rune(8473)],
                 },
+                shards: game::rune::Shards {
+                    offense: game::rune::Shard::AdaptiveForce,
+                    flex: game::rune::Shard::AdaptiveForce,
+                    defense: game::rune::Shard::Health,
+                },
             },
             stats: game::player::Stats {
                 level: 5,

@@ -78,6 +78,28 @@ pub use path::Rune;
 pub struct Page {
     pub primary: path::Primary,
     pub secondary: path::Secondary,
+    pub shards: Shards,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Shards {
+    pub offense: Shard,
+    pub flex: Shard,
+    pub defense: Shard,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Shard {
+    HealthScaling = 5001,
+    Armor = 5002,
+    MagicResist = 5003,
+    AttackSpeed = 5005,
+    AbilityHaste = 5007,
+    AdaptiveForce = 5008,
+    MoveSpeed = 5010,
+    Health = 5011,
+    ResistScaling = 5012,
+    Tenacity = 5013,
 }
 
 impl From<riven::models::match_v5::Perks> for Page {
@@ -107,6 +129,37 @@ impl From<riven::models::match_v5::Perks> for Page {
                     .try_into()
                     .expect("failed to convert runes"),
             },
+            shards: perks.stat_perks.into(),
+        }
+    }
+}
+
+impl TryFrom<usize> for Shard {
+    type Error = ();
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            x if x == Shard::HealthScaling as usize => Ok(Shard::HealthScaling),
+            x if x == Shard::Armor as usize => Ok(Shard::Armor),
+            x if x == Shard::MagicResist as usize => Ok(Shard::MagicResist),
+            x if x == Shard::AttackSpeed as usize => Ok(Shard::AttackSpeed),
+            x if x == Shard::AbilityHaste as usize => Ok(Shard::AbilityHaste),
+            x if x == Shard::AdaptiveForce as usize => Ok(Shard::AdaptiveForce),
+            x if x == Shard::MoveSpeed as usize => Ok(Shard::MoveSpeed),
+            x if x == Shard::Health as usize => Ok(Shard::Health),
+            x if x == Shard::ResistScaling as usize => Ok(Shard::ResistScaling),
+            x if x == Shard::Tenacity as usize => Ok(Shard::Tenacity),
+            _ => Err(()),
+        }
+    }
+}
+
+impl From<riven::models::match_v5::PerkStats> for Shards {
+    fn from(statmods: riven::models::match_v5::PerkStats) -> Self {
+        Self {
+            offense: Shard::try_from(statmods.offense as usize).unwrap(),
+            flex: Shard::try_from(statmods.flex as usize).unwrap(),
+            defense: Shard::try_from(statmods.defense as usize).unwrap(),
         }
     }
 }
