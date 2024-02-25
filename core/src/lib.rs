@@ -6,9 +6,9 @@ pub use client::Client;
 pub mod summoner;
 pub use summoner::Summoner;
 
-pub mod game_match;
-pub use game_match::GameMatch;
-pub use game_match::GameResult;
+pub mod game;
+pub use game::GameMatch;
+pub use game::GameResult;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Queue {
