@@ -163,6 +163,30 @@ impl Game {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Role {
+    Bottom,
+    Jungle,
+    Mid,
+    Support,
+    Top,
+}
+
+impl TryFrom<&String> for Role {
+    type Error = ();
+
+    fn try_from(role: &String) -> core::result::Result<Self, Self::Error> {
+        match role.as_str() {
+            "BOTTOM" => Ok(Role::Bottom),
+            "JUNGLE" => Ok(Role::Jungle),
+            "MIDDLE" => Ok(Role::Mid),
+            "UTILITY" => Ok(Role::Support),
+            "TOP" => Ok(Role::Top),
+            _ => Err(()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Queue {
     /// CUSTOM
     Custom,

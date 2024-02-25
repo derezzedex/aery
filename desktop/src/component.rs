@@ -1,55 +1,3 @@
-use crate::core;
-use iced::widget::image::Handle;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Role {
-    Bottom,
-    Jungle,
-    Mid,
-    Support,
-    Top,
-}
-
-impl TryFrom<core::Role> for Role {
-    type Error = ();
-
-    fn try_from(role: core::Role) -> Result<Self, Self::Error> {
-        match role {
-            core::Role::Bottom => Ok(Self::Bottom),
-            core::Role::Jungle => Ok(Self::Jungle),
-            core::Role::Mid => Ok(Self::Mid),
-            core::Role::Support => Ok(Self::Support),
-            core::Role::Top => Ok(Self::Top),
-            core::Role::Unknown => Err(()),
-        }
-    }
-}
-
-impl Role {
-    pub fn icon(&self) -> Handle {
-        let role = self.to_string().to_ascii_lowercase();
-        let path = format!(
-            "{}\\assets\\img\\position\\{role}.png",
-            env!("CARGO_MANIFEST_DIR"),
-        );
-
-        Handle::from_path(path)
-    }
-}
-
-impl ToString for Role {
-    fn to_string(&self) -> String {
-        match self {
-            Role::Bottom => "Bottom",
-            Role::Jungle => "Jungle",
-            Role::Mid => "Mid",
-            Role::Support => "Support",
-            Role::Top => "Top",
-        }
-        .to_string()
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Champion(u16);
 
@@ -71,6 +19,17 @@ impl ToString for Summoner {
 pub mod formatting {
     use crate::core;
     use crate::core::game;
+
+    pub fn role(role: core::game::Role) -> String {
+        match role {
+            core::game::Role::Bottom => "Bottom",
+            core::game::Role::Jungle => "Jungle",
+            core::game::Role::Mid => "Mid",
+            core::game::Role::Support => "Support",
+            core::game::Role::Top => "Top",
+        }
+        .to_string()
+    }
 
     pub fn team(team: core::Team) -> String {
         match team {

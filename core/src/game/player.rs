@@ -1,7 +1,7 @@
 use crate::game;
 use crate::game::rune;
 use crate::summoner;
-use crate::{Champion, Inventory, Item, Role, SummonerSpell, SummonerSpells, Team, Trinket};
+use crate::{Champion, Inventory, Item, SummonerSpell, SummonerSpells, Team, Trinket};
 
 #[derive(Debug, Clone)]
 pub struct Player {
@@ -11,7 +11,7 @@ pub struct Player {
 
     pub team: Team,
     pub result: game::Result,
-    pub role: Role,
+    pub role: Option<game::Role>,
     pub inventory: Inventory,
     pub trinket: Trinket,
     pub champion: Champion,
@@ -70,7 +70,7 @@ impl From<&riven::models::match_v5::Participant> for Player {
 
             team: Team(participant.team_id as usize),
             result,
-            role: participant.team_position.clone().into(),
+            role: game::Role::try_from(&participant.team_position).ok(),
             inventory,
             trinket: Trinket(participant.item6 as u32),
             champion: participant.champion().map_or(Champion(0), Champion::from),

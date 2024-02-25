@@ -150,7 +150,7 @@ impl Player {
             },
             team: core::Team::BLUE,
             result: game::Result::Victory,
-            role: core::Role::Mid,
+            role: Some(game::Role::Mid),
             inventory: core::Inventory([
                 Some(core::Item::new(1001)),
                 Some(core::Item::new(6630)),
@@ -337,11 +337,13 @@ impl Game {
             //     .spacing(2)
             //     .align_items(Alignment::Center);
 
-            let role: Element<_> = if let Some(role) = Role::try_from(self.player.info.role).ok() {
+            let role: Element<_> = if let Some(role) = self.player.info.role {
                 column![
                     row![
-                        image(role.icon()).width(12.0).height(12.0),
-                        text(role.to_string()).style(theme::sub_text()).size(10),
+                        image(theme::role_icon(role)).width(12.0).height(12.0),
+                        text(formatting::role(role))
+                            .style(theme::sub_text())
+                            .size(10),
                     ]
                     .align_items(Alignment::Center)
                     .spacing(4),

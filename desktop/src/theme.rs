@@ -75,6 +75,23 @@ pub fn unranked_icon() -> image::Handle {
     image::Handle::from_path(path)
 }
 
+pub fn role_icon(role: game::Role) -> image::Handle {
+    let file = match role {
+        game::Role::Bottom => "bottom.png",
+        game::Role::Jungle => "jungle.png",
+        game::Role::Mid => "mid.png",
+        game::Role::Support => "support.png",
+        game::Role::Top => "top.png",
+    };
+
+    let path = format!(
+        "{}\\assets\\img\\position\\{file}",
+        env!("CARGO_MANIFEST_DIR"),
+    );
+
+    image::Handle::from_path(path)
+}
+
 pub fn search_bar_text_input() -> theme::TextInput {
     theme::TextInput::Custom(Box::new(TextInput::SearchBar))
 }

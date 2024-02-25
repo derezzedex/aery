@@ -168,43 +168,6 @@ impl ToString for Time {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Role {
-    Bottom,
-    Jungle,
-    Mid,
-    Support,
-    Top,
-    Unknown,
-}
-
-impl ToString for Role {
-    fn to_string(&self) -> String {
-        match self {
-            Role::Bottom => "Bottom",
-            Role::Jungle => "Jungle",
-            Role::Mid => "Mid",
-            Role::Support => "Support",
-            Role::Top => "Top",
-            Role::Unknown => "Unknown",
-        }
-        .to_string()
-    }
-}
-
-impl From<String> for Role {
-    fn from(role: String) -> Self {
-        match role.as_str() {
-            "BOTTOM" => Role::Bottom,
-            "JUNGLE" => Role::Jungle,
-            "MIDDLE" => Role::Mid,
-            "UTILITY" => Role::Support,
-            "TOP" => Role::Top,
-            _ => Role::Unknown,
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy)]
 pub struct Item(u32);
 

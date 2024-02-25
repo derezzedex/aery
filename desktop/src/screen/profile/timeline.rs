@@ -3,8 +3,8 @@ use crate::assets::load_champion_icon;
 use self::summary::Summary;
 
 use super::game::{self, Game};
-use crate::component::Role;
 use crate::core;
+use crate::core::game::Role;
 use crate::profile;
 use crate::theme;
 use iced::widget::{column, container, scrollable};
@@ -41,28 +41,28 @@ impl Timeline {
                 wins: 2,
                 losses: 1,
                 kda: 1.15,
-                lane: Role::Mid.icon(),
+                lane: theme::role_icon(Role::Mid),
             },
             summary::Champion {
                 handle: load_champion_icon(assets, core::Champion::new(61)),
                 wins: 3,
                 losses: 0,
                 kda: 2.0,
-                lane: Role::Bottom.icon(),
+                lane: theme::role_icon(Role::Bottom),
             },
             summary::Champion {
                 handle: load_champion_icon(assets, core::Champion::new(1)),
                 wins: 2,
                 losses: 2,
                 kda: 3.0,
-                lane: Role::Support.icon(),
+                lane: theme::role_icon(Role::Support),
             },
             summary::Champion {
                 handle: load_champion_icon(assets, core::Champion::new(14)),
                 wins: 0,
                 losses: 3,
                 kda: 0.5,
-                lane: Role::Top.icon(),
+                lane: theme::role_icon(Role::Top),
             },
         ];
 
@@ -128,8 +128,8 @@ pub mod summary {
     use super::theme;
     use super::Message;
     use crate::assets;
-    use crate::component::Role;
     use crate::core;
+    use crate::core::game::Role;
     use crate::text;
     use crate::widget;
     use iced::alignment;
@@ -199,8 +199,8 @@ pub mod summary {
 
             let (role, role_stats) = games
                 .iter()
-                .filter(|p| p.role != core::Role::Unknown)
-                .into_grouping_map_by(|p| Role::try_from(p.role).unwrap())
+                .filter(|p| p.role.is_some())
+                .into_grouping_map_by(|p| p.role.unwrap())
                 .fold(RoleStats::default(), |acc, _role, p| RoleStats {
                     wins: acc.wins + p.result.won() as usize,
                     losses: acc.losses + p.result.lost() as usize,
@@ -214,9 +214,9 @@ pub mod summary {
 
             let champions = games
                 .iter()
-                .filter_map(|p| Some((Role::try_from(p.role).ok()?, p)))
-                .into_grouping_map_by(|&(r, p)| (r, p.champion))
-                .fold(RoleStats::default(), |acc, _, (_, p)| RoleStats {
+                .filter(|p| p.role.is_some())
+                .into_grouping_map_by(|&p| (p.role.unwrap(), p.champion))
+                .fold(RoleStats::default(), |acc, _, p| RoleStats {
                     wins: acc.wins + p.result.won() as usize,
                     losses: acc.losses + p.result.lost() as usize,
                     kills: acc.kills + p.stats.kills as usize,
@@ -228,7 +228,7 @@ pub mod summary {
                 .take(4)
                 .map(|((role, champion), stats)| Champion {
                     handle: assets::load_champion_icon(assets, champion),
-                    lane: role.icon(),
+                    lane: theme::role_icon(role),
                     wins: stats.wins,
                     losses: stats.losses,
                     kda: (stats.kills as f32 + stats.assists as f32) / stats.deaths as f32,
@@ -314,7 +314,7 @@ pub mod summary {
             };
 
             let summary_lane = {
-                let lane_icon = image(self.role.icon())
+                let lane_icon = image(theme::role_icon(self.role))
                     .width(24.0)
                     .height(24.0)
                     .content_fit(iced::ContentFit::Fill);
