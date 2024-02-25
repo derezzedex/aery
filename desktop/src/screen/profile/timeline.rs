@@ -187,7 +187,7 @@ pub mod summary {
         pub fn from_games(
             assets: &crate::Assets,
             player: &core::Summoner,
-            games: &Vec<core::GameMatch>,
+            games: &Vec<core::Game>,
         ) -> Summary {
             let games = games
                 .iter()

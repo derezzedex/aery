@@ -24,7 +24,7 @@ use std::cmp::Reverse;
 pub struct Data {
     summoner: core::Summoner,
     leagues: Vec<core::summoner::League>,
-    games: Vec<core::GameMatch>,
+    games: Vec<core::Game>,
 }
 
 #[derive(Debug, Clone)]
@@ -138,7 +138,7 @@ async fn fetch_data(client: core::Client, name: String) -> Result<Data, String> 
         return Err(String::from("Failed to fetch summoner leagues."));
     };
 
-    let mut games: Vec<core::GameMatch> = stream::iter(leagues.iter())
+    let mut games: Vec<core::Game> = stream::iter(leagues.iter())
         .filter_map(|league| {
             summoner
                 .matches(&client, 0..10, league.queue_kind())
@@ -146,7 +146,7 @@ async fn fetch_data(client: core::Client, name: String) -> Result<Data, String> 
         })
         .flat_map(|game_ids| {
             stream::iter(game_ids)
-                .filter_map(|id| core::GameMatch::from_id(&client, id).map(Result::ok))
+                .filter_map(|id| core::Game::from_id(&client, id).map(Result::ok))
         })
         .collect()
         .await;

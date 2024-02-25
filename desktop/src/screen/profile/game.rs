@@ -233,7 +233,7 @@ impl Game {
     pub fn from_summoner_game(
         assets: &crate::assets::Assets,
         summoner: &core::Summoner,
-        game: &core::GameMatch,
+        game: &core::Game,
     ) -> Self {
         let participants = game.participants();
         let player = participants

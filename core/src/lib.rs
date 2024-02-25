@@ -7,7 +7,7 @@ pub mod summoner;
 pub use summoner::Summoner;
 
 pub mod game;
-pub use game::GameMatch;
+pub use game::Game;
 pub use game::GameResult;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
