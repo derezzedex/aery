@@ -7,7 +7,7 @@ use crate::assets::load_summoner_spell_icon;
 use crate::component::*;
 use crate::core;
 use crate::core::game;
-use crate::core::{Duration, Queue, Time};
+use crate::core::{Duration, Time};
 use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::theme::chevron_up_icon;
@@ -216,7 +216,7 @@ struct Team {
 #[derive(Debug, Clone)]
 pub struct Game {
     result: game::Result,
-    queue: Queue,
+    queue: game::Queue,
     time: Time,
     duration: Duration,
     player: Player,
@@ -301,7 +301,7 @@ impl Game {
             } else {
                 game::Result::Defeat
             },
-            queue: Queue::RankedFlex,
+            queue: game::Queue::RankedFlex,
             time: Time(time::OffsetDateTime::now_utc().saturating_sub(time::Duration::days(1))),
             duration: Duration(
                 time::Duration::minutes(28).saturating_add(time::Duration::seconds(33)),

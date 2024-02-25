@@ -1,4 +1,5 @@
-use aery_core::{Client, Game, Queue, Summoner};
+use aery_core::game;
+use aery_core::{Client, Game, Summoner};
 use futures::future;
 use futures::stream::{self, StreamExt};
 
@@ -12,7 +13,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Summoner: {}", summoner.name());
 
     let range = 0..10;
-    let queue = Queue::RankedSolo;
+    let queue = game::Queue::RankedSolo;
     println!("{queue:?} matches ({range:?}):");
     stream::iter(summoner.matches(&client, range, queue).await?)
         .map(|id| Game::from_id(&client, id))

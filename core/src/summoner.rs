@@ -1,6 +1,5 @@
 use crate::game;
 use crate::Client;
-use crate::Queue;
 use riven::consts::{PlatformRoute, RegionalRoute};
 
 #[derive(Debug, Clone)]
@@ -48,7 +47,7 @@ impl Summoner {
         &self,
         client: &Client,
         range: std::ops::Range<u32>,
-        queue: impl Into<Option<Queue>>,
+        queue: impl Into<Option<game::Queue>>,
     ) -> Result<impl Iterator<Item = game::Id>, RequestError> {
         client
             .as_ref()
@@ -58,7 +57,7 @@ impl Summoner {
                 &self.0.puuid,
                 Some((range.end - range.start) as i32),
                 None,
-                queue.into().map(Queue::into),
+                queue.into().map(game::Queue::into),
                 None,
                 Some(range.start as i32),
                 None,
@@ -86,13 +85,13 @@ impl Summoner {
 pub struct League(riven::models::league_v4::LeagueEntry);
 
 impl League {
-    pub fn queue_kind(&self) -> Queue {
+    pub fn queue_kind(&self) -> game::Queue {
         use riven::consts::QueueType;
 
         match self.0.queue_type {
-            QueueType::RANKED_SOLO_5x5 => Queue::RankedSolo,
-            QueueType::RANKED_FLEX_SR => Queue::RankedFlex,
-            _ => Queue::Unknown(0),
+            QueueType::RANKED_SOLO_5x5 => game::Queue::RankedSolo,
+            QueueType::RANKED_FLEX_SR => game::Queue::RankedFlex,
+            _ => game::Queue::Unknown(0),
         }
     }
 

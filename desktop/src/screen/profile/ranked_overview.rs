@@ -3,15 +3,15 @@ use iced::{
     Alignment, Element, Length,
 };
 
-use crate::core;
-use crate::core::{Queue, Tier};
+use crate::core::game;
+use crate::core::Tier;
 use crate::profile;
 use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::widget;
 
 fn ranked_container<'a>(
-    queue: Queue,
+    queue: game::Queue,
     tier: Tier,
     wins: u16,
     losses: u16,
@@ -24,18 +24,18 @@ fn ranked_container<'a>(
     let chevron_down = image(chevron_down_icon()).width(10.0).height(10.0);
 
     let size = match queue {
-        Queue::RankedSolo => 100.0,
-        Queue::RankedFlex => 80.0,
+        game::Queue::RankedSolo => 100.0,
+        game::Queue::RankedFlex => 80.0,
         _ => unreachable!(),
     };
     let emblem_size = match queue {
-        Queue::RankedSolo => match tier {
+        game::Queue::RankedSolo => match tier {
             Tier::Challenger(_) | Tier::Grandmaster(_) | Tier::Master(_) => 100.0,
             Tier::Emerald(_) | Tier::Diamond(_) => 90.0,
             Tier::Platinum(_) | Tier::Gold(_) | Tier::Silver(_) => 80.0,
             Tier::Bronze(_) | Tier::Iron(_) => 70.0,
         },
-        Queue::RankedFlex => match tier {
+        game::Queue::RankedFlex => match tier {
             Tier::Challenger(_) | Tier::Grandmaster(_) | Tier::Master(_) => 80.0,
             Tier::Emerald(_) | Tier::Diamond(_) => 70.0,
             Tier::Platinum(_) | Tier::Gold(_) | Tier::Silver(_) => 60.0,
@@ -106,7 +106,7 @@ fn ranked_container<'a>(
     .into()
 }
 
-fn unranked_container<'a>(queue: Queue) -> Element<'a, Message> {
+fn unranked_container<'a>(queue: game::Queue) -> Element<'a, Message> {
     let left_bar = container(horizontal_space().width(2))
         .style(theme::left_bar_container())
         .height(18);
@@ -155,7 +155,7 @@ impl RankedOverview {
         let solo_duo = profile
             .leagues
             .iter()
-            .find(|league| league.queue_kind() == core::Queue::RankedSolo)
+            .find(|league| league.queue_kind() == game::Queue::RankedSolo)
             .filter(|league| league.tier().is_some())
             .map(|league| Stats {
                 tier: league.tier().unwrap(),
@@ -175,7 +175,7 @@ impl RankedOverview {
         let flex = profile
             .leagues
             .iter()
-            .find(|league| league.queue_kind() == core::Queue::RankedFlex)
+            .find(|league| league.queue_kind() == game::Queue::RankedFlex)
             .filter(|league| league.tier().is_some())
             .map(|league| Stats {
                 tier: league.tier().unwrap(),
@@ -212,24 +212,24 @@ impl RankedOverview {
     pub fn view(&self) -> Element<Message> {
         let solo_duo = match &self.solo_duo {
             Some(stats) => ranked_container(
-                Queue::RankedSolo,
+                game::Queue::RankedSolo,
                 stats.tier,
                 stats.wins,
                 stats.losses,
                 stats.handle.clone(),
             ),
-            None => unranked_container(Queue::RankedSolo),
+            None => unranked_container(game::Queue::RankedSolo),
         };
 
         let flex = match &self.flex {
             Some(stats) => ranked_container(
-                Queue::RankedFlex,
+                game::Queue::RankedFlex,
                 stats.tier,
                 stats.wins,
                 stats.losses,
                 stats.handle.clone(),
             ),
-            None => unranked_container(Queue::RankedFlex),
+            None => unranked_container(game::Queue::RankedFlex),
         };
 
         column![solo_duo, flex,]
