@@ -1,7 +1,9 @@
 pub mod player;
 pub use player::Player;
 
+pub mod item;
 pub mod rune;
+pub use item::Item;
 
 use crate::Client;
 

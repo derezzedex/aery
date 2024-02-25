@@ -6,6 +6,7 @@ use std::fs;
 use std::io::Read;
 
 use crate::core;
+use crate::core::game;
 use crate::core::game::rune;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -234,9 +235,9 @@ pub fn load_runes_icon(assets: &Assets, rune: rune::Rune) -> Handle {
     Handle::from_path(path)
 }
 
-pub fn load_item_icon(assets: &Assets, item: core::Item) -> Handle {
+pub fn load_item_icon(assets: &Assets, item: game::Item) -> Handle {
     let icon_data = assets.data.get(&DataFile::Item).unwrap();
-    let icon = &icon_data["data"][item.to_string()]["image"];
+    let icon = &icon_data["data"][item.0.to_string()]["image"];
     let sprite = Sprite::try_from(icon["sprite"].as_str().unwrap().to_string()).unwrap();
     let x = icon["x"].as_u64().unwrap() as u32;
     let y = icon["y"].as_u64().unwrap() as u32;

@@ -5,6 +5,7 @@ use crate::assets::load_summoner_spell_icon;
 use crate::component::*;
 use crate::core;
 use crate::core::game;
+use crate::core::game::item;
 use crate::core::summoner;
 use crate::theme;
 use crate::theme::chevron_down_icon;
@@ -107,7 +108,7 @@ impl PlayerAssets {
             .unwrap();
 
         let trinket_image = match participant.trinket {
-            core::Trinket(0) => None,
+            item::Trinket(0) => None,
             trinket => Some(load_item_icon(assets, trinket.into())),
         };
 
@@ -150,15 +151,15 @@ impl Player {
             team: core::Team::BLUE,
             result: game::Result::Victory,
             role: Some(game::Role::Mid),
-            inventory: core::Inventory([
-                Some(core::Item::new(1001)),
-                Some(core::Item::new(6630)),
-                Some(core::Item::new(4401)),
-                Some(core::Item::new(3143)),
-                Some(core::Item::new(3742)),
-                Some(core::Item::new(6333)),
+            inventory: item::Inventory::from([
+                Some(game::Item(1001)),
+                Some(game::Item(6630)),
+                Some(game::Item(4401)),
+                Some(game::Item(3143)),
+                Some(game::Item(3742)),
+                Some(game::Item(6333)),
             ]),
-            trinket: core::Trinket(3364),
+            trinket: item::Trinket(3364),
             champion,
             summoner_spells: core::SummonerSpells::from([
                 core::SummonerSpell::new(14),

@@ -1,5 +1,4 @@
 pub mod client;
-use std::fmt;
 
 pub use client::Client;
 
@@ -8,54 +7,6 @@ pub use summoner::Summoner;
 
 pub mod game;
 pub use game::Game;
-
-#[derive(Debug, Clone, Copy)]
-pub struct Item(u32);
-
-impl Item {
-    pub fn new(id: u32) -> Self {
-        Self(id)
-    }
-}
-
-impl fmt::Display for Item {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl TryFrom<i32> for Item {
-    type Error = ();
-
-    fn try_from(value: i32) -> Result<Item, Self::Error> {
-        if value <= 0 {
-            Err(())
-        } else {
-            Ok(Item(value as u32))
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Trinket(pub u32);
-
-impl Into<Item> for Trinket {
-    fn into(self) -> Item {
-        Item(self.0)
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Inventory(pub [Option<Item>; 6]);
-
-impl IntoIterator for Inventory {
-    type Item = Option<Item>;
-    type IntoIter = std::array::IntoIter<Self::Item, 6>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Champion(u32);

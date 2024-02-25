@@ -1,7 +1,8 @@
 use crate::game;
+use crate::game::item;
 use crate::game::rune;
 use crate::summoner;
-use crate::{Champion, Inventory, Item, SummonerSpell, SummonerSpells, Team, Trinket};
+use crate::{Champion, SummonerSpell, SummonerSpells, Team};
 
 #[derive(Debug, Clone)]
 pub struct Player {
@@ -12,8 +13,8 @@ pub struct Player {
     pub team: Team,
     pub result: game::Result,
     pub role: Option<game::Role>,
-    pub inventory: Inventory,
-    pub trinket: Trinket,
+    pub inventory: item::Inventory,
+    pub trinket: item::Trinket,
     pub champion: Champion,
     pub summoner_spells: SummonerSpells,
     pub rune_page: rune::Page,
@@ -22,14 +23,18 @@ pub struct Player {
 
 impl From<&riven::models::match_v5::Participant> for Player {
     fn from(participant: &riven::models::match_v5::Participant) -> Self {
-        let inventory = Inventory([
-            Item::try_from(participant.item0).ok(),
-            Item::try_from(participant.item1).ok(),
-            Item::try_from(participant.item2).ok(),
-            Item::try_from(participant.item3).ok(),
-            Item::try_from(participant.item4).ok(),
-            Item::try_from(participant.item5).ok(),
-        ]);
+        let inventory = item::Inventory::from(
+            [
+                participant.item0,
+                participant.item1,
+                participant.item2,
+                participant.item3,
+                participant.item4,
+                participant.item5,
+            ]
+            .map(game::Item::try_from)
+            .map(Result::ok),
+        );
 
         let stats = Stats {
             level: participant.champ_level as u32,
@@ -72,7 +77,7 @@ impl From<&riven::models::match_v5::Participant> for Player {
             result,
             role: game::Role::try_from(&participant.team_position).ok(),
             inventory,
-            trinket: Trinket(participant.item6 as u32),
+            trinket: item::Trinket(participant.item6 as usize),
             champion: participant.champion().map_or(Champion(0), Champion::from),
             summoner_spells: SummonerSpells([
                 SummonerSpell(participant.summoner1_id as u32),
