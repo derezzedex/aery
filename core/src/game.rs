@@ -8,7 +8,7 @@ pub struct Id(String);
 impl TryFrom<String> for Id {
     type Error = ();
 
-    fn try_from(value: String) -> Result<Self, Self::Error> {
+    fn try_from(value: String) -> core::result::Result<Self, Self::Error> {
         // TODO: verify this value
 
         Ok(Id(value))
@@ -33,7 +33,7 @@ pub enum RequestError {
 pub struct Event(riven::models::match_v5::MatchTimelineInfoFrameEvent);
 
 impl Event {
-    pub async fn from_id(client: &Client, id: Id) -> Result<Vec<Self>, RequestError> {
+    pub async fn from_id(client: &Client, id: Id) -> core::result::Result<Vec<Self>, RequestError> {
         client
             .as_ref()
             .match_v5()
@@ -56,14 +56,14 @@ impl Event {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GameResult {
+pub enum Result {
     Defeat,
     Remake,
     Surrender,
     Victory,
 }
 
-impl From<bool> for GameResult {
+impl From<bool> for Result {
     fn from(won: bool) -> Self {
         match won {
             true => Self::Victory,
@@ -72,7 +72,7 @@ impl From<bool> for GameResult {
     }
 }
 
-impl GameResult {
+impl Result {
     pub fn won(&self) -> bool {
         *self == Self::Victory
     }
@@ -121,7 +121,7 @@ impl Game {
             .collect()
     }
 
-    pub async fn from_id(client: &Client, id: Id) -> Result<Self, RequestError> {
+    pub async fn from_id(client: &Client, id: Id) -> core::result::Result<Self, RequestError> {
         client
             .as_ref()
             .match_v5()
@@ -131,7 +131,7 @@ impl Game {
             .and_then(|game| game.map(Game).ok_or(RequestError::NotFound))
     }
 
-    pub async fn events(&self, client: &Client) -> Result<Vec<Event>, RequestError> {
+    pub async fn events(&self, client: &Client) -> core::result::Result<Vec<Event>, RequestError> {
         client
             .as_ref()
             .match_v5()

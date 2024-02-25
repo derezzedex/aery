@@ -18,7 +18,7 @@ pub fn bold<'a>(text: impl ToString) -> iced::widget::Text<'a> {
 }
 
 pub fn left_border<'a, Message: 'a>(
-    result: core::GameResult,
+    result: core::game::Result,
 ) -> iced::widget::Container<'a, Message> {
     container(Space::new(6.0, 0.0))
         .style(theme::left_border_container(result))

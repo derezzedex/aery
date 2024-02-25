@@ -70,6 +70,7 @@ impl ToString for Summoner {
 
 pub mod formatting {
     use crate::core;
+    use crate::core::game;
 
     pub fn team(team: core::Team) -> String {
         match team {
@@ -80,11 +81,11 @@ pub mod formatting {
         .to_string()
     }
 
-    pub fn win(result: core::GameResult) -> String {
+    pub fn win(result: game::Result) -> String {
         match result {
-            core::GameResult::Remake => "Remake",
-            core::GameResult::Defeat | core::GameResult::Surrender => "Defeat",
-            core::GameResult::Victory => "Victory",
+            game::Result::Remake => "Remake",
+            game::Result::Defeat | game::Result::Surrender => "Defeat",
+            game::Result::Victory => "Victory",
         }
         .to_string()
     }

@@ -8,7 +8,6 @@ pub use summoner::Summoner;
 
 pub mod game;
 pub use game::Game;
-pub use game::GameResult;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Queue {
@@ -474,7 +473,7 @@ pub struct Participant {
     pub riot_id: RiotId,
 
     pub team: Team,
-    pub result: GameResult,
+    pub result: game::Result,
     pub role: Role,
     pub inventory: Inventory,
     pub trinket: Trinket,
@@ -529,13 +528,13 @@ impl From<&riven::models::match_v5::Participant> for Participant {
         };
 
         let result = if participant.game_ended_in_early_surrender {
-            GameResult::Remake
+            game::Result::Remake
         } else if participant.game_ended_in_surrender {
-            GameResult::Surrender
+            game::Result::Surrender
         } else if participant.win {
-            GameResult::Victory
+            game::Result::Victory
         } else {
-            GameResult::Defeat
+            game::Result::Defeat
         };
 
         Self {
@@ -622,7 +621,7 @@ impl Participant {
         &self.puuid
     }
 
-    pub fn result(&self) -> GameResult {
+    pub fn result(&self) -> game::Result {
         self.result
     }
 

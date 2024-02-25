@@ -6,6 +6,7 @@ use crate::assets::load_runes_icon;
 use crate::assets::load_summoner_spell_icon;
 use crate::component::*;
 use crate::core;
+use crate::core::game;
 use crate::core::{Duration, Queue, Time};
 use crate::theme;
 use crate::theme::chevron_down_icon;
@@ -149,7 +150,7 @@ impl Player {
                 tagline: String::from("dummy"),
             },
             team: core::Team::BLUE,
-            result: core::GameResult::Victory,
+            result: game::Result::Victory,
             role: core::Role::Mid,
             inventory: core::Inventory([
                 Some(core::Item::new(1001)),
@@ -208,13 +209,13 @@ impl Player {
 #[derive(Debug, Clone)]
 struct Team {
     id: core::Team,
-    result: core::GameResult,
+    result: game::Result,
     players: Vec<Player>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Game {
-    result: core::GameResult,
+    result: game::Result,
     queue: Queue,
     time: Time,
     duration: Duration,
@@ -259,7 +260,7 @@ impl Game {
                 result: players
                     .first()
                     .map(|p| p.info.result)
-                    .unwrap_or(core::GameResult::Defeat), // TODO: fix this
+                    .unwrap_or(game::Result::Defeat), // TODO: fix this
                 players,
             })
             .collect();
@@ -296,9 +297,9 @@ impl Game {
 
         Game {
             result: if win {
-                core::GameResult::Victory
+                game::Result::Victory
             } else {
-                core::GameResult::Defeat
+                game::Result::Defeat
             },
             queue: Queue::RankedFlex,
             time: Time(time::OffsetDateTime::now_utc().saturating_sub(time::Duration::days(1))),

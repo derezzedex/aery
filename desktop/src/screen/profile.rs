@@ -145,8 +145,7 @@ async fn fetch_data(client: core::Client, name: String) -> Result<Data, String> 
                 .map(Result::ok)
         })
         .flat_map(|game_ids| {
-            stream::iter(game_ids)
-                .filter_map(|id| core::Game::from_id(&client, id).map(Result::ok))
+            stream::iter(game_ids).filter_map(|id| core::Game::from_id(&client, id).map(Result::ok))
         })
         .collect()
         .await;

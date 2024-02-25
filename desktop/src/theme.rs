@@ -1,4 +1,4 @@
-use crate::core;
+use crate::core::game;
 
 use iced::advanced::svg;
 use iced::theme;
@@ -10,13 +10,13 @@ use iced::Color;
 pub enum Container {
     Dark,
     Icon,
-    LeftBorder(core::GameResult),
+    LeftBorder(game::Result),
     Timeline,
     SummonerIcon,
     SummonerLevel,
     SearchBar,
     LeftBar,
-    TeamPlayer(core::GameResult, bool),
+    TeamPlayer(game::Result, bool),
     TeamHeader,
 }
 
@@ -107,7 +107,7 @@ pub fn icon_container() -> theme::Container {
     theme::Container::Custom(Box::new(Container::Icon))
 }
 
-pub fn left_border_container(result: core::GameResult) -> theme::Container {
+pub fn left_border_container(result: game::Result) -> theme::Container {
     theme::Container::Custom(Box::new(Container::LeftBorder(result)))
 }
 
@@ -115,7 +115,7 @@ pub fn team_header_container() -> theme::Container {
     theme::Container::Custom(Box::new(Container::TeamHeader))
 }
 
-pub fn team_player_container(result: core::GameResult, is_player: bool) -> theme::Container {
+pub fn team_player_container(result: game::Result, is_player: bool) -> theme::Container {
     theme::Container::Custom(Box::new(Container::TeamPlayer(result, is_player)))
 }
 
@@ -135,11 +135,11 @@ pub fn expand_button() -> theme::Button {
     theme::Button::Custom(Box::new(Button::Expand))
 }
 
-pub fn win_color(result: impl Into<core::GameResult>) -> Color {
+pub fn win_color(result: impl Into<game::Result>) -> Color {
     match result.into() {
-        core::GameResult::Remake => Color::from_rgb(0.8, 0.8, 0.8),
-        core::GameResult::Surrender | core::GameResult::Defeat => RED,
-        core::GameResult::Victory => BLUE,
+        game::Result::Remake => Color::from_rgb(0.8, 0.8, 0.8),
+        game::Result::Surrender | game::Result::Defeat => RED,
+        game::Result::Victory => BLUE,
     }
 }
 
@@ -180,22 +180,18 @@ impl widget::container::StyleSheet for Container {
             Container::SummonerLevel => Background::Color(DARK_BACKGROUND),
             Container::SearchBar => Background::Color(LIGHTER_BACKGROUND),
             Container::LeftBar => Background::Color(BLUE),
-            Container::TeamPlayer(core::GameResult::Defeat, false)
-            | Container::TeamPlayer(core::GameResult::Surrender, false) => {
-                Background::Color(RED_DARK)
-            }
-            Container::TeamPlayer(core::GameResult::Defeat, true)
-            | Container::TeamPlayer(core::GameResult::Surrender, true) => {
+            Container::TeamPlayer(game::Result::Defeat, false)
+            | Container::TeamPlayer(game::Result::Surrender, false) => Background::Color(RED_DARK),
+            Container::TeamPlayer(game::Result::Defeat, true)
+            | Container::TeamPlayer(game::Result::Surrender, true) => {
                 Background::Color(RED_DARK_HIGHLIGHT)
             }
-            Container::TeamPlayer(core::GameResult::Victory, false) => Background::Color(BLUE_DARK),
-            Container::TeamPlayer(core::GameResult::Victory, true) => {
+            Container::TeamPlayer(game::Result::Victory, false) => Background::Color(BLUE_DARK),
+            Container::TeamPlayer(game::Result::Victory, true) => {
                 Background::Color(BLUE_DARK_HIGHLIGHT)
             }
-            Container::TeamPlayer(core::GameResult::Remake, false) => {
-                Background::Color(gray_text())
-            }
-            Container::TeamPlayer(core::GameResult::Remake, true) => Background::Color(sub_text()),
+            Container::TeamPlayer(game::Result::Remake, false) => Background::Color(gray_text()),
+            Container::TeamPlayer(game::Result::Remake, true) => Background::Color(sub_text()),
         };
 
         let text_color = match self {
