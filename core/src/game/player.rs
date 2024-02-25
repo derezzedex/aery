@@ -1,6 +1,7 @@
 use crate::game;
+use crate::summoner;
 use crate::{
-    Champion, Inventory, Item, PrimaryRune, RiotId, Role, RuneKeystone, RunePage, SecondaryRune,
+    Champion, Inventory, Item, PrimaryRune, Role, RuneKeystone, RunePage, SecondaryRune,
     SummonerSpell, SummonerSpells, Team, Trinket,
 };
 
@@ -8,7 +9,7 @@ use crate::{
 pub struct Player {
     pub puuid: String,
     pub name: String,
-    pub riot_id: RiotId,
+    pub riot_id: summoner::RiotId,
 
     pub team: Team,
     pub result: game::Result,
@@ -78,7 +79,7 @@ impl From<&riven::models::match_v5::Participant> for Player {
         Self {
             puuid: participant.puuid.clone(),
             name: participant.summoner_name.clone(),
-            riot_id: RiotId {
+            riot_id: summoner::RiotId {
                 name: participant.riot_id_game_name.clone(),
                 tagline: participant.riot_id_tagline.clone(),
             },

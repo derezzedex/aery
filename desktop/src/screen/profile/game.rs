@@ -7,6 +7,7 @@ use crate::assets::load_summoner_spell_icon;
 use crate::component::*;
 use crate::core;
 use crate::core::game;
+use crate::core::summoner;
 use crate::core::{Duration, Time};
 use crate::theme;
 use crate::theme::chevron_down_icon;
@@ -145,7 +146,7 @@ impl Player {
         let info = game::Player {
             puuid: String::from("dummy"),
             name: String::from("dummy"),
-            riot_id: core::RiotId {
+            riot_id: summoner::RiotId {
                 name: None,
                 tagline: String::from("dummy"),
             },

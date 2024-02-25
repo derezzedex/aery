@@ -14,6 +14,12 @@ pub enum RequestError {
 }
 
 #[derive(Debug, Clone)]
+pub struct RiotId {
+    pub name: Option<String>, // 3~16 chars
+    pub tagline: String,      // 3~5 chars
+}
+
+#[derive(Debug, Clone)]
 pub struct Summoner(riven::models::summoner_v4::Summoner);
 
 impl Summoner {

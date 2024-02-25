@@ -1,5 +1,6 @@
 use crate::component;
 use crate::core;
+use crate::core::summoner;
 use crate::profile;
 use crate::theme;
 use crate::widget::bold;
@@ -47,7 +48,7 @@ pub enum Event {
 
 pub struct Summoner {
     summoner_name: String,
-    riot_id: Option<core::RiotId>,
+    riot_id: Option<summoner::RiotId>,
     level: u32,
     icon: u32,
     icon_image: Option<image::Handle>,
