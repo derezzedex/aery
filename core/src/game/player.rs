@@ -33,12 +33,12 @@ impl From<&riven::models::match_v5::Participant> for Player {
 
         let rune_page = rune::Page {
             primary: rune::Primary {
-                keystone: rune::Keystone(participant.perks.styles[0].selections[0].perk as u32),
+                keystone: rune::Rune(participant.perks.styles[0].selections[0].perk as u32),
             },
             secondary: rune::Secondary {
                 lesser: participant.perks.styles[1].selections[0..=1]
                     .iter()
-                    .map(|s| rune::Keystone(s.perk as u32))
+                    .map(|s| rune::Rune(s.perk as u32))
                     .collect::<Vec<_>>()
                     .try_into()
                     .expect("failed to convert runes"),

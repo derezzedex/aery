@@ -167,10 +167,10 @@ impl Player {
             ]),
             rune_page: game::rune::Page {
                 primary: game::rune::Primary {
-                    keystone: game::rune::Keystone(8010),
+                    keystone: game::rune::Rune(8010),
                 },
                 secondary: game::rune::Secondary {
-                    lesser: [game::rune::Keystone::new(8400); 2],
+                    lesser: [game::rune::Rune::new(8400); 2],
                 },
             },
             stats: game::player::Stats {
