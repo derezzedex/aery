@@ -161,9 +161,9 @@ impl Player {
             ]),
             trinket: item::Trinket(3364),
             champion,
-            summoner_spells: core::SummonerSpells::from([
-                core::SummonerSpell::new(14),
-                core::SummonerSpell::new(4),
+            summoner_spells: game::player::SummonerSpells::from([
+                game::player::SummonerSpell::new(14),
+                game::player::SummonerSpell::new(4),
             ]),
             rune_page: game::rune::Page {
                 primary: game::rune::path::Primary {

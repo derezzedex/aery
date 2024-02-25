@@ -34,38 +34,6 @@ impl From<riven::consts::Champion> for Champion {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct SummonerSpell(u32);
-
-impl SummonerSpell {
-    pub fn new(id: u32) -> Self {
-        //TODO: verify id
-        Self(id)
-    }
-    pub fn id(&self) -> u32 {
-        self.0
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct SummonerSpells(pub [SummonerSpell; 2]);
-
-impl SummonerSpells {
-    pub fn first(&self) -> SummonerSpell {
-        self.0[0]
-    }
-
-    pub fn second(&self) -> SummonerSpell {
-        self.0[1]
-    }
-}
-
-impl From<[SummonerSpell; 2]> for SummonerSpells {
-    fn from(spells: [SummonerSpell; 2]) -> Self {
-        Self(spells)
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Team(usize);
 

@@ -202,7 +202,10 @@ pub fn load_champion_icon(assets: &Assets, champion: core::Champion) -> Handle {
     Handle::from_pixels(icon.width(), icon.height(), icon.to_image().into_vec())
 }
 
-pub fn load_summoner_spell_icon(assets: &Assets, summoner_spell: core::SummonerSpell) -> Handle {
+pub fn load_summoner_spell_icon(
+    assets: &Assets,
+    summoner_spell: game::player::SummonerSpell,
+) -> Handle {
     let icon_data = assets.data.get(&DataFile::SummonerSpell).unwrap();
     let spell = {
         let data = icon_data["data"].as_object().unwrap();

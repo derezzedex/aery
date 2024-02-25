@@ -2,7 +2,7 @@ use crate::game;
 use crate::game::item;
 use crate::game::rune;
 use crate::summoner;
-use crate::{Champion, SummonerSpell, SummonerSpells, Team};
+use crate::{Champion, Team};
 
 #[derive(Debug, Clone)]
 pub struct Player {
@@ -108,4 +108,36 @@ pub struct Stats {
     pub control_wards: u32,
     pub wards_placed: u32,
     pub wards_removed: u32,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct SummonerSpell(u32);
+
+impl SummonerSpell {
+    pub fn new(id: u32) -> Self {
+        //TODO: verify id
+        Self(id)
+    }
+    pub fn id(&self) -> u32 {
+        self.0
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct SummonerSpells(pub [SummonerSpell; 2]);
+
+impl SummonerSpells {
+    pub fn first(&self) -> SummonerSpell {
+        self.0[0]
+    }
+
+    pub fn second(&self) -> SummonerSpell {
+        self.0[1]
+    }
+}
+
+impl From<[SummonerSpell; 2]> for SummonerSpells {
+    fn from(spells: [SummonerSpell; 2]) -> Self {
+        Self(spells)
+    }
 }
