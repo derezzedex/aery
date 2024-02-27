@@ -3,12 +3,13 @@ use iced::{
     Alignment, Element, Length,
 };
 
+use crate::core::game;
 use crate::core::summoner::Tier;
+use crate::formatting;
 use crate::profile;
 use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::widget;
-use crate::{component::formatting, core::game};
 
 fn ranked_container<'a>(
     queue: game::Queue,

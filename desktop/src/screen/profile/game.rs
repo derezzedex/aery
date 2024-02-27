@@ -7,6 +7,7 @@ use crate::core;
 use crate::core::game;
 use crate::core::game::item;
 use crate::core::summoner;
+use crate::formatting;
 use crate::theme;
 use crate::theme::chevron_down_icon;
 use crate::theme::chevron_up_icon;
