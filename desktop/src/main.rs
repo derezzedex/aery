@@ -6,7 +6,7 @@ mod widget;
 
 use screen::profile;
 
-use iced::{widget::container, Application, Command, Element, Length, Settings};
+use iced::{font, widget::container, Application, Command, Element, Length, Settings};
 
 use assets::Assets;
 
@@ -15,6 +15,7 @@ use aery_core as core;
 pub fn main() -> iced::Result {
     Aery::run(Settings {
         antialiasing: true,
+        default_font: theme::ROBOTO_NORMAL,
         window: iced::window::Settings {
             min_size: Some([1024, 768].into()),
             ..Default::default()
@@ -53,6 +54,7 @@ impl Aery {
 #[derive(Debug, Clone)]
 enum Message {
     LoadedAssets(Assets),
+    FontLoaded(Result<(), font::Error>),
 
     Profile(profile::Message),
 }
@@ -66,7 +68,10 @@ impl Application for Aery {
     fn new(_flags: ()) -> (Self, Command<Message>) {
         (
             Self::Loading,
-            Command::perform(Assets::new(), Message::LoadedAssets),
+            Command::batch(vec![
+                Command::perform(Assets::new(), Message::LoadedAssets),
+                font::load(theme::ROBOTO_FLEX_TTF).map(Message::FontLoaded),
+            ]),
         )
     }
 
@@ -80,6 +85,8 @@ impl Application for Aery {
                 *self = Self::with_assets(assets);
                 Command::none()
             }
+            Message::FontLoaded(Err(err)) => panic!("font load failed: {err:?}"),
+            Message::FontLoaded(Ok(_)) => Command::none(),
             Message::Profile(message) => {
                 let Self::Loaded {
                     client,

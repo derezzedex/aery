@@ -1,9 +1,23 @@
 use crate::core::game;
 
+use iced::font;
 use iced::theme;
 use iced::widget;
 use iced::Background;
 use iced::Color;
+
+pub const ROBOTO_FLEX_TTF: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "\\assets\\font\\RobotoFlex-Regular.ttf"
+))
+.as_slice();
+
+pub const ROBOTO_NORMAL: iced::Font = iced::Font {
+    family: font::Family::Name("RobotoFlex"),
+    weight: font::Weight::Normal,
+    stretch: font::Stretch::Normal,
+    style: font::Style::Normal,
+};
 
 pub enum Container {
     Dark,
