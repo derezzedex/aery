@@ -1,23 +1,4 @@
-#[derive(Debug, Clone)]
-pub struct Champion(u16);
-
-#[derive(Debug, Clone, Copy)]
-pub struct Item(u16);
-
-#[derive(Debug, Clone)]
-pub struct Inventory([Option<Item>; 6]);
-
-#[derive(Debug, Clone)]
-pub struct Summoner(pub String);
-
-impl ToString for Summoner {
-    fn to_string(&self) -> String {
-        self.0.clone()
-    }
-}
-
 pub mod formatting {
-
     use crate::core;
     use crate::core::game;
     use crate::core::summoner;
