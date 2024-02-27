@@ -3,6 +3,9 @@ use crate::theme;
 use iced::widget::{container, Space};
 use iced::Length;
 
+pub mod modal;
+pub use modal::Modal;
+
 #[macro_export]
 macro_rules! text {
     ($($arg:tt)*) => {

@@ -1,5 +1,4 @@
 mod assets;
-mod component;
 mod formatting;
 mod screen;
 mod theme;

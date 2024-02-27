@@ -1,9 +1,9 @@
-use crate::component;
 use crate::core;
 use crate::core::summoner;
 use crate::profile;
 use crate::theme;
 use crate::widget::bold;
+use crate::widget::Modal;
 use iced::alignment;
 use iced::widget::column;
 use iced::widget::{button, container, image, row, text, vertical_space};
@@ -23,7 +23,7 @@ fn summoner_icon<'a>(icon: Option<image::Handle>, level: u32) -> Element<'a, Mes
         vertical_space().height(96).into()
     };
 
-    component::Modal::new(
+    Modal::new(
         container(image)
             .width(96.0)
             .height(96.0)
