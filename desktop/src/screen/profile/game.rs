@@ -8,8 +8,7 @@ use crate::core::game::item;
 use crate::core::summoner;
 use crate::formatting;
 use crate::theme;
-use crate::theme::chevron_down_icon;
-use crate::theme::chevron_up_icon;
+use crate::theme::icon;
 use crate::widget;
 use crate::widget::Modal;
 use iced::widget::horizontal_space;
@@ -341,7 +340,7 @@ impl Game {
             let role: Element<_> = if let Some(role) = self.player.info.role {
                 column![
                     row![
-                        image(theme::role_icon(role)).width(12.0).height(12.0),
+                        image(icon::role(role)).width(12.0).height(12.0),
                         text(formatting::role(role))
                             .style(theme::sub_text())
                             .size(10),
@@ -349,7 +348,7 @@ impl Game {
                     .align_items(Alignment::Center)
                     .spacing(4),
                     row![
-                        svg(theme::clock_icon()).width(12.0).height(12.0),
+                        svg(icon::clock()).width(12.0).height(12.0),
                         container(
                             text(formatting::duration(self.duration))
                                 .size(10)
@@ -514,9 +513,9 @@ impl Game {
         let teams = row![column(blue_team).spacing(2), column(red_team).spacing(2),].spacing(8);
 
         let chevron_icon = if self.is_expanded {
-            chevron_up_icon()
+            icon::chevron_up()
         } else {
-            chevron_down_icon()
+            icon::chevron_down()
         };
 
         let expand_content = container(image(chevron_icon).width(8.0).height(8.0))

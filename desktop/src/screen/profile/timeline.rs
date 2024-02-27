@@ -7,6 +7,7 @@ use crate::core;
 use crate::core::game::Role;
 use crate::profile;
 use crate::theme;
+use crate::theme::icon;
 use iced::widget::{column, container, scrollable};
 use iced::{Alignment, Element, Length};
 
@@ -41,28 +42,28 @@ impl Timeline {
                 wins: 2,
                 losses: 1,
                 kda: 1.15,
-                lane: theme::role_icon(Role::Mid),
+                lane: icon::role(Role::Mid),
             },
             summary::Champion {
                 handle: load_champion_icon(assets, core::Champion::new(61)),
                 wins: 3,
                 losses: 0,
                 kda: 2.0,
-                lane: theme::role_icon(Role::Bottom),
+                lane: icon::role(Role::Bottom),
             },
             summary::Champion {
                 handle: load_champion_icon(assets, core::Champion::new(1)),
                 wins: 2,
                 losses: 2,
                 kda: 3.0,
-                lane: theme::role_icon(Role::Support),
+                lane: icon::role(Role::Support),
             },
             summary::Champion {
                 handle: load_champion_icon(assets, core::Champion::new(14)),
                 wins: 0,
                 losses: 3,
                 kda: 0.5,
-                lane: theme::role_icon(Role::Top),
+                lane: icon::role(Role::Top),
             },
         ];
 
@@ -131,6 +132,7 @@ pub mod summary {
     use crate::core;
     use crate::core::game::Role;
     use crate::text;
+    use crate::theme::icon;
     use crate::widget;
     use iced::alignment;
     use iced::widget::image;
@@ -228,7 +230,7 @@ pub mod summary {
                 .take(4)
                 .map(|((role, champion), stats)| Champion {
                     handle: assets::load_champion_icon(assets, champion),
-                    lane: theme::role_icon(role),
+                    lane: icon::role(role),
                     wins: stats.wins,
                     losses: stats.losses,
                     kda: (stats.kills as f32 + stats.assists as f32) / stats.deaths as f32,
@@ -314,7 +316,7 @@ pub mod summary {
             };
 
             let summary_lane = {
-                let lane_icon = image(theme::role_icon(self.role))
+                let lane_icon = image(icon::role(self.role))
                     .width(24.0)
                     .height(24.0)
                     .content_fit(iced::ContentFit::Fill);

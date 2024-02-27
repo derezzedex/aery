@@ -1,9 +1,7 @@
 use crate::core::game;
 
-use iced::advanced::svg;
 use iced::theme;
 use iced::widget;
-use iced::widget::image;
 use iced::Background;
 use iced::Color;
 
@@ -35,61 +33,67 @@ pub const RED_DARK_HIGHLIGHT: Color = Color::from_rgb(0.439, 0.235, 0.278);
 pub const BLUE_DARK: Color = Color::from_rgb(0.094, 0.224, 0.333);
 pub const BLUE_DARK_HIGHLIGHT: Color = Color::from_rgb(0.067, 0.282, 0.51);
 
-pub fn chevron_down_icon() -> image::Handle {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "\\assets\\img\\icons\\chevron-down-white.png"
-    );
-    image::Handle::from_path(path)
-}
+pub mod icon {
+    use crate::core::game;
+    use iced::widget::image;
+    use iced::widget::svg;
 
-pub fn chevron_up_icon() -> image::Handle {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "\\assets\\img\\icons\\chevron-up-white.png"
-    );
-    image::Handle::from_path(path)
-}
+    pub fn chevron_down() -> image::Handle {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "\\assets\\img\\icons\\chevron-down-white.png"
+        );
+        image::Handle::from_path(path)
+    }
 
-pub fn search_icon() -> image::Handle {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "\\assets\\img\\icons\\search-white.png"
-    );
-    image::Handle::from_path(path)
-}
+    pub fn chevron_up() -> image::Handle {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "\\assets\\img\\icons\\chevron-up-white.png"
+        );
+        image::Handle::from_path(path)
+    }
 
-pub fn clock_icon() -> svg::Handle {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "\\assets\\img\\icons\\clock2.svg"
-    );
-    svg::Handle::from_path(path)
-}
+    pub fn search() -> image::Handle {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "\\assets\\img\\icons\\search-white.png"
+        );
+        image::Handle::from_path(path)
+    }
 
-pub fn unranked_icon() -> image::Handle {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "\\assets\\img\\emblems\\minicrests\\unranked.png"
-    );
-    image::Handle::from_path(path)
-}
+    pub fn clock() -> svg::Handle {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "\\assets\\img\\icons\\clock2.svg"
+        );
+        svg::Handle::from_path(path)
+    }
 
-pub fn role_icon(role: game::Role) -> image::Handle {
-    let file = match role {
-        game::Role::Bottom => "bottom.png",
-        game::Role::Jungle => "jungle.png",
-        game::Role::Mid => "mid.png",
-        game::Role::Support => "support.png",
-        game::Role::Top => "top.png",
-    };
+    pub fn unranked() -> image::Handle {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "\\assets\\img\\emblems\\minicrests\\unranked.png"
+        );
+        image::Handle::from_path(path)
+    }
 
-    let path = format!(
-        "{}\\assets\\img\\position\\{file}",
-        env!("CARGO_MANIFEST_DIR"),
-    );
+    pub fn role(role: game::Role) -> image::Handle {
+        let file = match role {
+            game::Role::Bottom => "bottom.png",
+            game::Role::Jungle => "jungle.png",
+            game::Role::Mid => "mid.png",
+            game::Role::Support => "support.png",
+            game::Role::Top => "top.png",
+        };
 
-    image::Handle::from_path(path)
+        let path = format!(
+            "{}\\assets\\img\\position\\{file}",
+            env!("CARGO_MANIFEST_DIR"),
+        );
+
+        image::Handle::from_path(path)
+    }
 }
 
 pub fn search_bar_text_input() -> theme::TextInput {

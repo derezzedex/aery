@@ -8,7 +8,7 @@ use crate::core::summoner::Tier;
 use crate::formatting;
 use crate::profile;
 use crate::theme;
-use crate::theme::chevron_down_icon;
+use crate::theme::icon;
 use crate::widget;
 
 fn ranked_container<'a>(
@@ -22,7 +22,7 @@ fn ranked_container<'a>(
         .style(theme::left_bar_container())
         .height(18);
 
-    let chevron_down = image(chevron_down_icon()).width(10.0).height(10.0);
+    let chevron_down = image(icon::chevron_down()).width(10.0).height(10.0);
 
     let size = match queue {
         game::Queue::RankedSolo => 100.0,
@@ -123,7 +123,7 @@ fn unranked_container<'a>(queue: game::Queue) -> Element<'a, Message> {
             widget::bold(queue.to_string()).size(14),
             horizontal_space().width(Length::Fill),
             row![
-                image(theme::unranked_icon()).width(18.0).height(18.0),
+                image(icon::unranked()).width(18.0).height(18.0),
                 text("Unranked").style(theme::sub_text()).size(12)
             ]
             .align_items(Alignment::Center)

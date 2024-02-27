@@ -4,7 +4,7 @@ use iced::{
 };
 
 use crate::theme;
-use crate::theme::search_icon;
+use crate::theme::icon;
 
 #[derive(Clone, Debug)]
 pub enum Message {
@@ -49,7 +49,7 @@ impl SearchBar {
     pub fn view(&self) -> Element<Message> {
         let region = "BR";
 
-        let search = container(image(search_icon()).width(12.0).height(12.0)).padding(2);
+        let search = container(image(icon::search()).width(12.0).height(12.0)).padding(2);
 
         container(row![
             logo(),
