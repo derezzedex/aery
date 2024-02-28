@@ -1,5 +1,6 @@
 use crate::core::game;
 
+use iced::color;
 use iced::font;
 use iced::theme;
 use iced::widget;
@@ -32,20 +33,28 @@ pub enum Container {
     TeamHeader,
 }
 
-pub const DARKER_BACKGROUND: Color = Color::from_rgb(0.05, 0.05, 0.05);
-pub const DARK_BACKGROUND: Color = Color::from_rgb(0.1, 0.1, 0.1);
-pub const LIGHTER_BACKGROUND: Color = Color::from_rgb(0.2, 0.2, 0.2);
-pub const LIGHT_BACKGROUND: Color = Color::from_rgb(0.95, 0.95, 0.95);
+pub const DARKER_BACKGROUND: Color = color!(0x0d0d0d);
+pub const DARK_BACKGROUND: Color = color!(0x1a1a1a);
+pub const LIGHTER_BACKGROUND: Color = color!(0x333333);
+pub const LIGHT_BACKGROUND: Color = color!(0xf2f2f2);
 
-pub const RED: Color = Color::from_rgb(1.0, 0.34, 0.2);
-pub const BLUE: Color = Color::from_rgb(0.0, 0.58, 1.0);
-pub const GOLD: Color = Color::from_rgb(205.0 / 255.0, 136.0 / 255.0, 55.0 / 255.0);
+pub const RED: Color = color!(0xff5733);
+pub const BLUE: Color = color!(0x0094ff);
+pub const GOLD: Color = color!(0xcd8837);
 
-pub const RED_DARK: Color = Color::from_rgb(0.349, 0.204, 0.231);
-pub const RED_DARK_HIGHLIGHT: Color = Color::from_rgb(0.439, 0.235, 0.278);
+pub const GRAY_TEXT: Color = color!(0x808080);
+pub const SUB_TEXT: Color = color!(0xcccccc);
 
-pub const BLUE_DARK: Color = Color::from_rgb(0.094, 0.224, 0.333);
-pub const BLUE_DARK_HIGHLIGHT: Color = Color::from_rgb(0.067, 0.282, 0.51);
+pub const LIGHTER_ALPHA: Color = color!(0x333333, 0.7);
+pub const LIGHT_ALPHA: Color = color!(0x666666, 0.9);
+pub const BLUE_ALPHA: Color = color!(0x0094ff, 0.7);
+pub const RED_ALPHA: Color = color!(0xff5733, 0.7);
+
+pub const RED_DARK: Color = color!(0x59343b);
+pub const RED_DARK_HIGHLIGHT: Color = color!(0x703c47);
+
+pub const BLUE_DARK: Color = color!(0x183955);
+pub const BLUE_DARK_HIGHLIGHT: Color = color!(0x114882);
 
 pub mod icon {
     use crate::core::game;
@@ -172,26 +181,10 @@ pub fn expand_button() -> theme::Button {
 
 pub fn win_color(result: impl Into<game::Result>) -> Color {
     match result.into() {
-        game::Result::Remake => Color::from_rgb(0.8, 0.8, 0.8),
+        game::Result::Remake => SUB_TEXT,
         game::Result::Surrender | game::Result::Defeat => RED,
         game::Result::Victory => BLUE,
     }
-}
-
-pub fn gray_text() -> Color {
-    Color::from_rgb(0.5, 0.5, 0.5)
-}
-
-pub fn red_text() -> Color {
-    RED
-}
-
-pub fn sub_text() -> Color {
-    Color::from_rgb(0.8, 0.8, 0.8)
-}
-
-pub fn blue_text() -> Color {
-    BLUE
 }
 
 pub fn update_button() -> theme::Button {
@@ -225,8 +218,8 @@ impl widget::container::StyleSheet for Container {
             Container::TeamPlayer(game::Result::Victory, true) => {
                 Background::Color(BLUE_DARK_HIGHLIGHT)
             }
-            Container::TeamPlayer(game::Result::Remake, false) => Background::Color(gray_text()),
-            Container::TeamPlayer(game::Result::Remake, true) => Background::Color(sub_text()),
+            Container::TeamPlayer(game::Result::Remake, false) => Background::Color(GRAY_TEXT),
+            Container::TeamPlayer(game::Result::Remake, true) => Background::Color(SUB_TEXT),
         };
 
         let text_color = match self {
@@ -239,7 +232,7 @@ impl widget::container::StyleSheet for Container {
             | Container::TeamPlayer(_, _)
             | Container::TeamHeader => Color::WHITE,
             Container::Icon => Color::BLACK,
-            Container::SearchBar => sub_text(),
+            Container::SearchBar => SUB_TEXT,
         };
 
         let border_radius = match self {
@@ -307,7 +300,7 @@ impl widget::button::StyleSheet for Button {
 
     fn active(&self, _theme: &iced::Theme) -> widget::button::Appearance {
         let background_color = match self {
-            Button::Expander(false) => Color::from_rgba(0.2, 0.2, 0.2, 0.6),
+            Button::Expander(false) => LIGHTER_ALPHA,
             Button::Expander(true) => Color::TRANSPARENT,
             Button::Update => BLUE,
             Button::Region => GOLD,
@@ -339,10 +332,10 @@ impl widget::button::StyleSheet for Button {
 
     fn hovered(&self, _theme: &iced::Theme) -> widget::button::Appearance {
         let background_color = match self {
-            Button::Update => Color::from_rgba(0.0, 0.58, 1.0, 0.7),
-            Button::Expander(_) => Color::from_rgba(0.4, 0.4, 0.4, 0.9),
-            Button::Region => Color::from_rgba(205.0 / 255.0, 136.0 / 255.0, 55.0 / 255.0, 0.7),
-            Button::Expand => Color::from_rgba(0.4, 0.4, 0.4, 0.9),
+            Button::Update => BLUE_ALPHA,
+            Button::Expander(_) => LIGHT_ALPHA,
+            Button::Region => RED_ALPHA,
+            Button::Expand => LIGHT_ALPHA,
         };
 
         widget::button::Appearance {
@@ -423,7 +416,7 @@ impl widget::scrollable::StyleSheet for Scrollable {
                     color: Color::TRANSPARENT,
                 },
                 scroller: widget::scrollable::Scroller {
-                    color: Color::from_rgb(0.2, 0.2, 0.2),
+                    color: LIGHTER_ALPHA,
                     border: iced::Border {
                         radius: 2.0.into(),
                         width: 0.0,
@@ -445,9 +438,9 @@ impl widget::scrollable::StyleSheet for Scrollable {
         if is_mouse_over_scrollbar {
             widget::scrollable::Appearance {
                 scrollbar: widget::scrollable::Scrollbar {
-                    background: Some(Background::Color(Color::from_rgb(0.1, 0.1, 0.1))),
+                    background: Some(Background::Color(DARK_BACKGROUND)),
                     scroller: widget::scrollable::Scroller {
-                        color: Color::from_rgba(0.4, 0.4, 0.4, 0.9),
+                        color: LIGHT_ALPHA,
                         ..active.scrollbar.scroller
                     },
                     ..active.scrollbar
@@ -481,7 +474,7 @@ impl widget::text_input::StyleSheet for TextInput {
 
     fn hovered(&self, style: &Self::Style) -> widget::text_input::Appearance {
         widget::text_input::Appearance {
-            background: Background::Color(Color::from_rgba(0.2, 0.2, 0.2, 0.7)),
+            background: Background::Color(LIGHTER_ALPHA),
             ..self.active(style)
         }
     }
@@ -491,7 +484,7 @@ impl widget::text_input::StyleSheet for TextInput {
     }
 
     fn placeholder_color(&self, _style: &Self::Style) -> Color {
-        sub_text()
+        SUB_TEXT
     }
 
     fn value_color(&self, _style: &Self::Style) -> Color {
@@ -510,6 +503,6 @@ impl widget::text_input::StyleSheet for TextInput {
     }
 
     fn disabled_color(&self, _style: &Self::Style) -> Color {
-        sub_text()
+        SUB_TEXT
     }
 }

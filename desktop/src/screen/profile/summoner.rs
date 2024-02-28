@@ -127,14 +127,14 @@ impl Summoner {
                         text(riot_name).size(24),
                         text(format!("#{}", riot_id.tagline))
                             .size(24)
-                            .style(theme::sub_text())
+                            .style(theme::SUB_TEXT)
                     ]
                     .spacing(8)
                     .align_items(iced::Alignment::Center)
                     .into(),
                     Some(
                         text(format!("Prev. {}", &self.summoner_name))
-                            .style(theme::sub_text())
+                            .style(theme::SUB_TEXT)
                             .size(12)
                             .into(),
                     ),
@@ -144,7 +144,7 @@ impl Summoner {
                         text(&self.summoner_name).size(24),
                         text(format!("#{}", riot_id.tagline))
                             .size(20)
-                            .style(theme::gray_text())
+                            .style(theme::GRAY_TEXT)
                     ]
                     .spacing(2)
                     .align_items(iced::Alignment::Center)

@@ -79,18 +79,18 @@ fn ranked_container<'a>(
             column![
                 row![
                     widget::bold(tier).size(16),
-                    text("·").style(theme::sub_text()).size(16),
-                    text(format!("{lp} LP")).style(theme::sub_text()).size(12)
+                    text("·").style(theme::SUB_TEXT).size(16),
+                    text(format!("{lp} LP")).style(theme::SUB_TEXT).size(12)
                 ]
                 .align_items(Alignment::Center)
                 .spacing(4),
                 row![
                     text(format!("{wins}W {losses}L"))
-                        .style(theme::sub_text())
+                        .style(theme::SUB_TEXT)
                         .size(12),
-                    text("·").style(theme::sub_text()),
+                    text("·").style(theme::SUB_TEXT),
                     widget::bold(format!("{win_rate:.0}%"))
-                        .style(theme::blue_text())
+                        .style(theme::BLUE)
                         .size(12)
                 ]
                 .align_items(Alignment::Center)
@@ -124,7 +124,7 @@ fn unranked_container<'a>(queue: game::Queue) -> Element<'a, Message> {
             horizontal_space().width(Length::Fill),
             row![
                 image(icon::unranked()).width(18.0).height(18.0),
-                text("Unranked").style(theme::sub_text()).size(12)
+                text("Unranked").style(theme::SUB_TEXT).size(12)
             ]
             .align_items(Alignment::Center)
             .spacing(4),

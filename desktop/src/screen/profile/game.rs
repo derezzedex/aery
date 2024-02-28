@@ -341,9 +341,7 @@ impl Game {
                 column![
                     row![
                         image(icon::role(role)).width(12.0).height(12.0),
-                        text(formatting::role(role))
-                            .style(theme::sub_text())
-                            .size(10),
+                        text(formatting::role(role)).style(theme::SUB_TEXT).size(10),
                     ]
                     .align_items(Alignment::Center)
                     .spacing(4),
@@ -352,7 +350,7 @@ impl Game {
                         container(
                             text(formatting::duration(self.duration))
                                 .size(10)
-                                .style(theme::sub_text())
+                                .style(theme::SUB_TEXT)
                         ),
                     ]
                     .align_items(Alignment::Center)
@@ -372,7 +370,7 @@ impl Game {
                     text(self.queue.to_string()).size(11),
                     container(
                         text(formatting::time_since(now, self.time))
-                            .style(theme::sub_text())
+                            .style(theme::SUB_TEXT)
                             .size(10)
                     ),
                 ],
@@ -417,11 +415,11 @@ impl Game {
         let player_stats = {
             let kda = row![
                 text(self.player.info.stats.kills).size(15),
-                text("/").style(theme::gray_text()).size(15),
+                text("/").style(theme::GRAY_TEXT).size(15),
                 text(self.player.info.stats.deaths)
-                    .style(theme::red_text())
+                    .style(theme::RED)
                     .size(15),
-                text("/").style(theme::gray_text()).size(15),
+                text("/").style(theme::GRAY_TEXT).size(15),
                 text(self.player.info.stats.assists).size(15)
             ]
             .align_items(Alignment::Center)
@@ -434,7 +432,7 @@ impl Game {
                     self.player.info.stats.assists
                 ))
                 .size(10)
-                .style(theme::sub_text())]
+                .style(theme::SUB_TEXT)]
                 .spacing(4)
                 .align_items(Alignment::Center),
                 row![text(formatting::creep_score(
@@ -442,14 +440,14 @@ impl Game {
                     self.duration.whole_minutes() as u32
                 ))
                 .size(10)
-                .style(theme::sub_text())]
+                .style(theme::SUB_TEXT)]
                 .spacing(4)
                 .align_items(Alignment::Center),
                 row![text(formatting::vision_score(
                     self.player.info.stats.vision_score
                 ))
                 .size(10)
-                .style(theme::sub_text())]
+                .style(theme::SUB_TEXT)]
                 .spacing(4)
                 .align_items(Alignment::Center),
             ]
@@ -611,7 +609,7 @@ fn team<'a>(
                 .size(12),
             text(format!("({})", formatting::team(team.id)))
                 .size(10)
-                .style(theme::sub_text()),
+                .style(theme::SUB_TEXT),
         ]
         .spacing(4)
         .align_items(Alignment::Center),
@@ -804,11 +802,11 @@ fn small_item<'a>(item: Option<image::Handle>) -> Element<'a, Message> {
 }
 
 fn small_text<'a>(content: impl ToString) -> Element<'a, Message> {
-    text(content).size(12).style(theme::sub_text()).into()
+    text(content).size(12).style(theme::SUB_TEXT).into()
 }
 
 fn smaller_text<'a>(content: impl ToString) -> Element<'a, Message> {
-    text(content).size(10).style(theme::sub_text()).into()
+    text(content).size(10).style(theme::SUB_TEXT).into()
 }
 
 fn truncate(string: String, max: usize) -> String {

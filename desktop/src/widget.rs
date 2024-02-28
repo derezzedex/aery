@@ -30,6 +30,6 @@ pub fn left_border<'a, Message: 'a>(
 
 pub fn small_text<'a>(text: impl ToString) -> iced::widget::Text<'a> {
     iced::widget::Text::new(text.to_string())
-        .style(theme::sub_text())
+        .style(theme::SUB_TEXT)
         .size(8.0)
 }
