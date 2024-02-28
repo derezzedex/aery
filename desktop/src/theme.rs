@@ -29,7 +29,8 @@ pub enum Container {
     SummonerLevel,
     SearchBar,
     LeftBar,
-    TeamPlayer(game::Result, bool),
+    TeamPlayer,
+    TeamMate,
     TeamHeader,
 }
 
@@ -49,12 +50,6 @@ pub const LIGHTER_ALPHA: Color = color!(0x333333, 0.7);
 pub const LIGHT_ALPHA: Color = color!(0x666666, 0.9);
 pub const BLUE_ALPHA: Color = color!(0x0094ff, 0.7);
 pub const RED_ALPHA: Color = color!(0xff5733, 0.7);
-
-pub const RED_DARK: Color = color!(0x59343b);
-pub const RED_DARK_HIGHLIGHT: Color = color!(0x703c47);
-
-pub const BLUE_DARK: Color = color!(0x183955);
-pub const BLUE_DARK_HIGHLIGHT: Color = color!(0x114882);
 
 pub mod icon {
     use crate::core::game;
@@ -159,8 +154,12 @@ pub fn team_header_container() -> theme::Container {
     theme::Container::Custom(Box::new(Container::TeamHeader))
 }
 
-pub fn team_player_container(result: game::Result, is_player: bool) -> theme::Container {
-    theme::Container::Custom(Box::new(Container::TeamPlayer(result, is_player)))
+pub fn team_player_container(is_player: bool) -> theme::Container {
+    if is_player {
+        theme::Container::Custom(Box::new(Container::TeamPlayer))
+    } else {
+        theme::Container::Custom(Box::new(Container::TeamMate))
+    }
 }
 
 pub fn ratio_bar() -> theme::ProgressBar {
@@ -208,18 +207,8 @@ impl widget::container::StyleSheet for Container {
             Container::SummonerLevel => Background::Color(DARK_BACKGROUND),
             Container::SearchBar => Background::Color(LIGHTER_BACKGROUND),
             Container::LeftBar => Background::Color(BLUE),
-            Container::TeamPlayer(game::Result::Defeat, false)
-            | Container::TeamPlayer(game::Result::Surrender, false) => Background::Color(RED_DARK),
-            Container::TeamPlayer(game::Result::Defeat, true)
-            | Container::TeamPlayer(game::Result::Surrender, true) => {
-                Background::Color(RED_DARK_HIGHLIGHT)
-            }
-            Container::TeamPlayer(game::Result::Victory, false) => Background::Color(BLUE_DARK),
-            Container::TeamPlayer(game::Result::Victory, true) => {
-                Background::Color(BLUE_DARK_HIGHLIGHT)
-            }
-            Container::TeamPlayer(game::Result::Remake, false) => Background::Color(GRAY_TEXT),
-            Container::TeamPlayer(game::Result::Remake, true) => Background::Color(SUB_TEXT),
+            Container::TeamPlayer => Background::Color(LIGHTER_ALPHA),
+            Container::TeamMate => Background::Color(DARK_BACKGROUND),
         };
 
         let text_color = match self {
@@ -229,7 +218,8 @@ impl widget::container::StyleSheet for Container {
             | Container::SummonerIcon
             | Container::SummonerLevel
             | Container::LeftBar
-            | Container::TeamPlayer(_, _)
+            | Container::TeamPlayer
+            | Container::TeamMate
             | Container::TeamHeader => Color::WHITE,
             Container::Icon => Color::BLACK,
             Container::SearchBar => SUB_TEXT,
@@ -243,7 +233,8 @@ impl widget::container::StyleSheet for Container {
             Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
             Container::SearchBar
             | Container::LeftBar
-            | Container::TeamPlayer(_, _)
+            | Container::TeamPlayer
+            | Container::TeamMate
             | Container::TeamHeader => 0.0.into(),
         };
 
@@ -254,7 +245,7 @@ impl widget::container::StyleSheet for Container {
             Container::SummonerIcon | Container::SummonerLevel => GOLD,
             Container::SearchBar => Color::TRANSPARENT,
             Container::LeftBar => Color::TRANSPARENT,
-            Container::TeamPlayer(_, _) => Color::TRANSPARENT,
+            Container::TeamPlayer | Container::TeamMate => Color::TRANSPARENT,
             Container::TeamHeader => Color::TRANSPARENT,
         };
 
@@ -267,7 +258,7 @@ impl widget::container::StyleSheet for Container {
             Container::SummonerIcon => 2.0,
             Container::SummonerLevel => 1.0,
             Container::LeftBar => 0.0,
-            Container::TeamPlayer(_, _) => 0.0,
+            Container::TeamPlayer | Container::TeamMate => 0.0,
             Container::TeamHeader => 0.0,
         };
 

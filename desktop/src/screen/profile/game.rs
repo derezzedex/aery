@@ -773,7 +773,7 @@ fn team<'a>(
         .align_items(Alignment::Center);
 
         container(content)
-            .style(theme::team_player_container(team.result, is_player))
+            .style(theme::team_player_container(is_player))
             .padding(4)
             .into()
     };
@@ -788,7 +788,7 @@ fn team<'a>(
     ];
 
     container(content)
-        .style(theme::team_player_container(team.result, false))
+        .style(theme::team_player_container(false))
         .into()
 }
 
