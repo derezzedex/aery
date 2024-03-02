@@ -385,7 +385,7 @@ impl Game {
         let champion_info = {
             let champion_icon = champion_icon(self.player.assets.champion_image.clone());
             let champion_level = container(widget::bold(self.player.info.stats.level).size(10))
-                .padding([2, 4, 0, 4])
+                .padding([0, 4, 1, 4])
                 .style(theme::summoner_level_container());
 
             // TODO: fix `champion_level` overlay not being clipped on the `scrollable`
