@@ -200,15 +200,15 @@ impl widget::container::StyleSheet for Container {
     fn appearance(&self, _theme: &iced::Theme) -> widget::container::Appearance {
         let background = match self {
             Container::Timeline => Background::Color(DARKER_BACKGROUND),
-            Container::Dark | Container::TeamHeader => Background::Color(DARK_BACKGROUND),
-            Container::Icon => Background::Color(LIGHT_BACKGROUND),
-            Container::LeftBorder(result) => Background::Color(win_color(*result)),
-            Container::SummonerIcon => Background::Color(LIGHT_BACKGROUND), // todo: switch to image
-            Container::SummonerLevel => Background::Color(DARK_BACKGROUND),
+            Container::Dark
+            | Container::TeamHeader
+            | Container::SummonerLevel
+            | Container::TeamMate => Background::Color(DARK_BACKGROUND),
+            Container::Icon | Container::SummonerIcon => Background::Color(LIGHT_BACKGROUND), // todo: switch summonericon to image?
             Container::SearchBar => Background::Color(LIGHTER_BACKGROUND),
-            Container::LeftBar => Background::Color(BLUE),
             Container::TeamPlayer => Background::Color(LIGHTER_ALPHA),
-            Container::TeamMate => Background::Color(DARK_BACKGROUND),
+            Container::LeftBar => Background::Color(BLUE),
+            Container::LeftBorder(result) => Background::Color(win_color(*result)),
         };
 
         let text_color = match self {
@@ -227,11 +227,11 @@ impl widget::container::StyleSheet for Container {
 
         let border_radius = match self {
             Container::Dark => 4.0.into(),
-            Container::SummonerLevel => 2.0.into(),
-            Container::SummonerIcon => 2.0.into(),
-            Container::Timeline | Container::Icon => 0.0.into(),
+            Container::SummonerLevel | Container::SummonerIcon => 2.0.into(),
             Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
-            Container::SearchBar
+            Container::Timeline
+            | Container::Icon
+            | Container::SearchBar
             | Container::LeftBar
             | Container::TeamPlayer
             | Container::TeamMate
@@ -239,14 +239,16 @@ impl widget::container::StyleSheet for Container {
         };
 
         let border_color = match self {
-            Container::Dark | Container::Timeline | Container::LeftBorder(_) | Container::Icon => {
-                Color::TRANSPARENT
-            }
+            Container::SearchBar
+            | Container::LeftBar
+            | Container::TeamPlayer
+            | Container::TeamMate
+            | Container::TeamHeader
+            | Container::Dark
+            | Container::Timeline
+            | Container::LeftBorder(_)
+            | Container::Icon => Color::TRANSPARENT,
             Container::SummonerIcon | Container::SummonerLevel => GOLD,
-            Container::SearchBar => Color::TRANSPARENT,
-            Container::LeftBar => Color::TRANSPARENT,
-            Container::TeamPlayer | Container::TeamMate => Color::TRANSPARENT,
-            Container::TeamHeader => Color::TRANSPARENT,
         };
 
         let border_width = match self {
@@ -254,12 +256,13 @@ impl widget::container::StyleSheet for Container {
             | Container::Timeline
             | Container::LeftBorder(_)
             | Container::Icon
+            | Container::LeftBar
+            | Container::TeamPlayer
+            | Container::TeamMate
+            | Container::TeamHeader
             | Container::SearchBar => 0.0,
-            Container::SummonerIcon => 2.0,
             Container::SummonerLevel => 1.0,
-            Container::LeftBar => 0.0,
-            Container::TeamPlayer | Container::TeamMate => 0.0,
-            Container::TeamHeader => 0.0,
+            Container::SummonerIcon => 2.0,
         };
 
         widget::container::Appearance {
@@ -301,13 +304,8 @@ impl widget::button::StyleSheet for Button {
         let border_radius = match self {
             Button::Expander(true) => [0.0, 4.0, 0.0, 0.0].into(),
             Button::Expander(false) => [0.0, 4.0, 4.0, 0.0].into(),
-            Button::Update => 2.0.into(),
+            Button::Update | Button::Expand => 2.0.into(),
             Button::Region => 0.0.into(),
-            Button::Expand => 2.0.into(),
-        };
-
-        let text_color = match self {
-            Button::Region | Button::Expander(_) | Button::Update | Button::Expand => Color::WHITE,
         };
 
         widget::button::Appearance {
@@ -316,17 +314,16 @@ impl widget::button::StyleSheet for Button {
                 radius: border_radius,
                 ..Default::default()
             },
-            text_color,
+            text_color: Color::WHITE,
             ..Default::default()
         }
     }
 
     fn hovered(&self, _theme: &iced::Theme) -> widget::button::Appearance {
         let background_color = match self {
+            Button::Expander(_) | Button::Expand => LIGHT_ALPHA,
             Button::Update => BLUE_ALPHA,
-            Button::Expander(_) => LIGHT_ALPHA,
             Button::Region => RED_ALPHA,
-            Button::Expand => LIGHT_ALPHA,
         };
 
         widget::button::Appearance {
