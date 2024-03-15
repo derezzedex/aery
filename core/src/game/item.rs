@@ -16,9 +16,9 @@ impl TryFrom<i32> for Item {
 #[derive(Debug, Clone, Copy)]
 pub struct Trinket(pub usize);
 
-impl Into<Item> for Trinket {
-    fn into(self) -> Item {
-        Item(self.0)
+impl From<Trinket> for Item {
+    fn from(val: Trinket) -> Self {
+        Item(val.0)
     }
 }
 

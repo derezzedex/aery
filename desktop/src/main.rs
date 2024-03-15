@@ -28,6 +28,7 @@ enum Screen {
     Profile(screen::Profile),
 }
 
+#[allow(clippy::large_enum_variant)]
 enum Aery {
     Loading,
     Loaded {

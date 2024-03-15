@@ -22,7 +22,7 @@ impl TryFrom<String> for DataFile {
     type Error = &'static str;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        let value = value.split(".").next().unwrap();
+        let value = value.split('.').next().unwrap();
         match value.to_ascii_lowercase().as_str() {
             "champion" => Ok(Self::Champion),
             "item" => Ok(Self::Item),
@@ -47,11 +47,11 @@ impl TryFrom<String> for Sprite {
     type Error = &'static str;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        let value = value.split(".").next().unwrap();
+        let value = value.split('.').next().unwrap();
         let mut size = 0;
         let index: u8 = value
             .chars()
-            .filter(|c| c.is_digit(10))
+            .filter(|c| c.is_ascii_digit())
             .inspect(|_| size += 1)
             .collect::<String>()
             .parse()
@@ -165,10 +165,7 @@ impl Assets {
         let img_path = fs::read_dir(Assets::EMBLEMS_PATH).unwrap();
         for sprite in img_path {
             let file = sprite.unwrap();
-            let sprite = {
-                let name = file.file_name().into_string().unwrap();
-                name.try_into().unwrap()
-            };
+            let sprite = file.file_name().into_string().unwrap();
             let image = iced::widget::image::Handle::from_path(file.path());
 
             emblems.insert(sprite, image);

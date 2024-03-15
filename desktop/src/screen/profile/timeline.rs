@@ -70,8 +70,7 @@ impl Timeline {
         Timeline {
             summary: Summary::new(champions),
             games: (0..5)
-                .into_iter()
-                .map(|_| {
+                .flat_map(|_| {
                     [
                         Game::new(true, assets, core::Champion::new(1)),
                         Game::new(false, assets, core::Champion::new(14)),
@@ -80,7 +79,6 @@ impl Timeline {
                         Game::new(false, assets, core::Champion::new(62)),
                     ]
                 })
-                .flatten()
                 .collect(),
         }
     }
@@ -189,7 +187,7 @@ pub mod summary {
         pub fn from_games(
             assets: &crate::Assets,
             player: &core::Summoner,
-            games: &Vec<core::Game>,
+            games: &[core::Game],
         ) -> Summary {
             let games = games
                 .iter()

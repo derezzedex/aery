@@ -47,10 +47,10 @@ pub struct Profile {
 impl Profile {
     pub fn dummy(assets: &crate::Assets) -> Self {
         Self {
-            timeline: Timeline::new(&assets),
+            timeline: Timeline::new(assets),
             summoner: Summoner::new(5843),
             search_bar: SearchBar::new(),
-            ranked_overview: RankedOverview::new(&assets),
+            ranked_overview: RankedOverview::new(assets),
         }
     }
 
@@ -84,16 +84,20 @@ impl Profile {
                     }
                 }
             }
-            Message::SearchBar(message) => match self.search_bar.update(message) {
-                Some(event) => match event {
-                    search_bar::Event::SearchRequested(name) => {
-                        let client = client.clone();
+            Message::SearchBar(message) => {
+                if let Some(event) = self.search_bar.update(message) {
+                    match event {
+                        search_bar::Event::SearchRequested(name) => {
+                            let client = client.clone();
 
-                        return Command::perform(fetch_data(client, name), Message::FetchedData);
+                            return Command::perform(
+                                fetch_data(client, name),
+                                Message::FetchedData,
+                            );
+                        }
                     }
-                },
-                None => {}
-            },
+                }
+            }
             Message::RankedOverview(message) => self.ranked_overview.update(message),
         }
 

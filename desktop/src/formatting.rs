@@ -89,12 +89,10 @@ pub fn time_since(now: time::OffsetDateTime, since: time::OffsetDateTime) -> Str
         } else {
             format!("{} months ago", months)
         }
+    } else if years <= 1 {
+        return String::from("last year");
     } else {
-        if years <= 1 {
-            return String::from("last year");
-        } else {
-            format!("{} years ago", years)
-        }
+        format!("{} years ago", years)
     }
 }
 

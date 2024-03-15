@@ -693,7 +693,7 @@ fn team<'a>(
 
         let damage = {
             let damage_dealt = column![
-                smaller_text(&player.info.stats.damage_dealt),
+                smaller_text(player.info.stats.damage_dealt),
                 progress_bar(
                     0.0..=max_damage_dealt as f32,
                     player.info.stats.damage_dealt as f32
@@ -705,7 +705,7 @@ fn team<'a>(
             .align_items(Alignment::Center);
 
             let damage_taken = column![
-                smaller_text(&player.info.stats.damage_taken),
+                smaller_text(player.info.stats.damage_taken),
                 progress_bar(
                     0.0..=max_damage_taken as f32,
                     player.info.stats.damage_taken as f32
