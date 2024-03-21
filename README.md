@@ -1,3 +1,3 @@
 # Aery
 
-{% docs reusables.master %}
+{% data reusables.master %}
