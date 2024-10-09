@@ -1,4 +1,5 @@
 use iced::{
+    padding,
     widget::{button, column, container, horizontal_space, image, progress_bar, row, text, Space},
     Alignment, Element, Length,
 };
@@ -19,7 +20,7 @@ fn ranked_container<'a>(
     // handle: image::Handle,
 ) -> Element<'a, Message> {
     let left_bar = container(horizontal_space().width(2))
-        .style(theme::left_bar_container())
+        .style(theme::left_bar)
         .height(18);
 
     let chevron_down = image(icon::chevron_down()).width(10.0).height(10.0);
@@ -63,57 +64,55 @@ fn ranked_container<'a>(
             widget::bold(queue.to_string()).size(14),
             horizontal_space().width(Length::Fill),
             button(chevron_down)
-                .style(theme::expand_button())
+                .style(theme::expand)
                 .padding(4)
                 .on_press(Message::Expand),
         ]
-        .padding([12, 12, 0, 12])
+        .padding(padding::all(12).right(0))
         .spacing(2)
-        .align_items(Alignment::Center),
+        .align_y(Alignment::Center),
         row![
             container(Space::new(emblem_size, emblem_size))
-                .width(size)
-                .height(size)
-                .center_x()
-                .center_y(),
+                .center_x(size)
+                .center_y(size),
             column![
                 row![
                     widget::bold(tier).size(16),
-                    text("·").style(theme::SUB_TEXT).size(16),
-                    text(format!("{lp} LP")).style(theme::SUB_TEXT).size(12)
+                    text("·").color(theme::SUB_TEXT).size(16),
+                    text(format!("{lp} LP")).color(theme::SUB_TEXT).size(12)
                 ]
-                .align_items(Alignment::Center)
+                .align_y(Alignment::Center)
                 .spacing(4),
                 row![
                     text(format!("{wins}W {losses}L"))
-                        .style(theme::SUB_TEXT)
+                        .color(theme::SUB_TEXT)
                         .size(12),
-                    text("·").style(theme::SUB_TEXT),
+                    text("·").color(theme::SUB_TEXT),
                     widget::bold(format!("{win_rate:.0}%"))
-                        .style(theme::BLUE)
+                        .color(theme::BLUE)
                         .size(12)
                 ]
-                .align_items(Alignment::Center)
+                .align_y(Alignment::Center)
                 .spacing(4),
                 progress_bar(0.0..=100.0, win_rate)
                     .width(120)
                     .height(4)
-                    .style(theme::ratio_bar()),
+                    .style(theme::ratio_bar),
             ]
             .spacing(2)
         ]
-        .padding([0, 18, 0, 18])
+        .padding(padding::left(18).right(18))
         .spacing(16)
-        .align_items(Alignment::Center),
+        .align_y(Alignment::Center),
     ])
-    .style(theme::dark_container())
+    .style(theme::dark)
     .width(280)
     .into()
 }
 
 fn unranked_container<'a>(queue: game::Queue) -> Element<'a, Message> {
     let left_bar = container(horizontal_space().width(2))
-        .style(theme::left_bar_container())
+        .style(theme::left_bar)
         .height(18);
 
     container(
@@ -124,15 +123,15 @@ fn unranked_container<'a>(queue: game::Queue) -> Element<'a, Message> {
             horizontal_space().width(Length::Fill),
             row![
                 image(icon::unranked()).width(18.0).height(18.0),
-                text("Unranked").style(theme::SUB_TEXT).size(12)
+                text("Unranked").color(theme::SUB_TEXT).size(12)
             ]
-            .align_items(Alignment::Center)
+            .align_y(Alignment::Center)
             .spacing(4),
         ]
-        .align_items(Alignment::Center),
+        .align_y(Alignment::Center),
     )
     .padding(10)
-    .style(theme::dark_container())
+    .style(theme::dark)
     .width(280)
     .into()
 }
@@ -236,7 +235,7 @@ impl RankedOverview {
 
         column![solo_duo, flex,]
             .spacing(4)
-            .align_items(Alignment::Center)
+            .align_x(Alignment::Center)
             .into()
     }
 }

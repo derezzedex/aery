@@ -3,9 +3,10 @@ use crate::core::summoner;
 use crate::profile;
 use crate::theme;
 use crate::widget::bold;
-use crate::widget::Modal;
 use iced::alignment;
+use iced::padding;
 use iced::widget::column;
+use iced::widget::stack;
 use iced::widget::{button, container, image, row, text, vertical_space};
 use iced::Element;
 use iced::Length;
@@ -23,21 +24,20 @@ fn summoner_icon<'a>(icon: Option<image::Handle>, level: u32) -> Element<'a, Mes
         vertical_space().height(96).into()
     };
 
-    Modal::new(
+    stack![
         container(image)
-            .width(96.0)
-            .height(96.0)
-            .center_x()
-            .center_y()
+            .center_x(96.0)
+            .center_y(96.0)
             .padding(2.0)
-            .style(theme::summoner_icon_container()),
-        container(bold(level).size(10))
-            .padding([1, 4, 2, 4]) // TODO: fix this alignment issue (text doesnt seem to get centered)
-            .center_y()
-            .style(theme::summoner_level_container()),
-    )
-    .horizontal_alignment(iced::Alignment::Center)
-    .vertical_alignment(iced::Alignment::End)
+            .style(theme::summoner_icon),
+        container(
+            container(bold(level).size(10))
+                .padding(padding::top(1).right(4).bottom(2).left(4)) // TODO: fix this alignment issue (text doesnt seem to get centered)
+                .style(theme::summoner_level),
+        )
+        .align_bottom(Length::Fill)
+        .center_x(Length::Fill)
+    ]
     .into()
 }
 
@@ -127,14 +127,14 @@ impl Summoner {
                         text(riot_name).size(24),
                         text(format!("#{}", riot_id.tagline))
                             .size(24)
-                            .style(theme::SUB_TEXT)
+                            .color(theme::SUB_TEXT)
                     ]
                     .spacing(8)
-                    .align_items(iced::Alignment::Center)
+                    .align_y(iced::Alignment::Center)
                     .into(),
                     Some(
                         text(format!("Prev. {}", &self.summoner_name))
-                            .style(theme::SUB_TEXT)
+                            .color(theme::SUB_TEXT)
                             .size(12)
                             .into(),
                     ),
@@ -144,10 +144,10 @@ impl Summoner {
                         text(&self.summoner_name).size(24),
                         text(format!("#{}", riot_id.tagline))
                             .size(20)
-                            .style(theme::GRAY_TEXT)
+                            .color(theme::GRAY_TEXT)
                     ]
                     .spacing(2)
-                    .align_items(iced::Alignment::Center)
+                    .align_y(iced::Alignment::Center)
                     .into(),
                     None,
                 ),
@@ -156,7 +156,7 @@ impl Summoner {
         };
 
         let update_button = button("Update")
-            .style(theme::update_button())
+            .style(theme::update)
             .on_press(Message::Update);
 
         let mut inner = column![name];
@@ -178,11 +178,10 @@ impl Summoner {
                 .spacing(8)
                 .width(Length::Fill)
                 .max_width(920)
-                .padding([8, 0, 8, 0]),
+                .padding([8, 0]),
         )
-        .center_x()
-        .width(Length::Fill)
-        .style(theme::timeline_container())
+        .center_x(Length::Fill)
+        .style(theme::timeline)
         .into()
     }
 }

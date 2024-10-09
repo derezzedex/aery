@@ -23,7 +23,7 @@ pub struct SearchBar {
 
 fn logo<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
     container(Space::new(28.0, 28.0))
-        .style(theme::icon_container())
+        .style(theme::icon)
         .max_width(28.0)
         .max_height(28.0)
 }
@@ -59,25 +59,25 @@ impl SearchBar {
                     text_input("Search for a summoner or champion", &self.text)
                         .on_input(Message::TextChanged)
                         .on_submit(Message::SearchPressed)
-                        .style(theme::search_bar_text_input())
+                        .style(theme::search_text_input)
                         .size(12),
                     button(text(region).size(10))
                         .width(Length::Shrink)
-                        .padding([2, 4, 2, 4])
-                        .style(theme::region_button())
+                        .padding([4, 2])
+                        .style(theme::region)
                         .on_press(Message::RegionPressed),
                     button(search)
-                        .style(iced::theme::Button::Text)
+                        .style(button::text)
                         .on_press(Message::SearchPressed),
                 ]
-                .align_items(Alignment::Center)
+                .align_y(Alignment::Center)
             )
-            .style(theme::search_bar_container())
+            .style(theme::search_bar)
             .width(Length::FillPortion(4)),
             horizontal_space().width(Length::FillPortion(2)),
         ])
         .padding(8)
-        .style(theme::dark_container())
+        .style(theme::dark)
         .into()
     }
 }

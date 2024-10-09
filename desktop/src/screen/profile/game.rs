@@ -10,10 +10,11 @@ use crate::formatting;
 use crate::theme;
 use crate::theme::icon;
 use crate::widget;
-use crate::widget::Modal;
+use iced::padding;
 use iced::widget::horizontal_space;
 use iced::widget::image;
 use iced::widget::progress_bar;
+use iced::widget::stack;
 use iced::widget::svg;
 use iced::widget::vertical_space;
 use iced::widget::{button, column, container, row, text, Space};
@@ -53,12 +54,7 @@ fn summoner_rune2_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
         .height(16.0)
         .content_fit(iced::ContentFit::Fill);
 
-    container(icon)
-        .center_x()
-        .center_y()
-        .width(22.0)
-        .height(22.0)
-        .into()
+    container(icon).center_x(22.0).center_y(22.0).into()
 }
 
 fn item_icon<'a>(handle: Option<image::Handle>) -> Element<'a, Message> {
@@ -70,7 +66,7 @@ fn item_icon<'a>(handle: Option<image::Handle>) -> Element<'a, Message> {
             .into()
     } else {
         container(iced::widget::Space::new(28.0, 28.0))
-            .style(theme::search_bar_container())
+            .style(theme::search_bar)
             .into()
     };
 
@@ -341,19 +337,19 @@ impl Game {
                 column![
                     row![
                         image(icon::role(role)).width(12.0).height(12.0),
-                        text(formatting::role(role)).style(theme::SUB_TEXT).size(10),
+                        text(formatting::role(role)).color(theme::SUB_TEXT).size(10),
                     ]
-                    .align_items(Alignment::Center)
+                    .align_y(Alignment::Center)
                     .spacing(4),
                     row![
                         svg(icon::clock()).width(12.0).height(12.0),
                         container(
                             text(formatting::duration(self.duration))
                                 .size(10)
-                                .style(theme::SUB_TEXT)
+                                .color(theme::SUB_TEXT)
                         ),
                     ]
-                    .align_items(Alignment::Center)
+                    .align_y(Alignment::Center)
                     .spacing(4),
                 ]
                 .spacing(2)
@@ -364,20 +360,20 @@ impl Game {
 
             column![
                 widget::bold(formatting::win(self.result))
-                    .style(theme::win_color(self.result))
+                    .color(theme::win_color(self.result))
                     .size(18),
                 column![
                     text(self.queue.to_string()).size(11),
                     container(
                         text(formatting::time_since(now, self.time))
-                            .style(theme::SUB_TEXT)
+                            .color(theme::SUB_TEXT)
                             .size(10)
                     ),
                 ],
                 vertical_space().height(Length::Fill),
                 role,
             ]
-            .align_items(Alignment::Start)
+            .align_x(Alignment::Start)
             .spacing(2)
             .padding(2)
         };
@@ -385,13 +381,16 @@ impl Game {
         let champion_info = {
             let champion_icon = champion_icon(self.player.assets.champion_image.clone());
             let champion_level = container(widget::bold(self.player.info.stats.level).size(10))
-                .padding([0, 4, 1, 4])
-                .style(theme::summoner_level_container());
+                .padding(padding::right(4).bottom(1).left(4))
+                .style(theme::summoner_level);
 
             // TODO: fix `champion_level` overlay not being clipped on the `scrollable`
-            let champion = Modal::new(champion_icon, champion_level)
-                .horizontal_alignment(Alignment::Start)
-                .vertical_alignment(Alignment::End);
+            let champion = stack![
+                champion_icon,
+                container(champion_level)
+                    .align_bottom(Length::Fill)
+                    .align_x(Alignment::Start)
+            ];
 
             let champion_spells = row![
                 summoner_spell_icon(self.player.assets.summoner_spell_images[0].clone()),
@@ -415,14 +414,14 @@ impl Game {
         let player_stats = {
             let kda = row![
                 text(self.player.info.stats.kills).size(15),
-                text("/").style(theme::GRAY_TEXT).size(15),
+                text("/").color(theme::GRAY_TEXT).size(15),
                 text(self.player.info.stats.deaths)
-                    .style(theme::RED)
+                    .color(theme::RED)
                     .size(15),
-                text("/").style(theme::GRAY_TEXT).size(15),
+                text("/").color(theme::GRAY_TEXT).size(15),
                 text(self.player.info.stats.assists).size(15)
             ]
-            .align_items(Alignment::Center)
+            .align_y(Alignment::Center)
             .spacing(2);
 
             let other_stats = column![
@@ -432,28 +431,28 @@ impl Game {
                     self.player.info.stats.assists
                 ))
                 .size(10)
-                .style(theme::SUB_TEXT)]
+                .color(theme::SUB_TEXT)]
                 .spacing(4)
-                .align_items(Alignment::Center),
+                .align_y(Alignment::Center),
                 row![text(formatting::creep_score(
                     self.player.info.stats.creep_score,
                     self.duration.whole_minutes() as u32
                 ))
                 .size(10)
-                .style(theme::SUB_TEXT)]
+                .color(theme::SUB_TEXT)]
                 .spacing(4)
-                .align_items(Alignment::Center),
+                .align_y(Alignment::Center),
                 row![text(formatting::vision_score(
                     self.player.info.stats.vision_score
                 ))
                 .size(10)
-                .style(theme::SUB_TEXT)]
+                .color(theme::SUB_TEXT)]
                 .spacing(4)
-                .align_items(Alignment::Center),
+                .align_y(Alignment::Center),
             ]
-            .align_items(Alignment::Center);
+            .align_x(Alignment::Center);
 
-            column![kda, other_stats,].align_items(Alignment::Center)
+            column![kda, other_stats,].align_x(Alignment::Center)
         };
 
         let player_items = {
@@ -492,7 +491,7 @@ impl Game {
             };
 
             row![summoner_icon, summoner_name]
-                .align_items(Alignment::Center)
+                .align_y(Alignment::Center)
                 .spacing(4)
                 .into()
         };
@@ -517,16 +516,15 @@ impl Game {
         };
 
         let expand_content = container(image(chevron_icon).width(8.0).height(8.0))
-            .center_x()
+            .center_x(24)
             .align_y(alignment::Vertical::Bottom)
             .height(Length::Fill)
-            .width(24)
             .padding(2);
 
         let expand_button = button(expand_content)
             .height(Length::Shrink)
             .on_press(Message::ExpandPressed)
-            .style(theme::expander_button(self.is_expanded));
+            .style(|_, status| theme::expander(self.is_expanded, status));
 
         let overview = container(row![
             row![
@@ -543,7 +541,7 @@ impl Game {
             ]
             .width(Length::Fill)
             .padding(4)
-            .align_items(Alignment::Center),
+            .align_y(Alignment::Center),
             expand_button.padding(0),
         ])
         .max_height(100.0);
@@ -589,14 +587,14 @@ impl Game {
         container(game)
             .width(Length::Fill)
             .height(Length::Shrink)
-            .style(theme::dark_container())
+            .style(theme::dark)
             .into()
     }
 }
 
 fn team<'a>(
-    team: &Team,
-    summoner: &Player,
+    team: &'a Team,
+    summoner: &'a Player,
     max_damage_dealt: u32,
     max_damage_taken: u32,
     game_duration: time::Duration,
@@ -605,14 +603,14 @@ fn team<'a>(
     let header = row![
         row![
             widget::bold(formatting::win(team.result))
-                .style(theme::win_color(team.result))
+                .color(theme::win_color(team.result))
                 .size(12),
             text(format!("({})", formatting::team(team.id)))
                 .size(10)
-                .style(theme::SUB_TEXT),
+                .color(theme::SUB_TEXT),
         ]
         .spacing(4)
-        .align_items(Alignment::Center),
+        .align_y(Alignment::Center),
         horizontal_space().width(Length::Fill),
         small_text("KDA"),
         horizontal_space().width(Length::Fill),
@@ -627,168 +625,27 @@ fn team<'a>(
     ]
     .padding(4);
 
-    let total_team_kills: u32 = team.players.iter().map(|p| p.info.stats.kills).sum();
-
-    let player = |player: &Player| -> Element<_> {
-        let is_player = player.info.puuid == summoner.info.puuid;
-
-        let champion_icon = image(player.assets.champion_image.clone())
-            .width(32.0)
-            .height(32.0);
-        let champion_level = container(widget::bold(player.info.stats.level).size(8))
-            .padding([1, 2, 0, 2])
-            .style(theme::summoner_level_container());
-
-        // TODO: fix `champion_level` overlay not being clipped on the `scrollable`
-        let champion = Modal::new(champion_icon, champion_level)
-            .horizontal_alignment(Alignment::Start)
-            .vertical_alignment(Alignment::End);
-
-        let spell_and_runes = {
-            let champion_spells = row![
-                image(player.assets.summoner_spell_images[0].clone())
-                    .width(16.0)
-                    .height(16.0),
-                image(player.assets.summoner_spell_images[1].clone())
-                    .width(16.0)
-                    .height(16.0)
-            ]
-            .spacing(2)
-            .align_items(Alignment::Center);
-
-            let champion_runes = row![
-                image(player.assets.runes_images[0].clone())
-                    .width(16.0)
-                    .height(16.0),
-                image(player.assets.runes_images[1].clone())
-                    .width(16.0)
-                    .height(16.0)
-            ]
-            .spacing(2)
-            .align_items(Alignment::Center);
-            column![champion_spells, champion_runes]
-                .spacing(2)
-                .align_items(Alignment::Center)
-        };
-
-        let name = if is_player {
-            widget::bold(&player.info.name).size(12)
-        } else {
-            text(&player.info.name).size(12)
-        };
-
-        let kda = {
-            let stats = player.info.stats;
-            let kill_participation = stats.kills as f32 / total_team_kills as f32 * 100.0;
-
-            column![
-                smaller_text(format!(
-                    "{}/{}/{} ({:.1}%)",
-                    stats.kills, stats.deaths, stats.assists, kill_participation
-                )),
-                smaller_text(formatting::kda(stats.kills, stats.deaths, stats.assists)),
-            ]
-            .align_items(Alignment::Center)
-        };
-
-        let damage = {
-            let damage_dealt = column![
-                smaller_text(player.info.stats.damage_dealt),
-                progress_bar(
-                    0.0..=max_damage_dealt as f32,
-                    player.info.stats.damage_dealt as f32
-                )
-                .width(48.0)
-                .height(6.0)
-                .style(theme::fill_bar(theme::RED)),
-            ]
-            .align_items(Alignment::Center);
-
-            let damage_taken = column![
-                smaller_text(player.info.stats.damage_taken),
-                progress_bar(
-                    0.0..=max_damage_taken as f32,
-                    player.info.stats.damage_taken as f32
-                )
-                .width(48.0)
-                .height(6.0)
-                .style(theme::fill_bar(theme::LIGHT_BACKGROUND)),
-            ]
-            .align_items(Alignment::Center);
-
-            row![damage_dealt, damage_taken,]
-                .spacing(8)
-                .align_items(Alignment::Center)
-        };
-
-        let wards = column![
-            smaller_text(player.info.stats.control_wards),
-            row![
-                smaller_text(player.info.stats.wards_placed),
-                smaller_text("/"),
-                smaller_text(player.info.stats.wards_removed)
-            ]
-            .spacing(1)
-            .align_items(Alignment::Center),
-        ]
-        .align_items(Alignment::Center);
-
-        let cs = column![
-            smaller_text(player.info.stats.creep_score),
-            smaller_text(format!(
-                "{:.1}/m",
-                player.info.stats.creep_score as f32 / game_duration.whole_minutes() as f32,
-            )),
-        ]
-        .align_items(Alignment::Center);
-
-        let items = {
-            let items = player.assets.item_images.iter().cloned().map(small_item);
-            row(items).spacing(2).align_items(Alignment::Center)
-        };
-
-        let ward = small_item(player.assets.trinket_image.clone());
-
-        let content = row![
-            champion,
-            horizontal_space().width(4),
-            spell_and_runes,
-            horizontal_space().width(8),
-            name,
-            horizontal_space().width(Length::Fill),
-            kda,
-            horizontal_space().width(16),
-            damage,
-            horizontal_space().width(16),
-            wards,
-            horizontal_space().width(16),
-            cs,
-            horizontal_space().width(16),
-            items,
-            horizontal_space().width(4),
-            ward,
-            horizontal_space().width(16),
-        ]
-        .width(Length::Fill)
-        .align_items(Alignment::Center);
-
-        container(content)
-            .style(theme::team_player_container(is_player))
-            .padding(4)
-            .into()
-    };
-
-    let players = team.players.iter().map(player);
+    let total_team_kills = team.players.iter().map(|p| p.info.stats.kills).sum();
+    let players = team.players.iter().map(|p| {
+        player(
+            p,
+            summoner,
+            max_damage_dealt,
+            max_damage_taken,
+            total_team_kills,
+            game_duration,
+        )
+    });
 
     let content = column![
         container(header.padding(4))
-            .style(theme::team_header_container())
+            .style(theme::team_header)
             .padding(1),
         column(players).padding(1).spacing(4),
     ];
 
     container(content)
-        .style(theme::team_player_container(false))
+        .style(|_| theme::team_player(false))
         .into()
 }
 
@@ -796,17 +653,17 @@ fn small_item<'a>(item: Option<image::Handle>) -> Element<'a, Message> {
     match item {
         Some(handle) => image(handle).width(20.0).height(20.0).into(),
         None => container(iced::widget::Space::new(20.0, 20.0))
-            .style(theme::search_bar_container())
+            .style(theme::search_bar)
             .into(),
     }
 }
 
-fn small_text<'a>(content: impl ToString) -> Element<'a, Message> {
-    text(content).size(12).style(theme::SUB_TEXT).into()
+fn small_text<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message> {
+    text(content).size(12).color(theme::SUB_TEXT).into()
 }
 
-fn smaller_text<'a>(content: impl ToString) -> Element<'a, Message> {
-    text(content).size(10).style(theme::SUB_TEXT).into()
+fn smaller_text<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message> {
+    text(content).size(10).color(theme::SUB_TEXT).into()
 }
 
 fn truncate(string: String, max: usize) -> String {
@@ -814,4 +671,163 @@ fn truncate(string: String, max: usize) -> String {
         None => string,
         Some((idx, _)) => format!("{string:.idx$}…"),
     }
+}
+
+fn player<'a>(
+    player: &'a Player,
+    summoner: &'a Player,
+    max_damage_dealt: u32,
+    max_damage_taken: u32,
+    total_team_kills: u32,
+    game_duration: time::Duration,
+) -> Element<'a, Message> {
+    let is_player = player.info.puuid == summoner.info.puuid;
+
+    let champion_icon = image(player.assets.champion_image.clone())
+        .width(32.0)
+        .height(32.0);
+    let champion_level = container(widget::bold(player.info.stats.level).size(8))
+        .padding(padding::top(1).right(2).bottom(2))
+        .style(theme::summoner_level);
+
+    // TODO: fix `champion_level` overlay not being clipped on the `scrollable`
+    let champion = stack![
+        champion_icon,
+        container(champion_level)
+            .align_bottom(Length::Fill)
+            .align_x(Alignment::Start)
+    ];
+
+    let spell_and_runes = {
+        let champion_spells = row![
+            image(player.assets.summoner_spell_images[0].clone())
+                .width(16.0)
+                .height(16.0),
+            image(player.assets.summoner_spell_images[1].clone())
+                .width(16.0)
+                .height(16.0)
+        ]
+        .spacing(2)
+        .align_y(Alignment::Center);
+
+        let champion_runes = row![
+            image(player.assets.runes_images[0].clone())
+                .width(16.0)
+                .height(16.0),
+            image(player.assets.runes_images[1].clone())
+                .width(16.0)
+                .height(16.0)
+        ]
+        .spacing(2)
+        .align_y(Alignment::Center);
+        column![champion_spells, champion_runes]
+            .spacing(2)
+            .align_x(Alignment::Center)
+    };
+
+    let name = if is_player {
+        widget::bold(&player.info.name).size(12)
+    } else {
+        text(&player.info.name).size(12)
+    };
+
+    let kda = {
+        let stats = player.info.stats;
+        let kill_participation = stats.kills as f32 / total_team_kills as f32 * 100.0;
+
+        column![
+            smaller_text(format!(
+                "{}/{}/{} ({:.1}%)",
+                stats.kills, stats.deaths, stats.assists, kill_participation
+            )),
+            smaller_text(formatting::kda(stats.kills, stats.deaths, stats.assists)),
+        ]
+        .align_x(Alignment::Center)
+    };
+
+    let damage = {
+        let damage_dealt = column![
+            smaller_text(player.info.stats.damage_dealt),
+            progress_bar(
+                0.0..=max_damage_dealt as f32,
+                player.info.stats.damage_dealt as f32
+            )
+            .width(48.0)
+            .height(6.0)
+            .style(|_| theme::fill_bar(theme::RED)),
+        ]
+        .align_x(Alignment::Center);
+
+        let damage_taken = column![
+            smaller_text(player.info.stats.damage_taken),
+            progress_bar(
+                0.0..=max_damage_taken as f32,
+                player.info.stats.damage_taken as f32
+            )
+            .width(48.0)
+            .height(6.0)
+            .style(|_| theme::fill_bar(theme::LIGHT_BACKGROUND)),
+        ]
+        .align_x(Alignment::Center);
+
+        row![damage_dealt, damage_taken,]
+            .spacing(8)
+            .align_y(Alignment::Center)
+    };
+
+    let wards = column![
+        smaller_text(player.info.stats.control_wards),
+        row![
+            smaller_text(player.info.stats.wards_placed),
+            smaller_text("/"),
+            smaller_text(player.info.stats.wards_removed)
+        ]
+        .spacing(1)
+        .align_y(Alignment::Center),
+    ]
+    .align_x(Alignment::Center);
+
+    let cs = column![
+        smaller_text(player.info.stats.creep_score),
+        smaller_text(format!(
+            "{:.1}/m",
+            player.info.stats.creep_score as f32 / game_duration.whole_minutes() as f32,
+        )),
+    ]
+    .align_x(Alignment::Center);
+
+    let items = {
+        let items = player.assets.item_images.iter().cloned().map(small_item);
+        row(items).spacing(2).align_y(Alignment::Center)
+    };
+
+    let ward = small_item(player.assets.trinket_image.clone());
+
+    let content = row![
+        champion,
+        horizontal_space().width(4),
+        spell_and_runes,
+        horizontal_space().width(8),
+        name,
+        horizontal_space().width(Length::Fill),
+        kda,
+        horizontal_space().width(16),
+        damage,
+        horizontal_space().width(16),
+        wards,
+        horizontal_space().width(16),
+        cs,
+        horizontal_space().width(16),
+        items,
+        horizontal_space().width(4),
+        ward,
+        horizontal_space().width(16),
+    ]
+    .width(Length::Fill)
+    .align_y(Alignment::Center);
+
+    container(content)
+        .style(move |_| theme::team_player(is_player))
+        .padding(4)
+        .into()
 }

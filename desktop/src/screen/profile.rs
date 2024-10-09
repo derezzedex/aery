@@ -13,7 +13,7 @@ use crate::core;
 use crate::theme;
 
 use iced::widget::{column, container, row};
-use iced::{Command, Element, Length};
+use iced::{Element, Length, Task};
 
 use futures::stream;
 use futures::FutureExt;
@@ -59,7 +59,7 @@ impl Profile {
         message: Message,
         client: &core::Client,
         assets: &crate::Assets,
-    ) -> Command<Message> {
+    ) -> Task<Message> {
         match message {
             Message::FetchedData(Ok(data)) => {
                 self.summoner = Summoner::from_profile(&data);
@@ -74,7 +74,7 @@ impl Profile {
                         summoner::Event::UpdateProfile(name) => {
                             let client = client.clone();
 
-                            return Command::perform(
+                            return Task::perform(
                                 core::Summoner::from_name(client, name),
                                 |summoner| {
                                     Message::Summoner(summoner::Message::SummonerFetched(summoner))
@@ -90,10 +90,7 @@ impl Profile {
                         search_bar::Event::SearchRequested(name) => {
                             let client = client.clone();
 
-                            return Command::perform(
-                                fetch_data(client, name),
-                                Message::FetchedData,
-                            );
+                            return Task::perform(fetch_data(client, name), Message::FetchedData);
                         }
                     }
                 }
@@ -101,7 +98,7 @@ impl Profile {
             Message::RankedOverview(message) => self.ranked_overview.update(message),
         }
 
-        Command::none()
+        Task::none()
     }
 
     pub fn view(&self) -> Element<Message> {
@@ -113,8 +110,7 @@ impl Profile {
             .padding(8)
             .spacing(8),
         )
-        .center_x()
-        .width(Length::Fill);
+        .center_x(Length::Fill);
 
         container(
             column![
@@ -124,7 +120,7 @@ impl Profile {
             ]
             .spacing(16),
         )
-        .style(theme::timeline_container())
+        .style(theme::timeline)
         .into()
     }
 }

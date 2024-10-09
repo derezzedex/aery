@@ -1,9 +1,13 @@
 use crate::core::game;
 
+use iced::border;
 use iced::color;
 use iced::font;
-use iced::theme;
 use iced::widget;
+use iced::widget::button;
+use iced::widget::container;
+use iced::widget::progress_bar;
+use iced::widget::text_input;
 use iced::Background;
 use iced::Color;
 
@@ -19,20 +23,6 @@ pub const ROBOTO_NORMAL: iced::Font = iced::Font {
     stretch: font::Stretch::Normal,
     style: font::Style::Normal,
 };
-
-pub enum Container {
-    Dark,
-    Icon,
-    LeftBorder(game::Result),
-    Timeline,
-    SummonerIcon,
-    SummonerLevel,
-    SearchBar,
-    LeftBar,
-    TeamPlayer,
-    TeamMate,
-    TeamHeader,
-}
 
 pub const DARKER_BACKGROUND: Color = color!(0x0d0d0d);
 pub const DARK_BACKGROUND: Color = color!(0x1a1a1a);
@@ -114,68 +104,103 @@ pub mod icon {
     }
 }
 
-pub fn search_bar_text_input() -> theme::TextInput {
-    theme::TextInput::Custom(Box::new(TextInput::SearchBar))
-}
-
-pub fn left_bar_container() -> theme::Container {
-    theme::Container::Custom(Box::new(Container::LeftBar))
-}
-
-pub fn search_bar_container() -> theme::Container {
-    theme::Container::Custom(Box::new(Container::SearchBar))
-}
-
-pub fn timeline_container() -> theme::Container {
-    theme::Container::Custom(Box::new(Container::Timeline))
-}
-
-pub fn summoner_icon_container() -> theme::Container {
-    theme::Container::Custom(Box::new(Container::SummonerIcon))
-}
-
-pub fn summoner_level_container() -> theme::Container {
-    theme::Container::Custom(Box::new(Container::SummonerLevel))
-}
-
-pub fn dark_container() -> theme::Container {
-    theme::Container::Custom(Box::new(Container::Dark))
-}
-
-pub fn icon_container() -> theme::Container {
-    theme::Container::Custom(Box::new(Container::Icon))
-}
-
-pub fn left_border_container(result: game::Result) -> theme::Container {
-    theme::Container::Custom(Box::new(Container::LeftBorder(result)))
-}
-
-pub fn team_header_container() -> theme::Container {
-    theme::Container::Custom(Box::new(Container::TeamHeader))
-}
-
-pub fn team_player_container(is_player: bool) -> theme::Container {
-    if is_player {
-        theme::Container::Custom(Box::new(Container::TeamPlayer))
-    } else {
-        theme::Container::Custom(Box::new(Container::TeamMate))
+pub fn left_bar(_theme: &iced::Theme) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(BLUE)),
+        border: border::width(0),
+        text_color: Some(Color::WHITE),
+        ..Default::default()
     }
 }
 
-pub fn ratio_bar() -> theme::ProgressBar {
-    theme::ProgressBar::Custom(Box::new(RatioBar))
+pub fn search_bar(_theme: &iced::Theme) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(LIGHTER_BACKGROUND)),
+        border: border::width(0),
+        text_color: Some(SUB_TEXT),
+        ..Default::default()
+    }
 }
 
-pub fn fill_bar(fill_color: Color) -> theme::ProgressBar {
-    theme::ProgressBar::Custom(Box::new(FillBar(fill_color)))
+pub fn timeline(_theme: &iced::Theme) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(DARKER_BACKGROUND)),
+        border: border::width(0),
+        text_color: Some(Color::WHITE),
+        ..Default::default()
+    }
 }
 
-pub fn region_button() -> theme::Button {
-    theme::Button::Custom(Box::new(Button::Region))
+pub fn summoner_icon(_theme: &iced::Theme) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(LIGHT_BACKGROUND)),
+        border: border::rounded(2).width(2).color(GOLD),
+        text_color: Some(Color::WHITE),
+        ..Default::default()
+    }
 }
 
-pub fn expand_button() -> theme::Button {
-    theme::Button::Custom(Box::new(Button::Expand))
+pub fn summoner_level(_theme: &iced::Theme) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(DARK_BACKGROUND)),
+        border: border::rounded(2).width(1).color(GOLD),
+        text_color: Some(Color::WHITE),
+        ..Default::default()
+    }
+}
+
+pub fn dark(_theme: &iced::Theme) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(DARK_BACKGROUND)),
+        border: border::rounded(4),
+        text_color: Some(Color::WHITE),
+        ..Default::default()
+    }
+}
+
+pub fn icon(_theme: &iced::Theme) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(LIGHT_BACKGROUND)),
+        border: border::width(0),
+        text_color: Some(Color::BLACK),
+        ..Default::default()
+    }
+}
+
+pub fn left_border(result: game::Result) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(win_color(result))),
+        border: border::rounded(border::left(4)),
+        text_color: Some(Color::WHITE),
+        ..Default::default()
+    }
+}
+
+pub fn team_header(_theme: &iced::Theme) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(DARK_BACKGROUND)),
+        border: border::width(0),
+        text_color: Some(Color::WHITE),
+        ..Default::default()
+    }
+}
+
+pub fn team_player(is_player: bool) -> container::Style {
+    if is_player {
+        container::Style {
+            background: Some(Background::Color(LIGHTER_ALPHA)),
+            border: border::width(0),
+            text_color: Some(Color::WHITE),
+            ..Default::default()
+        }
+    } else {
+        container::Style {
+            background: Some(Background::Color(DARK_BACKGROUND)),
+            border: border::width(0),
+            text_color: Some(Color::WHITE),
+            ..Default::default()
+        }
+    }
 }
 
 pub fn win_color(result: impl Into<game::Result>) -> Color {
@@ -186,311 +211,181 @@ pub fn win_color(result: impl Into<game::Result>) -> Color {
     }
 }
 
-pub fn update_button() -> theme::Button {
-    theme::Button::Custom(Box::new(Button::Update))
-}
+pub fn expander(expanded: bool, status: button::Status) -> button::Style {
+    let background = if matches!(status, button::Status::Hovered) || !expanded {
+        Some(Background::Color(LIGHTER_ALPHA))
+    } else {
+        Some(Background::Color(Color::TRANSPARENT))
+    };
 
-pub fn scrollable() -> theme::Scrollable {
-    theme::Scrollable::Custom(Box::new(Scrollable))
-}
-
-impl widget::container::StyleSheet for Container {
-    type Style = iced::Theme;
-
-    fn appearance(&self, _theme: &iced::Theme) -> widget::container::Appearance {
-        let background = match self {
-            Container::Timeline => Background::Color(DARKER_BACKGROUND),
-            Container::Dark
-            | Container::TeamHeader
-            | Container::SummonerLevel
-            | Container::TeamMate => Background::Color(DARK_BACKGROUND),
-            Container::Icon | Container::SummonerIcon => Background::Color(LIGHT_BACKGROUND), // todo: switch summonericon to image?
-            Container::SearchBar => Background::Color(LIGHTER_BACKGROUND),
-            Container::TeamPlayer => Background::Color(LIGHTER_ALPHA),
-            Container::LeftBar => Background::Color(BLUE),
-            Container::LeftBorder(result) => Background::Color(win_color(*result)),
-        };
-
-        let text_color = match self {
-            Container::Dark
-            | Container::LeftBorder(_)
-            | Container::Timeline
-            | Container::SummonerIcon
-            | Container::SummonerLevel
-            | Container::LeftBar
-            | Container::TeamPlayer
-            | Container::TeamMate
-            | Container::TeamHeader => Color::WHITE,
-            Container::Icon => Color::BLACK,
-            Container::SearchBar => SUB_TEXT,
-        };
-
-        let border_radius = match self {
-            Container::Dark => 4.0.into(),
-            Container::SummonerLevel | Container::SummonerIcon => 2.0.into(),
-            Container::LeftBorder(_) => [4.0, 0.0, 0.0, 4.0].into(),
-            Container::Timeline
-            | Container::Icon
-            | Container::SearchBar
-            | Container::LeftBar
-            | Container::TeamPlayer
-            | Container::TeamMate
-            | Container::TeamHeader => 0.0.into(),
-        };
-
-        let border_color = match self {
-            Container::SearchBar
-            | Container::LeftBar
-            | Container::TeamPlayer
-            | Container::TeamMate
-            | Container::TeamHeader
-            | Container::Dark
-            | Container::Timeline
-            | Container::LeftBorder(_)
-            | Container::Icon => Color::TRANSPARENT,
-            Container::SummonerIcon | Container::SummonerLevel => GOLD,
-        };
-
-        let border_width = match self {
-            Container::Dark
-            | Container::Timeline
-            | Container::LeftBorder(_)
-            | Container::Icon
-            | Container::LeftBar
-            | Container::TeamPlayer
-            | Container::TeamMate
-            | Container::TeamHeader
-            | Container::SearchBar => 0.0,
-            Container::SummonerLevel => 1.0,
-            Container::SummonerIcon => 2.0,
-        };
-
-        widget::container::Appearance {
-            background: Some(background),
-            text_color: Some(text_color),
-            border: iced::Border {
-                color: border_color,
-                width: border_width,
-                radius: border_radius,
-            },
+    if expanded {
+        button::Style {
+            background,
+            border: border::rounded(border::right(4)),
+            text_color: Color::WHITE,
             ..Default::default()
         }
-    }
-}
-
-pub fn expander_button(toggled: bool) -> theme::Button {
-    theme::Button::custom(Button::Expander(toggled))
-}
-
-pub enum Button {
-    Expander(bool),
-    Update,
-    Region,
-    Expand,
-}
-
-impl widget::button::StyleSheet for Button {
-    type Style = iced::Theme;
-
-    fn active(&self, _theme: &iced::Theme) -> widget::button::Appearance {
-        let background_color = match self {
-            Button::Expander(false) => LIGHTER_ALPHA,
-            Button::Expander(true) => Color::TRANSPARENT,
-            Button::Update => BLUE,
-            Button::Region => GOLD,
-            Button::Expand => LIGHTER_BACKGROUND,
-        };
-
-        let border_radius = match self {
-            Button::Expander(true) => [0.0, 4.0, 0.0, 0.0].into(),
-            Button::Expander(false) => [0.0, 4.0, 4.0, 0.0].into(),
-            Button::Update | Button::Expand => 2.0.into(),
-            Button::Region => 0.0.into(),
-        };
-
-        widget::button::Appearance {
-            background: Some(iced::Background::Color(background_color)),
-            border: iced::Border {
-                radius: border_radius,
-                ..Default::default()
-            },
+    } else {
+        button::Style {
+            background,
+            border: border::rounded(border::right(4).bottom(4)),
             text_color: Color::WHITE,
             ..Default::default()
         }
     }
+}
 
-    fn hovered(&self, _theme: &iced::Theme) -> widget::button::Appearance {
-        let background_color = match self {
-            Button::Expander(_) | Button::Expand => LIGHT_ALPHA,
-            Button::Update => BLUE_ALPHA,
-            Button::Region => RED_ALPHA,
-        };
+pub fn update(_theme: &iced::Theme, status: button::Status) -> button::Style {
+    let background = if matches!(status, button::Status::Hovered) {
+        Some(Background::Color(BLUE_ALPHA))
+    } else {
+        Some(Background::Color(BLUE))
+    };
 
-        widget::button::Appearance {
-            background: Some(iced::Background::Color(background_color)),
-            ..self.active(_theme)
-        }
+    button::Style {
+        background,
+        border: border::rounded(2),
+        text_color: Color::WHITE,
+        ..Default::default()
     }
 }
 
-struct RatioBar;
+pub fn region(_theme: &iced::Theme, status: button::Status) -> button::Style {
+    let background = if matches!(status, button::Status::Hovered) {
+        Some(Background::Color(RED_ALPHA))
+    } else {
+        Some(Background::Color(GOLD))
+    };
 
-impl widget::progress_bar::StyleSheet for RatioBar {
-    type Style = iced::Theme;
-
-    fn appearance(&self, _theme: &iced::Theme) -> widget::progress_bar::Appearance {
-        widget::progress_bar::Appearance {
-            background: Background::Color(RED),
-            bar: Background::Color(BLUE),
-            border_radius: 0.0.into(),
-        }
+    button::Style {
+        background,
+        border: border::rounded(0),
+        text_color: Color::WHITE,
+        ..Default::default()
     }
 }
 
-struct FillBar(Color);
+pub fn expand(_theme: &iced::Theme, status: button::Status) -> button::Style {
+    let background = if matches!(status, button::Status::Hovered) {
+        Some(Background::Color(LIGHT_ALPHA))
+    } else {
+        Some(Background::Color(LIGHTER_BACKGROUND))
+    };
 
-impl widget::progress_bar::StyleSheet for FillBar {
-    type Style = iced::Theme;
-
-    fn appearance(&self, _theme: &iced::Theme) -> widget::progress_bar::Appearance {
-        widget::progress_bar::Appearance {
-            background: Background::Color(LIGHTER_BACKGROUND),
-            bar: Background::Color(self.0),
-            border_radius: 0.0.into(),
-        }
+    button::Style {
+        background,
+        border: border::rounded(2),
+        text_color: Color::WHITE,
+        ..Default::default()
     }
 }
 
-pub fn rule(color: Color) -> theme::Rule {
-    theme::Rule::Custom(Box::new(Rule(color)))
-}
-
-struct Rule(Color);
-
-impl widget::rule::StyleSheet for Rule {
-    type Style = iced::Theme;
-
-    fn appearance(&self, _theme: &iced::Theme) -> widget::rule::Appearance {
-        widget::rule::Appearance {
-            color: self.0,
-            width: 1,
-            radius: 0.0.into(),
-            fill_mode: widget::rule::FillMode::Full,
-        }
+pub fn ratio_bar(_theme: &iced::Theme) -> progress_bar::Style {
+    progress_bar::Style {
+        background: Background::Color(RED),
+        bar: Background::Color(BLUE),
+        border: border::rounded(0),
     }
 }
 
-struct Scrollable;
+pub fn fill_bar(color: Color) -> progress_bar::Style {
+    progress_bar::Style {
+        background: Background::Color(LIGHTER_BACKGROUND),
+        bar: Background::Color(color),
+        border: border::rounded(border::radius(0)),
+    }
+}
 
-impl widget::scrollable::StyleSheet for Scrollable {
-    type Style = iced::Theme;
+pub fn rule(color: iced::Color) -> widget::rule::Style {
+    widget::rule::Style {
+        color,
+        width: 1,
+        radius: 0.0.into(),
+        fill_mode: widget::rule::FillMode::Full,
+    }
+}
 
-    fn active(&self, _theme: &iced::Theme) -> widget::scrollable::Appearance {
-        widget::scrollable::Appearance {
-            container: widget::container::Appearance {
-                background: None,
-                border: iced::Border {
-                    radius: 2.0.into(),
-                    width: 0.0,
-                    color: Color::TRANSPARENT,
-                },
-                ..Default::default()
-            },
-            scrollbar: widget::scrollable::Scrollbar {
-                background: None,
-                border: iced::Border {
-                    radius: 2.0.into(),
-                    width: 0.0,
-                    color: Color::TRANSPARENT,
-                },
-                scroller: widget::scrollable::Scroller {
-                    color: LIGHTER_ALPHA,
-                    border: iced::Border {
-                        radius: 2.0.into(),
-                        width: 0.0,
-                        color: Color::TRANSPARENT,
-                    },
-                },
-            },
+pub fn scrollable(
+    _theme: &iced::Theme,
+    status: widget::scrollable::Status,
+) -> widget::scrollable::Style {
+    use widget::scrollable;
+
+    let scrollbar = scrollable::Rail {
+        background: None,
+        border: border::rounded(2),
+        scroller: scrollable::Scroller {
+            color: LIGHTER_ALPHA,
+            border: border::rounded(2),
+        },
+    };
+
+    match status {
+        scrollable::Status::Active => scrollable::Style {
+            container: container::Style::default(),
+            vertical_rail: scrollbar,
+            horizontal_rail: scrollbar,
             gap: None,
+        },
+        scrollable::Status::Hovered {
+            is_horizontal_scrollbar_hovered: is_horizontal_scrollbar,
+            is_vertical_scrollbar_hovered: is_vertical_scrollbar,
         }
-    }
-
-    fn hovered(
-        &self,
-        style: &Self::Style,
-        is_mouse_over_scrollbar: bool,
-    ) -> widget::scrollable::Appearance {
-        let active = self.active(style);
-
-        if is_mouse_over_scrollbar {
-            widget::scrollable::Appearance {
-                scrollbar: widget::scrollable::Scrollbar {
-                    background: Some(Background::Color(DARK_BACKGROUND)),
-                    scroller: widget::scrollable::Scroller {
-                        color: LIGHT_ALPHA,
-                        ..active.scrollbar.scroller
-                    },
-                    ..active.scrollbar
+        | scrollable::Status::Dragged {
+            is_horizontal_scrollbar_dragged: is_horizontal_scrollbar,
+            is_vertical_scrollbar_dragged: is_vertical_scrollbar,
+        } => {
+            let hovered = scrollable::Rail {
+                background: Some(Background::Color(DARK_BACKGROUND)),
+                scroller: scrollable::Scroller {
+                    color: LIGHT_ALPHA,
+                    ..scrollbar.scroller
                 },
-                ..active
+                ..scrollbar
+            };
+
+            scrollable::Style {
+                container: container::Style::default(),
+                vertical_rail: if is_vertical_scrollbar {
+                    hovered
+                } else {
+                    scrollbar
+                },
+                horizontal_rail: if is_horizontal_scrollbar {
+                    hovered
+                } else {
+                    scrollbar
+                },
+                gap: None,
             }
-        } else {
-            active
         }
     }
 }
 
-pub enum TextInput {
-    SearchBar,
-}
+pub fn search_text_input(_theme: &iced::Theme, status: text_input::Status) -> text_input::Style {
+    let active = text_input::Style {
+        background: Background::Color(Color::TRANSPARENT),
+        border: iced::Border {
+            radius: 0.0.into(),
+            width: 0.0,
+            color: Color::TRANSPARENT,
+        },
+        icon: Color::TRANSPARENT,
+        placeholder: SUB_TEXT,
+        value: Color::WHITE,
+        selection: BLUE,
+    };
 
-impl widget::text_input::StyleSheet for TextInput {
-    type Style = iced::Theme;
-
-    fn active(&self, _style: &Self::Style) -> widget::text_input::Appearance {
-        widget::text_input::Appearance {
-            background: Background::Color(Color::TRANSPARENT),
-            border: iced::Border {
-                radius: 0.0.into(),
-                width: 0.0,
-                color: Color::TRANSPARENT,
-            },
-            icon_color: Color::TRANSPARENT,
-        }
-    }
-
-    fn hovered(&self, style: &Self::Style) -> widget::text_input::Appearance {
-        widget::text_input::Appearance {
+    match status {
+        text_input::Status::Active => active,
+        text_input::Status::Hovered | text_input::Status::Focused => text_input::Style {
             background: Background::Color(LIGHTER_ALPHA),
-            ..self.active(style)
-        }
-    }
-
-    fn focused(&self, style: &Self::Style) -> widget::text_input::Appearance {
-        self.hovered(style)
-    }
-
-    fn placeholder_color(&self, _style: &Self::Style) -> Color {
-        SUB_TEXT
-    }
-
-    fn value_color(&self, _style: &Self::Style) -> Color {
-        Color::WHITE
-    }
-
-    fn selection_color(&self, _style: &Self::Style) -> Color {
-        BLUE
-    }
-
-    fn disabled(&self, style: &Self::Style) -> widget::text_input::Appearance {
-        widget::text_input::Appearance {
+            ..active
+        },
+        text_input::Status::Disabled => widget::text_input::Style {
             background: Background::Color(DARKER_BACKGROUND),
-            ..self.active(style)
-        }
-    }
-
-    fn disabled_color(&self, _style: &Self::Style) -> Color {
-        SUB_TEXT
+            value: SUB_TEXT,
+            ..active
+        },
     }
 }

@@ -110,7 +110,7 @@ impl Assets {
                 tracing::info!("{name:?}");
                 name.try_into().unwrap()
             };
-            let image = image::io::Reader::open(file.path())
+            let image = image::ImageReader::open(file.path())
                 .unwrap()
                 .decode()
                 .unwrap();
@@ -201,7 +201,7 @@ pub fn load_champion_icon(assets: &Assets, champion: core::Champion) -> Handle {
 
     let icon_sprite = assets.sprites.get(&sprite).unwrap();
     let icon = icon_sprite.view(x + offset, y + offset, w - offset * 2, h - offset * 2);
-    Handle::from_pixels(icon.width(), icon.height(), icon.to_image().into_vec())
+    Handle::from_rgba(icon.width(), icon.height(), icon.to_image().into_vec())
 }
 
 pub fn load_summoner_spell_icon(
@@ -226,7 +226,7 @@ pub fn load_summoner_spell_icon(
 
     let icon_sprite = assets.sprites.get(&sprite).unwrap();
     let icon = icon_sprite.view(x + offset, y + offset, w - offset * 2, h - offset * 2);
-    Handle::from_pixels(icon.width(), icon.height(), icon.to_image().into_vec())
+    Handle::from_rgba(icon.width(), icon.height(), icon.to_image().into_vec())
 }
 
 pub fn load_runes_icon(assets: &Assets, rune: rune::Rune) -> Handle {
@@ -252,5 +252,5 @@ pub fn load_item_icon(assets: &Assets, item: game::Item) -> Handle {
 
     let icon_sprite = assets.sprites.get(&sprite).unwrap();
     let icon = icon_sprite.view(x + offset, y + offset, w - offset * 2, h - offset * 2);
-    Handle::from_pixels(icon.width(), icon.height(), icon.to_image().into_vec())
+    Handle::from_rgba(icon.width(), icon.height(), icon.to_image().into_vec())
 }
