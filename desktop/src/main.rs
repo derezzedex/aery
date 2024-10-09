@@ -13,6 +13,8 @@ use assets::Assets;
 use aery_core as core;
 
 pub fn main() -> iced::Result {
+    tracing_subscriber::fmt().init();
+
     Aery::run(Settings {
         antialiasing: true,
         default_font: theme::ROBOTO_NORMAL,

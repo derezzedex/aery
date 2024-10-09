@@ -9,7 +9,7 @@ use iced::Color;
 
 pub const ROBOTO_FLEX_TTF: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "\\assets\\font\\RobotoFlex-Regular.ttf"
+    "/assets/font/RobotoFlex-Regular.ttf"
 ))
 .as_slice();
 

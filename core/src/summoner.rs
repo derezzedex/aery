@@ -5,6 +5,7 @@ use crate::game;
 use crate::Client;
 use riven::consts::{PlatformRoute, RegionalRoute};
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct InternalApiError(String);
 
@@ -23,33 +24,51 @@ pub struct RiotId {
 }
 
 #[derive(Debug, Clone)]
-pub struct Summoner(riven::models::summoner_v4::Summoner);
+pub struct Summoner {
+    name: String,
+    summoner: riven::models::summoner_v4::Summoner,
+}
 
 impl Summoner {
     pub fn name(&self) -> &str {
-        &self.0.name
+        &self.name
     }
 
     pub fn puuid(&self) -> &str {
-        &self.0.puuid
+        &self.summoner.puuid
     }
 
     pub fn level(&self) -> u32 {
-        self.0.summoner_level as u32
+        self.summoner.summoner_level as u32
     }
 
     pub fn icon_id(&self) -> i32 {
-        self.0.profile_icon_id
+        self.summoner.profile_icon_id
     }
 
     pub async fn from_name(client: Client, name: String) -> Result<Self, RequestError> {
+        let mut account_id = name.split("#");
+
+        let (game_name, tag_line) = (
+            account_id.next().ok_or(RequestError::NotFound)?,
+            account_id.next().ok_or(RequestError::NotFound)?,
+        );
+
+        let account = client
+            .as_ref()
+            .account_v1()
+            .get_by_riot_id(RegionalRoute::AMERICAS, game_name, tag_line)
+            .await
+            .map_err(|error| RequestError::RequestFailed(InternalApiError(error.to_string())))?
+            .ok_or(RequestError::NotFound)?;
+
         client
             .as_ref()
             .summoner_v4()
-            .get_by_summoner_name(PlatformRoute::BR1, &name)
+            .get_by_puuid(PlatformRoute::BR1, &account.puuid)
             .await
             .map_err(|error| RequestError::RequestFailed(InternalApiError(error.to_string())))
-            .and_then(|summoner| summoner.map(Summoner).ok_or(RequestError::NotFound))
+            .map(|summoner| Summoner { name, summoner })
     }
 
     pub async fn matches(
@@ -63,7 +82,7 @@ impl Summoner {
             .match_v5()
             .get_match_ids_by_puuid(
                 RegionalRoute::AMERICAS,
-                &self.0.puuid,
+                &self.summoner.puuid,
                 Some((range.end - range.start) as i32),
                 None,
                 queue.into().map(game::Queue::into),
@@ -83,7 +102,7 @@ impl Summoner {
         client
             .as_ref()
             .league_v4()
-            .get_league_entries_for_summoner(PlatformRoute::BR1, &self.0.id)
+            .get_league_entries_for_summoner(PlatformRoute::BR1, &self.summoner.id)
             .await
             .map_err(|error| RequestError::RequestFailed(InternalApiError(error.to_string())))
             .map(|leagues| leagues.into_iter().map(League))

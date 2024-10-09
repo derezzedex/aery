@@ -15,7 +15,7 @@ macro_rules! text {
 
 pub fn bold<'a>(text: impl ToString) -> iced::widget::Text<'a> {
     iced::widget::Text::new(text.to_string()).font(iced::Font {
-        weight: iced::font::Weight::Semibold,
+        weight: iced::font::Weight::Bold,
         ..theme::ROBOTO_NORMAL
     })
 }

@@ -1,4 +1,6 @@
 pub mod player;
+use std::fmt;
+
 pub use player::Player;
 
 pub mod item;
@@ -36,8 +38,9 @@ pub enum RequestError {
     RequestFailed(#[from] riven::RiotApiError),
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
-pub struct Event(riven::models::match_v5::MatchTimelineInfoFrameEvent);
+pub struct Event(riven::models::match_v5::EventsTimeLine);
 
 impl Event {
     pub async fn from_id(client: &Client, id: Id) -> core::result::Result<Vec<Self>, RequestError> {
@@ -211,9 +214,9 @@ pub enum Queue {
     Unknown(u16),
 }
 
-impl ToString for Queue {
-    fn to_string(&self) -> String {
-        match self {
+impl fmt::Display for Queue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = match self {
             Queue::Custom => "Custom",
             Queue::Blind => "Blind Pick",
             Queue::Draft => "Draft Pick",
@@ -226,8 +229,9 @@ impl ToString for Queue {
             Queue::BotIntermediate => "Bot (Intermediate)",
             Queue::Other(_) => "Event",
             Queue::Unknown(_) => "Unknown",
-        }
-        .to_string()
+        };
+
+        write!(f, "{name}")
     }
 }
 

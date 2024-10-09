@@ -38,7 +38,7 @@ impl TryFrom<String> for DataFile {
 pub enum Sprite {
     Champion(u8),
     Item(u8),
-    SummonerSpell(u8),
+    SummonerSpell(u16),
     ProfileIcon(u8),
     RuneReforged(u8),
 }
@@ -49,7 +49,7 @@ impl TryFrom<String> for Sprite {
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let value = value.split('.').next().unwrap();
         let mut size = 0;
-        let index: u8 = value
+        let index: u16 = value
             .chars()
             .filter(|c| c.is_ascii_digit())
             .inspect(|_| size += 1)
@@ -59,10 +59,10 @@ impl TryFrom<String> for Sprite {
         let value = value[..value.len() - size].to_string();
 
         match value.to_ascii_lowercase().as_str() {
-            "champion" => Ok(Self::Champion(index)),
-            "item" => Ok(Self::Item(index)),
-            "profileicon" => Ok(Self::ProfileIcon(index)),
-            "runereforged" => Ok(Self::RuneReforged(index)),
+            "champion" => Ok(Self::Champion(index as u8)),
+            "item" => Ok(Self::Item(index as u8)),
+            "profileicon" => Ok(Self::ProfileIcon(index as u8)),
+            "runereforged" => Ok(Self::RuneReforged(index as u8)),
             "spell" => Ok(Self::SummonerSpell(index)),
             _ => Err("unknown sprite type"),
         }
@@ -75,25 +75,25 @@ pub type DataMap = HashMap<DataFile, serde_json::Value>;
 
 pub type RuneMap = HashMap<rune::Rune, String>;
 
-pub type EmblemMap = HashMap<String, Handle>;
+// pub type EmblemMap = HashMap<String, Handle>;
 
 #[derive(Debug, Clone)]
 pub struct Assets {
     pub sprites: SpriteMap,
     pub data: DataMap,
     pub runes: RuneMap,
-    pub emblems: EmblemMap,
+    // pub emblems: EmblemMap,
 }
 
 impl Assets {
-    const SPRITE_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\sprite");
-    const DATA_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\data");
+    const SPRITE_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/sprite");
+    const DATA_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/data");
     const RUNES_PATH: &'static str = concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "\\assets\\data\\runesReforged.json"
+        "/assets/data/runesReforged.json"
     );
-    const EMBLEMS_PATH: &'static str =
-        concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\emblems");
+    // const EMBLEMS_PATH: &'static str =
+    //     concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\emblems");
 
     pub async fn new() -> Assets {
         let timer = std::time::Instant::now();
@@ -103,6 +103,11 @@ impl Assets {
             let file = sprite.unwrap();
             let sprite = {
                 let name = file.file_name().into_string().unwrap();
+                if name.starts_with(".") {
+                    continue;
+                }
+
+                tracing::info!("{name:?}");
                 name.try_into().unwrap()
             };
             let image = image::io::Reader::open(file.path())
@@ -160,24 +165,24 @@ impl Assets {
         }
         tracing::debug!("Loaded rune data in {:?}", runes_timer.elapsed());
 
-        let emblem_timer = std::time::Instant::now();
-        let mut emblems = HashMap::default();
-        let img_path = fs::read_dir(Assets::EMBLEMS_PATH).unwrap();
-        for sprite in img_path {
-            let file = sprite.unwrap();
-            let sprite = file.file_name().into_string().unwrap();
-            let image = iced::widget::image::Handle::from_path(file.path());
+        // let emblem_timer = std::time::Instant::now();
+        // let mut emblems = HashMap::default();
+        // let img_path = fs::read_dir(Assets::EMBLEMS_PATH).unwrap();
+        // for sprite in img_path {
+        //     let file = sprite.unwrap();
+        //     let sprite = file.file_name().into_string().unwrap();
+        //     let image = iced::widget::image::Handle::from_path(file.path());
 
-            emblems.insert(sprite, image);
-        }
-        tracing::debug!("Loaded emblems in {:?}", emblem_timer.elapsed());
-        tracing::debug!("Total time: {:?}", timer.elapsed());
+        //     emblems.insert(sprite, image);
+        // }
+        // tracing::debug!("Loaded emblems in {:?}", emblem_timer.elapsed());
+        // tracing::debug!("Total time: {:?}", timer.elapsed());
 
         Assets {
             sprites,
             data,
             runes,
-            emblems,
+            // emblems,
         }
     }
 }
