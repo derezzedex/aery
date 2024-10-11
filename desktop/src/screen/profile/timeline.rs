@@ -109,11 +109,11 @@ impl Timeline {
 
         let summary = self.summary.view();
         let timeline = column![
-            summary,
+            container(summary).height(Length::FillPortion(2)),
             scrollable(content)
                 .style(theme::scrollable)
                 .width(Length::Fill)
-                .height(Length::FillPortion(9))
+                .height(Length::FillPortion(10))
         ]
         .max_width(680)
         .align_x(Alignment::Center)
@@ -449,6 +449,7 @@ pub mod summary {
 
             container(content)
                 .width(iced::Length::Fill)
+                // .height(100)
                 .style(theme::dark)
                 .into()
         }

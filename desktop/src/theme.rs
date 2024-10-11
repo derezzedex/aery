@@ -49,7 +49,7 @@ pub mod icon {
     pub fn chevron_down() -> image::Handle {
         let path = concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "\\assets\\img\\icons\\chevron-down-white.png"
+            "/assets/img/icons/chevron-down-white.png"
         );
         image::Handle::from_path(path)
     }
@@ -57,7 +57,7 @@ pub mod icon {
     pub fn chevron_up() -> image::Handle {
         let path = concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "\\assets\\img\\icons\\chevron-up-white.png"
+            "/assets/img/icons/chevron-up-white.png"
         );
         image::Handle::from_path(path)
     }
@@ -65,23 +65,20 @@ pub mod icon {
     pub fn search() -> image::Handle {
         let path = concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "\\assets\\img\\icons\\search-white.png"
+            "/assets/img/icons/search-white.png"
         );
         image::Handle::from_path(path)
     }
 
     pub fn clock() -> svg::Handle {
-        let path = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "\\assets\\img\\icons\\clock2.svg"
-        );
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/icons/clock2.svg");
         svg::Handle::from_path(path)
     }
 
     pub fn unranked() -> image::Handle {
         let path = concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "\\assets\\img\\emblems\\minicrests\\unranked.png"
+            "/assets/img/emblems/minicrests/unranked.png"
         );
         image::Handle::from_path(path)
     }
@@ -95,10 +92,7 @@ pub mod icon {
             game::Role::Top => "top.png",
         };
 
-        let path = format!(
-            "{}\\assets\\img\\position\\{file}",
-            env!("CARGO_MANIFEST_DIR"),
-        );
+        let path = format!("{}/assets/img/position/{file}", env!("CARGO_MANIFEST_DIR"),);
 
         image::Handle::from_path(path)
     }

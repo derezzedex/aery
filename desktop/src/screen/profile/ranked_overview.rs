@@ -1,6 +1,6 @@
 use iced::{
     padding,
-    widget::{button, column, container, horizontal_space, image, progress_bar, row, text, Space},
+    widget::{button, column, container, horizontal_space, image, progress_bar, row, text},
     Alignment, Element, Length,
 };
 
@@ -17,7 +17,7 @@ fn ranked_container<'a>(
     tier: Tier,
     wins: u16,
     losses: u16,
-    // handle: image::Handle,
+    handle: image::Handle,
 ) -> Element<'a, Message> {
     let left_bar = container(horizontal_space().width(2))
         .style(theme::left_bar)
@@ -68,11 +68,11 @@ fn ranked_container<'a>(
                 .padding(4)
                 .on_press(Message::Expand),
         ]
-        .padding(padding::all(12).right(0))
+        .padding(padding::all(12).bottom(0))
         .spacing(2)
         .align_y(Alignment::Center),
         row![
-            container(Space::new(emblem_size, emblem_size))
+            container(image(handle).width(emblem_size).height(emblem_size))
                 .center_x(size)
                 .center_y(size),
             column![
@@ -145,7 +145,7 @@ struct Stats {
     tier: Tier,
     wins: u16,
     losses: u16,
-    // handle: image::Handle,
+    handle: image::Handle,
 }
 
 pub struct RankedOverview {
@@ -154,7 +154,7 @@ pub struct RankedOverview {
 }
 
 impl RankedOverview {
-    pub fn from_profile(_assets: &crate::assets::Assets, profile: &profile::Data) -> Self {
+    pub fn from_profile(assets: &crate::assets::Assets, profile: &profile::Data) -> Self {
         let solo_duo = profile
             .leagues
             .iter()
@@ -164,14 +164,14 @@ impl RankedOverview {
                 tier: league.tier().unwrap(),
                 wins: league.wins() as u16,
                 losses: league.losses() as u16,
-                // handle: assets
-                //     .emblems
-                //     .get(&format!(
-                //         "emblem-{}.png",
-                //         formatting::tier(league.tier().unwrap()).to_lowercase()
-                //     ))
-                //     .unwrap()
-                //     .clone(),
+                handle: assets
+                    .emblems
+                    .get(&format!(
+                        "emblem-{}.png",
+                        formatting::tier(league.tier().unwrap()).to_lowercase()
+                    ))
+                    .unwrap()
+                    .clone(),
             });
 
         let flex = profile
@@ -183,23 +183,23 @@ impl RankedOverview {
                 tier: league.tier().unwrap(),
                 wins: league.wins() as u16,
                 losses: league.losses() as u16,
-                // handle: assets
-                //     .emblems
-                //     .get(&format!(
-                //         "emblem-{}.png",
-                //         formatting::tier(league.tier().unwrap()).to_lowercase()
-                //     ))
-                //     .unwrap()
-                //     .clone(),
+                handle: assets
+                    .emblems
+                    .get(&format!(
+                        "emblem-{}.png",
+                        formatting::tier(league.tier().unwrap()).to_lowercase()
+                    ))
+                    .unwrap()
+                    .clone(),
             });
 
         Self { solo_duo, flex }
     }
 
-    pub fn new(_assets: &crate::assets::Assets) -> RankedOverview {
+    pub fn new(assets: &crate::assets::Assets) -> RankedOverview {
         RankedOverview {
             solo_duo: Some(Stats {
-                // handle: assets.emblems.get("emblem-challenger.png").unwrap().clone(),
+                handle: assets.emblems.get("emblem-challenger.png").unwrap().clone(),
                 tier: Tier::Challenger(650),
                 wins: 295,
                 losses: 208,
@@ -217,7 +217,7 @@ impl RankedOverview {
                 stats.tier,
                 stats.wins,
                 stats.losses,
-                // stats.handle.clone(),
+                stats.handle.clone(),
             ),
             None => unranked_container(game::Queue::RankedSolo),
         };
@@ -228,7 +228,7 @@ impl RankedOverview {
                 stats.tier,
                 stats.wins,
                 stats.losses,
-                // stats.handle.clone(),
+                stats.handle.clone(),
             ),
             None => unranked_container(game::Queue::RankedFlex),
         };
