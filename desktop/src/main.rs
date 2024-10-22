@@ -15,9 +15,17 @@ use iced::{
 use assets::Assets;
 
 use aery_core as core;
+use tracing_subscriber::EnvFilter;
 
 pub fn main() -> iced::Result {
-    tracing_subscriber::fmt().init();
+    let env_filter = EnvFilter::builder()
+        .with_default_directive(tracing::Level::INFO.into())
+        .from_env()
+        .unwrap_or_default()
+        .add_directive("aery_desktop=trace".parse().unwrap_or_default())
+        .add_directive("wgpu=warn".parse().unwrap_or_default());
+
+    tracing_subscriber::fmt().with_env_filter(env_filter).init();
 
     iced::application("Aery", Aery::update, Aery::view)
         .antialiasing(true)

@@ -54,6 +54,8 @@ impl Summoner {
             account_id.next().ok_or(RequestError::NotFound)?,
         );
 
+        tracing::info!("Requesting account: {game_name}#{tag_line}");
+
         let account = client
             .as_ref()
             .account_v1()

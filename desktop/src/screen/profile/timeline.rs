@@ -214,7 +214,7 @@ pub mod summary {
                 })
                 .into_iter()
                 .max_by(|(_, a), (_, b)| a.wins.cmp(&b.wins))
-                .unwrap();
+                .unwrap_or((Role::Mid, RoleStats::default()));
 
             let champions = games
                 .iter()
