@@ -58,18 +58,18 @@ impl Profile {
         &mut self,
         message: Message,
         client: &core::Client,
-        assets: &crate::Assets,
+        assets: &mut crate::Assets,
     ) -> Task<Message> {
         match message {
             Message::FetchedData(Ok(data)) => {
-                self.summoner = Summoner::from_profile(&data);
+                self.summoner = Summoner::from_profile(assets, &data);
                 self.timeline = Timeline::from_profile(assets, &data);
                 self.ranked_overview = RankedOverview::from_profile(assets, &data);
             }
             Message::FetchedData(Err(error)) => panic!("failed: {error}"),
             Message::Timeline(message) => self.timeline.update(message),
             Message::Summoner(message) => {
-                if let Some(event) = self.summoner.update(message) {
+                if let Some(event) = self.summoner.update(assets, message) {
                     match event {
                         summoner::Event::UpdateProfile(name) => {
                             let client = client.clone();
@@ -138,12 +138,7 @@ async fn fetch_data(client: core::Client, name: String) -> Result<Data, String> 
         return Err(String::from("Failed to fetch summoner leagues."));
     };
 
-    let mut games: Vec<core::Game> = stream::iter(leagues.iter())
-        .filter_map(|league| {
-            summoner
-                .matches(&client, 0..10, league.queue_kind())
-                .map(Result::ok)
-        })
+    let mut games: Vec<core::Game> = stream::iter(summoner.matches(&client, 0..10, None).await)
         .flat_map(|game_ids| {
             stream::iter(game_ids).filter_map(|id| core::Game::from_id(&client, id).map(Result::ok))
         })

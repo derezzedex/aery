@@ -1,3 +1,4 @@
+use crate::assets::Assets;
 use crate::core;
 use crate::core::summoner;
 use crate::profile;
@@ -55,7 +56,7 @@ pub struct Summoner {
 }
 
 impl Summoner {
-    pub fn from_profile(profile: &profile::Data) -> Self {
+    pub fn from_profile(assets: &mut Assets, profile: &profile::Data) -> Self {
         let riot_id = profile
             .games
             .first()
@@ -63,12 +64,7 @@ impl Summoner {
         let summoner_name = profile.summoner.name().to_string();
         let level = profile.summoner.level();
         let icon = profile.summoner.icon_id() as u32;
-        let path = format!(
-            "{}{}.png",
-            concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\profileicon\\"),
-            icon
-        );
-        let icon_image = Some(iced::widget::image::Handle::from_path(path));
+        let icon_image = Some(assets.get_summoner_icon(icon as usize));
 
         Self {
             summoner_name,
@@ -89,23 +85,14 @@ impl Summoner {
         }
     }
 
-    pub fn load_icon(&mut self) {
-        let path = format!(
-            "{}{}.png",
-            concat!(env!("CARGO_MANIFEST_DIR"), "\\assets\\img\\profileicon\\"),
-            self.icon
-        );
-        self.icon_image = Some(iced::widget::image::Handle::from_path(path));
-    }
-
-    pub fn update(&mut self, message: Message) -> Option<Event> {
+    pub fn update(&mut self, assets: &mut Assets, message: Message) -> Option<Event> {
         match message {
             Message::Update => Some(Event::UpdateProfile(self.summoner_name.clone())),
             Message::SummonerFetched(Ok(summoner)) => {
                 self.summoner_name = summoner.name().to_string();
                 self.level = summoner.level();
                 self.icon = summoner.icon_id() as u32;
-                self.load_icon();
+                self.icon_image = Some(assets.get_summoner_icon(self.icon as usize));
 
                 None
             }

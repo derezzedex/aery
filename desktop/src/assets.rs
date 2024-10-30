@@ -77,15 +77,20 @@ pub type RuneMap = HashMap<rune::Rune, String>;
 
 pub type EmblemMap = HashMap<String, Handle>;
 
+pub type SummonerIconMap = HashMap<usize, Handle>;
+
 #[derive(Debug, Clone)]
 pub struct Assets {
     pub sprites: SpriteMap,
     pub data: DataMap,
     pub runes: RuneMap,
     pub emblems: EmblemMap,
+    pub summoner_icons: SummonerIconMap,
 }
 
 impl Assets {
+    const SUMMONER_ICONS_PATH: &'static str =
+        concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/profileicon");
     const SPRITE_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/sprite");
     const DATA_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/data");
     const RUNES_PATH: &'static str = concat!(
@@ -95,6 +100,8 @@ impl Assets {
     const EMBLEMS_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/emblems");
 
     pub async fn new() -> Assets {
+        let summoner_icons = SummonerIconMap::default();
+
         let timer = std::time::Instant::now();
         let mut sprites = HashMap::default();
         let img_path = fs::read_dir(Assets::SPRITE_PATH).unwrap();
@@ -182,7 +189,19 @@ impl Assets {
             data,
             runes,
             emblems,
+            summoner_icons,
         }
+    }
+
+    pub fn get_summoner_icon(&mut self, icon: usize) -> Handle {
+        let path = format!("{}/{}.png", Assets::SUMMONER_ICONS_PATH, icon);
+
+        tracing::debug!("Fetching icon at `{path}`");
+
+        self.summoner_icons
+            .entry(icon)
+            .or_insert_with(|| Handle::from_path(path))
+            .clone()
     }
 }
 
