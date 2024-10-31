@@ -206,10 +206,10 @@ pub fn win_color(result: impl Into<game::Result>) -> Color {
 }
 
 pub fn expander(expanded: bool, status: button::Status) -> button::Style {
-    let background = if matches!(status, button::Status::Hovered) || !expanded {
-        Some(Background::Color(LIGHTER_ALPHA))
+    let background = if matches!(status, button::Status::Hovered) {
+        Some(Background::Color(LIGHT_ALPHA))
     } else {
-        Some(Background::Color(Color::TRANSPARENT))
+        Some(Background::Color(LIGHTER_ALPHA))
     };
 
     if expanded {
