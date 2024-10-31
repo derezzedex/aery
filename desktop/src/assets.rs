@@ -93,10 +93,7 @@ impl Assets {
         concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/profileicon");
     const SPRITE_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/sprite");
     const DATA_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/data");
-    const RUNES_PATH: &'static str = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/assets/data/runesReforged.json"
-    );
+    const RUNES_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/runes");
     const EMBLEMS_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/emblems");
 
     pub async fn new() -> Assets {
@@ -147,8 +144,10 @@ impl Assets {
 
         let runes_timer = std::time::Instant::now();
         let mut runes = HashMap::default();
-        let value: serde_json::Value =
-            serde_json::from_reader(fs::File::open(Assets::RUNES_PATH).unwrap()).unwrap();
+        let value: serde_json::Value = serde_json::from_reader(
+            fs::File::open(format!("{}/{}", Assets::DATA_PATH, "runesReforged.json")).unwrap(),
+        )
+        .unwrap();
 
         for value in value.as_array().unwrap() {
             let path = value["icon"]
@@ -249,10 +248,7 @@ pub fn load_summoner_spell_icon(
 
 pub fn load_runes_icon(assets: &Assets, rune: rune::Rune) -> Handle {
     let rune_path = assets.runes.get(&rune).unwrap();
-    let mut path = std::path::PathBuf::from(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "\\assets\\img\\runes\\"
-    ));
+    let mut path = std::path::PathBuf::from(Assets::RUNES_PATH);
     path.push(rune_path);
 
     Handle::from_path(path)
