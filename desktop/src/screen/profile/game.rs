@@ -334,25 +334,12 @@ impl Game {
             //     .align_items(Alignment::Center);
 
             let role: Element<_> = if let Some(role) = self.player.info.role {
-                column![
-                    row![
-                        image(icon::role(role)).width(12.0).height(12.0),
-                        text(formatting::role(role)).color(theme::SUB_TEXT).size(10),
-                    ]
-                    .align_y(Alignment::Center)
-                    .spacing(4),
-                    row![
-                        svg(icon::clock()).width(12.0).height(12.0),
-                        container(
-                            text(formatting::duration(self.duration))
-                                .size(10)
-                                .color(theme::SUB_TEXT)
-                        ),
-                    ]
-                    .align_y(Alignment::Center)
-                    .spacing(4),
+                row![
+                    image(icon::role(role)).width(12.0).height(12.0),
+                    text(formatting::role(role)).color(theme::SUB_TEXT).size(10),
                 ]
-                .spacing(2)
+                .align_y(Alignment::Center)
+                .spacing(4)
                 .into()
             } else {
                 Space::new(0, 0).into()
@@ -371,7 +358,20 @@ impl Game {
                     ),
                 ],
                 vertical_space().height(Length::Fill),
-                role,
+                column![
+                    role,
+                    row![
+                        svg(icon::clock()).width(12.0).height(12.0),
+                        container(
+                            text(formatting::duration(self.duration))
+                                .size(10)
+                                .color(theme::SUB_TEXT)
+                        ),
+                    ]
+                    .align_y(Alignment::Center)
+                    .spacing(4),
+                ]
+                .spacing(2),
             ]
             .align_x(Alignment::Start)
             .spacing(2)
