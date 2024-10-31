@@ -2,5 +2,10 @@
 resolver = "2"
 members = [
   "core",
-  "desktop"
+  "desktop",
+  "backend"
 ]
+
+# https://github.com/cloudflare/workers-rs/issues/658
+[profile.release.package.aery_backend]
+strip = true
