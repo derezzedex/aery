@@ -38,6 +38,7 @@ pub enum Message {
 }
 
 pub struct Profile {
+    region: core::Region,
     timeline: Timeline,
     summoner: Summoner,
     search_bar: SearchBar,
@@ -47,6 +48,7 @@ pub struct Profile {
 impl Profile {
     pub fn dummy(assets: &crate::Assets) -> Self {
         Self {
+            region: core::Region::default(),
             timeline: Timeline::new(assets),
             summoner: Summoner::new(5843),
             search_bar: SearchBar::new(),
@@ -75,7 +77,7 @@ impl Profile {
                             let client = client.clone();
 
                             return Task::perform(
-                                core::Summoner::from_name(client, name),
+                                core::Summoner::from_name(client, name, self.region),
                                 |summoner| {
                                     Message::Summoner(summoner::Message::SummonerFetched(summoner))
                                 },
@@ -87,10 +89,14 @@ impl Profile {
             Message::SearchBar(message) => {
                 if let Some(event) = self.search_bar.update(message) {
                     match event {
-                        search_bar::Event::SearchRequested(name) => {
-                            let client = client.clone();
+                        search_bar::Event::SearchRequested { riot_id, region } => {
+                            self.region = region;
 
-                            return Task::perform(fetch_data(client, name), Message::FetchedData);
+                            let client = client.clone();
+                            return Task::perform(
+                                fetch_data(client, riot_id, region),
+                                Message::FetchedData,
+                            );
                         }
                     }
                 }
@@ -125,13 +131,17 @@ impl Profile {
     }
 }
 
-async fn fetch_data(client: core::Client, name: String) -> Result<Data, String> {
-    let Ok(summoner) = core::Summoner::from_name(client.clone(), name).await else {
+async fn fetch_data(
+    client: core::Client,
+    name: String,
+    region: core::Region,
+) -> Result<Data, String> {
+    let Ok(summoner) = core::Summoner::from_name(client.clone(), name, region).await else {
         return Err(String::from("Summoner not found!"));
     };
 
     let Ok(leagues) = summoner
-        .leagues(&client)
+        .leagues(&client, region)
         .await
         .map(|leagues| leagues.collect::<Vec<_>>())
     else {

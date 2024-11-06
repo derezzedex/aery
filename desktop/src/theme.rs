@@ -3,9 +3,11 @@ use crate::core::game;
 use iced::border;
 use iced::color;
 use iced::font;
+use iced::overlay::menu;
 use iced::widget;
 use iced::widget::button;
 use iced::widget::container;
+use iced::widget::pick_list;
 use iced::widget::progress_bar;
 use iced::widget::text_input;
 use iced::Background;
@@ -39,7 +41,6 @@ pub const SUB_TEXT: Color = color!(0xcccccc);
 pub const LIGHTER_ALPHA: Color = color!(0x333333, 0.7);
 pub const LIGHT_ALPHA: Color = color!(0x666666, 0.9);
 pub const BLUE_ALPHA: Color = color!(0x0094ff, 0.7);
-pub const RED_ALPHA: Color = color!(0xff5733, 0.7);
 
 pub mod icon {
     use crate::core::game;
@@ -244,18 +245,20 @@ pub fn update(_theme: &iced::Theme, status: button::Status) -> button::Style {
     }
 }
 
-pub fn region(_theme: &iced::Theme, status: button::Status) -> button::Style {
-    let background = if matches!(status, button::Status::Hovered) {
-        Some(Background::Color(RED_ALPHA))
-    } else {
-        Some(Background::Color(GOLD))
-    };
+pub fn region(theme: &iced::Theme, status: pick_list::Status) -> pick_list::Style {
+    pick_list::Style {
+        background: Background::Color(LIGHTER_BACKGROUND),
+        border: border::width(0),
+        ..pick_list::default(theme, status)
+    }
+}
 
-    button::Style {
-        background,
-        border: border::rounded(0),
-        text_color: Color::WHITE,
-        ..Default::default()
+pub fn region_menu(theme: &iced::Theme) -> menu::Style {
+    menu::Style {
+        background: Background::Color(LIGHTER_BACKGROUND),
+        border: border::width(0),
+        selected_background: Background::Color(LIGHT_ALPHA),
+        ..menu::default(theme)
     }
 }
 

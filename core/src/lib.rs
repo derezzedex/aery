@@ -3,6 +3,7 @@ pub mod client;
 pub use client::Client;
 
 pub mod summoner;
+use riven::consts::{PlatformRoute, RegionalRoute};
 pub use summoner::Summoner;
 
 pub mod game;
@@ -40,4 +41,57 @@ pub struct Team(usize);
 impl Team {
     pub const BLUE: Team = Team(100);
     pub const RED: Team = Team(200);
+}
+
+#[derive(Debug, Clone)]
+pub enum Route {
+    America,
+    Asia,
+    Europe,
+    SouthAsia,
+    Tournament,
+}
+
+impl From<RegionalRoute> for Route {
+    fn from(route: RegionalRoute) -> Self {
+        match route {
+            RegionalRoute::AMERICAS => Route::America,
+            RegionalRoute::ASIA => Route::Asia,
+            RegionalRoute::EUROPE => Route::Europe,
+            RegionalRoute::SEA => Route::SouthAsia,
+            RegionalRoute::ESPORTS => Route::Tournament,
+            #[allow(deprecated)]
+            RegionalRoute::APAC => Route::SouthAsia,
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Region(PlatformRoute);
+
+impl std::fmt::Display for Region {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0.to_string())
+    }
+}
+
+impl Default for Region {
+    fn default() -> Self {
+        Region(PlatformRoute::BR1)
+    }
+}
+
+impl Region {
+    pub fn iter() -> Vec<Region> {
+        use riven::consts::IntoEnumIterator;
+
+        PlatformRoute::iter().map(Region).collect()
+    }
+}
+
+impl From<PlatformRoute> for Region {
+    fn from(route: PlatformRoute) -> Self {
+        Region(route)
+    }
 }

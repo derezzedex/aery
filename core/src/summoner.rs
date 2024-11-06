@@ -3,7 +3,8 @@ pub use league::{Division, League, Tier};
 
 use crate::game;
 use crate::Client;
-use riven::consts::{PlatformRoute, RegionalRoute};
+use crate::Region;
+use riven::consts::RegionalRoute;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
@@ -46,7 +47,11 @@ impl Summoner {
         self.summoner.profile_icon_id
     }
 
-    pub async fn from_name(client: Client, name: String) -> Result<Self, RequestError> {
+    pub async fn from_name(
+        client: Client,
+        name: String,
+        region: Region,
+    ) -> Result<Self, RequestError> {
         let mut account_id = name.split("#");
 
         let (game_name, tag_line) = (
@@ -67,7 +72,7 @@ impl Summoner {
         client
             .as_ref()
             .summoner_v4()
-            .get_by_puuid(PlatformRoute::BR1, &account.puuid)
+            .get_by_puuid(region.0, &account.puuid)
             .await
             .map_err(|error| RequestError::RequestFailed(InternalApiError(error.to_string())))
             .map(|summoner| Summoner { name, summoner })
@@ -100,11 +105,12 @@ impl Summoner {
     pub async fn leagues(
         &self,
         client: &Client,
+        region: Region,
     ) -> Result<impl Iterator<Item = League>, RequestError> {
         client
             .as_ref()
             .league_v4()
-            .get_league_entries_for_summoner(PlatformRoute::BR1, &self.summoner.id)
+            .get_league_entries_for_summoner(region.0, &self.summoner.id)
             .await
             .map_err(|error| RequestError::RequestFailed(InternalApiError(error.to_string())))
             .map(|leagues| leagues.into_iter().map(League))
