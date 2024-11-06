@@ -277,6 +277,23 @@ pub fn expand(_theme: &iced::Theme, status: button::Status) -> button::Style {
     }
 }
 
+pub fn queue_filter(selected: bool, status: button::Status) -> button::Style {
+    let background = if matches!(status, button::Status::Hovered) {
+        Some(Background::Color(LIGHT_BACKGROUND.scale_alpha(0.4)))
+    } else if selected {
+        Some(Background::Color(LIGHT_ALPHA))
+    } else {
+        Some(Background::Color(LIGHTER_ALPHA))
+    };
+
+    button::Style {
+        background,
+        border: border::rounded(4),
+        text_color: Color::WHITE,
+        ..Default::default()
+    }
+}
+
 pub fn ratio_bar(_theme: &iced::Theme) -> progress_bar::Style {
     progress_bar::Style {
         background: Background::Color(RED),

@@ -4,6 +4,10 @@ mod search_bar;
 mod summoner;
 mod timeline;
 
+use iced::widget::button;
+use iced::widget::pick_list;
+use iced::widget::text;
+use iced::widget::vertical_space;
 use ranked_overview::RankedOverview;
 use search_bar::SearchBar;
 use summoner::Summoner;
@@ -12,6 +16,8 @@ use timeline::Timeline;
 use crate::core;
 use crate::theme;
 
+use core::game::Queue;
+
 use iced::widget::{column, container, row};
 use iced::{Element, Length, Task};
 
@@ -19,6 +25,34 @@ use futures::stream;
 use futures::FutureExt;
 use futures::StreamExt;
 use std::cmp::Reverse;
+
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum QueueFilter {
+    #[default]
+    All,
+    Specific(Queue),
+}
+
+impl QueueFilter {
+    pub const ALTERNATIVE: [QueueFilter; 7] = [
+        QueueFilter::Specific(Queue::Custom),
+        QueueFilter::Specific(Queue::Blind),
+        QueueFilter::Specific(Queue::Draft),
+        QueueFilter::Specific(Queue::Clash),
+        QueueFilter::Specific(Queue::BotIntro),
+        QueueFilter::Specific(Queue::BotBeginner),
+        QueueFilter::Specific(Queue::BotIntermediate),
+    ];
+}
+
+impl std::fmt::Display for QueueFilter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            QueueFilter::All => f.write_str("All"),
+            QueueFilter::Specific(queue) => write!(f, "{queue}"),
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Data {
@@ -35,10 +69,14 @@ pub enum Message {
     Summoner(summoner::Message),
     SearchBar(search_bar::Message),
     RankedOverview(ranked_overview::Message),
+
+    QueueFilterChanged(QueueFilter),
 }
 
 pub struct Profile {
     region: core::Region,
+    queue_filter: QueueFilter,
+
     timeline: Timeline,
     summoner: Summoner,
     search_bar: SearchBar,
@@ -49,6 +87,7 @@ impl Profile {
     pub fn dummy(assets: &crate::Assets) -> Self {
         Self {
             region: core::Region::default(),
+            queue_filter: QueueFilter::default(),
             timeline: Timeline::new(assets),
             summoner: Summoner::new(5843),
             search_bar: SearchBar::new(),
@@ -63,6 +102,9 @@ impl Profile {
         assets: &mut crate::Assets,
     ) -> Task<Message> {
         match message {
+            Message::QueueFilterChanged(new_filter) => {
+                self.queue_filter = new_filter;
+            }
             Message::FetchedData(Ok(data)) => {
                 self.summoner = Summoner::from_profile(assets, &data);
                 self.timeline = Timeline::from_profile(assets, &data);
@@ -118,17 +160,53 @@ impl Profile {
         )
         .center_x(Length::Fill);
 
-        container(
-            column![
-                self.search_bar.view().map(Message::SearchBar),
-                self.summoner.view().map(Message::Summoner),
-                timeline,
-            ]
-            .spacing(16),
-        )
+        container(column![
+            self.search_bar.view().map(Message::SearchBar),
+            vertical_space().height(16),
+            self.summoner.view().map(Message::Summoner),
+            vertical_space().height(16),
+            filter_bar(self.queue_filter),
+            timeline,
+        ])
         .style(theme::timeline)
         .into()
     }
+}
+
+fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
+    let queue_button = |queue: QueueFilter| -> Element<Message> {
+        button(text!("{queue}").size(12))
+            .style(move |_, status| theme::queue_filter(selected == queue, status))
+            .on_press(Message::QueueFilterChanged(queue))
+            .into()
+    };
+
+    container(
+        container(
+            row![
+                queue_button(QueueFilter::All),
+                queue_button(QueueFilter::Specific(Queue::RankedSolo)),
+                queue_button(QueueFilter::Specific(Queue::RankedFlex)),
+                queue_button(QueueFilter::Specific(Queue::ARAM)),
+                pick_list(
+                    QueueFilter::ALTERNATIVE,
+                    Some(selected).filter(|queue| QueueFilter::ALTERNATIVE.contains(queue)),
+                    Message::QueueFilterChanged
+                )
+                .text_size(12)
+                .placeholder("Queue type")
+                .style(theme::region)
+                .menu_style(theme::region_menu),
+            ]
+            .spacing(4),
+        )
+        .padding(8)
+        .style(theme::dark)
+        .max_width(970)
+        .width(Length::Fill),
+    )
+    .center_x(Length::Fill)
+    .into()
 }
 
 async fn fetch_data(
