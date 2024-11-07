@@ -1,16 +1,16 @@
-use crate::assets::load_champion_icon;
-
-use self::summary::Summary;
-
 use super::game::{self, Game};
+use crate::assets::load_champion_icon;
 use crate::core;
 use crate::core::game::Role;
 use crate::profile;
 use crate::theme;
 use crate::theme::icon;
+
 use iced::padding;
 use iced::widget::{column, container, scrollable};
 use iced::{Alignment, Element, Length};
+
+use summary::Summary;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
@@ -133,7 +133,7 @@ pub mod summary {
     use crate::core;
     use crate::core::game::Role;
     use crate::theme::icon;
-    use crate::widget;
+
     use iced::alignment;
     use iced::padding;
     use iced::widget::image;
@@ -272,7 +272,7 @@ pub mod summary {
             let is_positive_ratio = self.wins > self.losses;
 
             let title_bar = row![
-                widget::bold("Recent summary").size(12),
+                text("Recent summary").font(theme::SEMIBOLD).size(12),
                 text!("last {total} games").color(theme::GRAY_TEXT).size(10)
             ]
             .padding(padding::top(2).right(6).left(6))

@@ -19,11 +19,21 @@ pub const ROBOTO_FLEX_TTF: &[u8] = include_bytes!(concat!(
 ))
 .as_slice();
 
-pub const ROBOTO_NORMAL: iced::Font = iced::Font {
+pub const DEFAULT_FONT: iced::Font = iced::Font {
     family: font::Family::Name("RobotoFlex"),
     weight: font::Weight::Normal,
     stretch: font::Stretch::Normal,
     style: font::Style::Normal,
+};
+
+pub const SEMIBOLD: iced::Font = iced::Font {
+    weight: iced::font::Weight::Semibold,
+    ..DEFAULT_FONT
+};
+
+pub const BOLD: iced::Font = iced::Font {
+    weight: iced::font::Weight::Bold,
+    ..DEFAULT_FONT
 };
 
 pub const DARKER_BACKGROUND: Color = color!(0x0d0d0d);

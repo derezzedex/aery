@@ -29,7 +29,7 @@ pub fn main() -> iced::Result {
 
     iced::application("Aery", Aery::update, Aery::view)
         .antialiasing(true)
-        .default_font(theme::ROBOTO_NORMAL)
+        .default_font(theme::DEFAULT_FONT)
         .window_size([1024.0, 768.0])
         .run_with(Aery::new)
 }

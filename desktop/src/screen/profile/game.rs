@@ -346,7 +346,8 @@ impl Game {
             };
 
             column![
-                widget::bold(formatting::win(self.result))
+                text(formatting::win(self.result))
+                    .font(theme::SEMIBOLD)
                     .color(theme::win_color(self.result))
                     .size(18),
                 column![
@@ -380,9 +381,13 @@ impl Game {
 
         let champion_info = {
             let champion_icon = champion_icon(self.player.assets.champion_image.clone());
-            let champion_level = container(widget::bold(self.player.info.stats.level).size(10))
-                .padding(padding::right(4).bottom(1).left(4))
-                .style(theme::summoner_level);
+            let champion_level = container(
+                text(self.player.info.stats.level)
+                    .font(theme::SEMIBOLD)
+                    .size(10),
+            )
+            .padding(padding::right(4).bottom(1).left(4))
+            .style(theme::summoner_level);
 
             // TODO: fix `champion_level` overlay not being clipped on the `scrollable`
             let champion = stack![
@@ -602,7 +607,8 @@ fn team<'a>(
     // TODO: align header with content
     let header = row![
         row![
-            widget::bold(formatting::win(team.result))
+            text(formatting::win(team.result))
+                .font(theme::SEMIBOLD)
                 .color(theme::win_color(team.result))
                 .size(12),
             text(format!("({})", formatting::team(team.id)))
@@ -686,7 +692,7 @@ fn player<'a>(
     let champion_icon = image(player.assets.champion_image.clone())
         .width(32.0)
         .height(32.0);
-    let champion_level = container(widget::bold(player.info.stats.level).size(8))
+    let champion_level = container(text(player.info.stats.level).font(theme::SEMIBOLD).size(8))
         .padding(padding::top(1).right(2).bottom(2))
         .style(theme::summoner_level);
 
@@ -726,7 +732,7 @@ fn player<'a>(
     };
 
     let name = if is_player {
-        widget::bold(&player.info.name).size(12)
+        text(&player.info.name).font(theme::SEMIBOLD).size(12)
     } else {
         text(&player.info.name).size(12)
     };

@@ -80,10 +80,7 @@ impl SearchBar {
                 .width(Length::FillPortion(4)),
                 horizontal_space().width(4),
                 pick_list(Region::iter(), Some(self.region), Message::RegionSelected)
-                    .font(iced::Font {
-                        weight: iced::font::Weight::Bold,
-                        ..theme::ROBOTO_NORMAL
-                    })
+                    .font(theme::BOLD)
                     .text_size(12)
                     .padding(5)
                     .width(Length::Shrink)

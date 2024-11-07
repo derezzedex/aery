@@ -3,7 +3,7 @@ use crate::core;
 use crate::core::summoner;
 use crate::profile;
 use crate::theme;
-use crate::widget::bold;
+
 use iced::alignment;
 use iced::padding;
 use iced::widget::column;
@@ -32,7 +32,7 @@ fn summoner_icon<'a>(icon: Option<image::Handle>, level: u32) -> Element<'a, Mes
             .padding(2.0)
             .style(theme::summoner_icon),
         container(
-            container(bold(level).size(10))
+            container(text(level).font(theme::SEMIBOLD).size(10))
                 .padding(padding::top(1).right(4).bottom(2).left(4)) // TODO: fix this alignment issue (text doesnt seem to get centered)
                 .style(theme::summoner_level),
         )

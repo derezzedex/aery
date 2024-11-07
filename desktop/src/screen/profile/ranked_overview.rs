@@ -10,7 +10,6 @@ use crate::formatting;
 use crate::profile;
 use crate::theme;
 use crate::theme::icon;
-use crate::widget;
 
 fn ranked_container<'a>(
     queue: game::Queue,
@@ -61,7 +60,7 @@ fn ranked_container<'a>(
         row![
             left_bar,
             horizontal_space().width(4),
-            widget::bold(queue.to_string()).size(14),
+            text(queue.to_string()).font(theme::SEMIBOLD).size(14),
             horizontal_space().width(Length::Fill),
             button(chevron_down)
                 .style(theme::expand)
@@ -77,7 +76,7 @@ fn ranked_container<'a>(
                 .center_y(size),
             column![
                 row![
-                    widget::bold(tier).size(16),
+                    text(tier).font(theme::SEMIBOLD).size(16),
                     text("·").color(theme::SUB_TEXT).size(16),
                     text(format!("{lp} LP")).color(theme::SUB_TEXT).size(12)
                 ]
@@ -88,7 +87,8 @@ fn ranked_container<'a>(
                         .color(theme::SUB_TEXT)
                         .size(12),
                     text("·").color(theme::SUB_TEXT),
-                    widget::bold(format!("{win_rate:.0}%"))
+                    text(format!("{win_rate:.0}%"))
+                        .font(theme::SEMIBOLD)
                         .color(theme::BLUE)
                         .size(12)
                 ]
@@ -119,7 +119,7 @@ fn unranked_container<'a>(queue: game::Queue) -> Element<'a, Message> {
         row![
             left_bar,
             horizontal_space().width(4),
-            widget::bold(queue.to_string()).size(14),
+            text(queue.to_string()).font(theme::SEMIBOLD).size(14),
             horizontal_space().width(Length::Fill),
             row![
                 image(icon::unranked()).width(18.0).height(18.0),
