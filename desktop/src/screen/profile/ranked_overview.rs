@@ -22,7 +22,7 @@ fn ranked_container<'a>(
         .style(theme::left_bar)
         .height(18);
 
-    let chevron_down = image(icon::chevron_down()).width(10.0).height(10.0);
+    let chevron_down = icon::chevron_down().width(12.0).height(12.0);
 
     let size = match queue {
         game::Queue::RankedSolo => 100.0,

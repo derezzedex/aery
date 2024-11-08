@@ -15,7 +15,6 @@ use iced::widget::horizontal_space;
 use iced::widget::image;
 use iced::widget::progress_bar;
 use iced::widget::stack;
-use iced::widget::svg;
 use iced::widget::vertical_space;
 use iced::widget::{button, column, container, row, text, Space};
 use iced::{alignment, Alignment, Element, Length};
@@ -362,7 +361,7 @@ impl Game {
                 column![
                     role,
                     row![
-                        svg(icon::clock()).width(12.0).height(12.0),
+                        icon::clock().width(12.0).height(12.0),
                         container(
                             text(formatting::duration(self.duration))
                                 .size(10)
@@ -520,7 +519,7 @@ impl Game {
             icon::chevron_down()
         };
 
-        let expand_content = container(image(chevron_icon).width(8.0).height(8.0))
+        let expand_content = container(chevron_icon.width(12.0).height(12.0))
             .center_x(24)
             .align_y(alignment::Vertical::Bottom)
             .height(Length::Fill)

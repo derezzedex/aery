@@ -1,5 +1,5 @@
 use iced::{
-    widget::{button, container, horizontal_space, image, pick_list, row, text_input, Space},
+    widget::{button, container, horizontal_space, pick_list, row, text_input, Space},
     Alignment, Element, Length,
 };
 
@@ -57,7 +57,7 @@ impl SearchBar {
     }
 
     pub fn view(&self) -> Element<Message> {
-        let search = container(image(icon::search()).width(12.0).height(12.0)).padding(2);
+        let search = container(icon::search().width(16.0).height(16.0));
 
         container(
             row![

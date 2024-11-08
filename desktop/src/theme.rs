@@ -56,34 +56,46 @@ pub mod icon {
     use crate::core::game;
     use iced::widget::image;
     use iced::widget::svg;
+    use iced::Color;
 
-    pub fn chevron_down() -> image::Handle {
-        let path = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/icons/chevron-down-white.png"
-        );
-        image::Handle::from_path(path)
+    fn colored(color: Color) -> impl Fn(&iced::Theme, svg::Status) -> svg::Style {
+        move |_, _| svg::Style { color: Some(color) }
     }
 
-    pub fn chevron_up() -> image::Handle {
-        let path = concat!(
+    pub fn chevron_down<'a>() -> svg::Svg<'a> {
+        let path = svg::Handle::from_path(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/icons/chevron-up-white.png"
-        );
-        image::Handle::from_path(path)
+            "/assets/img/icons/chevron-down.svg"
+        ));
+
+        svg(path).style(colored(Color::WHITE))
     }
 
-    pub fn search() -> image::Handle {
-        let path = concat!(
+    pub fn chevron_up<'a>() -> svg::Svg<'a> {
+        let path = svg::Handle::from_path(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/icons/search-white.png"
-        );
-        image::Handle::from_path(path)
+            "/assets/img/icons/chevron-up.svg"
+        ));
+
+        svg(path).style(colored(Color::WHITE))
     }
 
-    pub fn clock() -> svg::Handle {
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/icons/clock2.svg");
-        svg::Handle::from_path(path)
+    pub fn search<'a>() -> svg::Svg<'a> {
+        let path = svg::Handle::from_path(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/img/icons/search.svg"
+        ));
+
+        svg(path).style(colored(Color::WHITE))
+    }
+
+    pub fn clock<'a>() -> svg::Svg<'a> {
+        let path = svg::Handle::from_path(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/img/icons/clock.svg"
+        ));
+
+        svg(path)
     }
 
     pub fn unranked() -> image::Handle {
