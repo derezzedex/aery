@@ -181,6 +181,8 @@ fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
             .into()
     };
 
+    let picked = Some(selected).filter(|queue| QueueFilter::ALTERNATIVE.contains(queue));
+
     container(
         container(
             row![
@@ -190,12 +192,12 @@ fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
                 queue_button(QueueFilter::Specific(Queue::ARAM)),
                 pick_list(
                     QueueFilter::ALTERNATIVE,
-                    Some(selected).filter(|queue| QueueFilter::ALTERNATIVE.contains(queue)),
+                    picked,
                     Message::QueueFilterChanged
                 )
                 .text_size(12)
                 .placeholder("Queue type")
-                .style(theme::region)
+                .style(move |theme, status| theme::queue_picklist(picked.is_some(), theme, status))
                 .menu_style(theme::region_menu),
             ]
             .spacing(4),

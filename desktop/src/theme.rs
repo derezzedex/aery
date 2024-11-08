@@ -299,6 +299,20 @@ pub fn expand(_theme: &iced::Theme, status: button::Status) -> button::Style {
     }
 }
 
+pub fn queue_picklist(
+    selected: bool,
+    theme: &iced::Theme,
+    status: pick_list::Status,
+) -> pick_list::Style {
+    let color = if selected { LIGHT_ALPHA } else { LIGHTER_ALPHA };
+
+    pick_list::Style {
+        background: Background::Color(color),
+        border: border::rounded(2),
+        ..pick_list::default(theme, status)
+    }
+}
+
 pub fn queue_filter(selected: bool, status: button::Status) -> button::Style {
     let background = if matches!(status, button::Status::Hovered) {
         Some(Background::Color(LIGHT_BACKGROUND.scale_alpha(0.4)))
