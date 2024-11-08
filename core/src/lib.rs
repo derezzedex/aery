@@ -1,5 +1,7 @@
 pub mod client;
 
+use std::str::FromStr;
+
 pub use client::Client;
 
 pub mod summoner;
@@ -69,6 +71,12 @@ impl From<RegionalRoute> for Route {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Region(PlatformRoute);
+
+impl From<String> for Region {
+    fn from(value: String) -> Self {
+        Self(PlatformRoute::from_str(&value).unwrap())
+    }
+}
 
 impl std::fmt::Display for Region {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

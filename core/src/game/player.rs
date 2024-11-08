@@ -70,7 +70,7 @@ impl From<&riven::models::match_v5::Participant> for Player {
             name: participant.summoner_name.clone(),
             riot_id: summoner::RiotId {
                 name: participant.riot_id_game_name.clone(),
-                tagline: participant.riot_id_tagline.clone(),
+                tagline: participant.riot_id_tagline.clone().unwrap_or_default(),
             },
 
             team: Team(participant.team_id as usize),

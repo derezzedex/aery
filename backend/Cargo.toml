@@ -15,8 +15,11 @@ wasm-opt = false
 crate-type = ["cdylib"]
 
 [dependencies]
+serde = "1.0"
+futures = "0.3"
+aery_core = { path = "../core" }
 worker = { version="0.4.2", features=['http', 'axum'] }
 worker-macros = { version="0.4.2", features=['http'] }
-axum  = { version = "0.7", default-features = false }
+axum  = { version = "0.7", default-features = false, features = ["json", "macros"] }
 tower-service = "0.3.2"
 console_error_panic_hook = { version = "0.1.1" }

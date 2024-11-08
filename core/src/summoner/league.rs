@@ -1,6 +1,6 @@
 use crate::game;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct League(pub(crate) riven::models::league_v4::LeagueEntry);
 
 impl League {

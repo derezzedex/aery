@@ -24,7 +24,7 @@ pub struct RiotId {
     pub tagline: String,      // 3~5 chars
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Summoner {
     name: String,
     summoner: riven::models::summoner_v4::Summoner,

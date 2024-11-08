@@ -39,7 +39,7 @@ pub enum RequestError {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Event(riven::models::match_v5::EventsTimeLine);
 
 impl Event {
@@ -92,7 +92,7 @@ impl Result {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Game(riven::models::match_v5::Match);
 
 impl Game {
