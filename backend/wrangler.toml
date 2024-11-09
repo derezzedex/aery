@@ -2,5 +2,11 @@ name = "aery_backend"
 main = "build/worker/shim.mjs"
 compatibility_date = "2024-10-31"
 
+kv_namespaces = [{ binding = "summoners", id = "d4ca2447a02e413aaa88c4b3ffe4fb85" }]
+
 [build]
 command = "cargo install -q worker-build && worker-build --release"
+
+[observability]
+enabled = true
+head_sampling_rate = 1

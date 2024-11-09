@@ -15,7 +15,12 @@ wasm-opt = false
 crate-type = ["cdylib"]
 
 [dependencies]
+tracing = "0.1"
+tracing-web = "0.1"
+tracing-subscriber = { version = "0.3", features = ["time", "json"] }
+time = { version = "0.3", features = ["wasm-bindgen"] }
 serde = "1.0"
+serde_json = "1.0"
 futures = "0.3"
 aery_core = { path = "../core" }
 worker = { version="0.4.2", features=['http', 'axum'] }
