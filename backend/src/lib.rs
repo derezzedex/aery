@@ -44,7 +44,7 @@ pub type Result<T> = std::result::Result<T, ErrWrapper>;
 
 fn router(api_key: String) -> Router {
     Router::new()
-        .route("/summoner/:region/:name/:tagline", get(fetch_summoner))
+        .route("/summoner/:region/:riot_id", get(fetch_summoner))
         .with_state(api_key)
 }
 
@@ -73,15 +73,14 @@ pub struct Data {
 #[axum::debug_handler]
 #[worker::send]
 async fn fetch_summoner(
-    Path((region, name, tagline)): Path<(String, String, String)>,
+    Path((region, name)): Path<(String, String)>,
     State(api_key): State<String>,
 ) -> Result<Json<Data>> {
     let client = core::Client::new(api_key);
     let region = core::Region::from(region);
+    let riot_id = name.replace("-", "#");
 
-    let Ok(summoner) =
-        core::Summoner::from_name(client.clone(), format!("{name}#{tagline}"), region).await
-    else {
+    let Ok(summoner) = core::Summoner::from_name(client.clone(), riot_id, region).await else {
         return Err(worker::Error::RustError(String::from("Summoner not found!")).into());
     };
 
