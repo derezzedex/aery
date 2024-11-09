@@ -41,11 +41,7 @@ enum Screen {
 #[allow(clippy::large_enum_variant)]
 enum Aery {
     Loading,
-    Loaded {
-        client: core::Client,
-        screen: Screen,
-        assets: Assets,
-    },
+    Loaded { screen: Screen, assets: Assets },
 }
 
 #[derive(Debug, Clone)]
@@ -68,13 +64,7 @@ impl Aery {
     }
 
     fn with_assets(assets: Assets) -> Self {
-        let api_key =
-            dotenv::var("RGAPI_KEY").expect("Unable to find `RGAPI_KEY` environment variable");
-
-        let client = core::Client::new(api_key);
-
         Self::Loaded {
-            client,
             screen: Screen::Profile(screen::Profile::dummy(&assets)),
             assets,
         }
@@ -89,20 +79,13 @@ impl Aery {
             Message::FontLoaded(Err(err)) => panic!("font load failed: {err:?}"),
             Message::FontLoaded(Ok(_)) => Task::none(),
             Message::Profile(message) => {
-                let Self::Loaded {
-                    client,
-                    screen,
-                    assets,
-                } = self
-                else {
+                let Self::Loaded { screen, assets } = self else {
                     return Task::none();
                 };
 
                 let Screen::Profile(profile) = screen;
 
-                profile
-                    .update(message, client, assets)
-                    .map(Message::Profile)
+                profile.update(message, assets).map(Message::Profile)
             }
         }
     }

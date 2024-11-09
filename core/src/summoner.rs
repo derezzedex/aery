@@ -6,6 +6,13 @@ use crate::Client;
 use crate::Region;
 use riven::consts::RegionalRoute;
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct Data {
+    pub summoner: Summoner,
+    pub leagues: Vec<League>,
+    pub games: Vec<game::Game>,
+}
+
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct InternalApiError(String);

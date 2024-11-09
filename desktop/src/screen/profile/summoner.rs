@@ -1,5 +1,4 @@
 use crate::assets::Assets;
-use crate::core;
 use crate::core::summoner;
 use crate::profile;
 use crate::theme;
@@ -15,7 +14,6 @@ use iced::Length;
 #[derive(Debug, Clone)]
 pub enum Message {
     Update,
-    SummonerFetched(Result<core::Summoner, core::summoner::RequestError>),
 }
 
 fn summoner_icon<'a>(icon: Option<image::Handle>, level: u32) -> Element<'a, Message> {
@@ -51,7 +49,6 @@ pub struct Summoner {
     summoner_name: String,
     riot_id: Option<summoner::RiotId>,
     level: u32,
-    icon: u32,
     icon_image: Option<image::Handle>,
 }
 
@@ -70,37 +67,22 @@ impl Summoner {
             summoner_name,
             riot_id,
             level,
-            icon,
             icon_image,
         }
     }
 
-    pub fn new(icon: u32) -> Self {
+    pub fn new(_icon: u32) -> Self {
         Summoner {
             summoner_name: String::from("Summoner"),
             riot_id: None,
             level: 111,
-            icon,
             icon_image: None,
         }
     }
 
-    pub fn update(&mut self, assets: &mut Assets, message: Message) -> Option<Event> {
+    pub fn update(&mut self, message: Message) -> Option<Event> {
         match message {
             Message::Update => Some(Event::UpdateProfile(self.summoner_name.clone())),
-            Message::SummonerFetched(Ok(summoner)) => {
-                self.summoner_name = summoner.name().to_string();
-                self.level = summoner.level();
-                self.icon = summoner.icon_id() as u32;
-                self.icon_image = Some(assets.get_summoner_icon(self.icon as usize));
-
-                None
-            }
-            Message::SummonerFetched(Err(error)) => {
-                tracing::error!("{error:?}");
-
-                None
-            }
         }
     }
 

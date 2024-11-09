@@ -4,6 +4,7 @@ mod search_bar;
 mod summoner;
 mod timeline;
 
+use futures::TryFutureExt;
 use iced::widget::button;
 use iced::widget::pick_list;
 use iced::widget::text;
@@ -21,10 +22,7 @@ use core::game::Queue;
 use iced::widget::{column, container, row};
 use iced::{Element, Length, Task};
 
-use futures::stream;
-use futures::FutureExt;
-use futures::StreamExt;
-use std::cmp::Reverse;
+pub use core::summoner::Data;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum QueueFilter {
@@ -52,13 +50,6 @@ impl std::fmt::Display for QueueFilter {
             QueueFilter::Specific(queue) => write!(f, "{queue}"),
         }
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct Data {
-    summoner: core::Summoner,
-    leagues: Vec<core::summoner::League>,
-    games: Vec<core::Game>,
 }
 
 #[derive(Debug, Clone)]
@@ -95,12 +86,7 @@ impl Profile {
         }
     }
 
-    pub fn update(
-        &mut self,
-        message: Message,
-        client: &core::Client,
-        assets: &mut crate::Assets,
-    ) -> Task<Message> {
+    pub fn update(&mut self, message: Message, assets: &mut crate::Assets) -> Task<Message> {
         match message {
             Message::QueueFilterChanged(new_filter) => {
                 self.queue_filter = new_filter;
@@ -113,16 +99,12 @@ impl Profile {
             Message::FetchedData(Err(error)) => panic!("failed: {error}"),
             Message::Timeline(message) => self.timeline.update(message),
             Message::Summoner(message) => {
-                if let Some(event) = self.summoner.update(assets, message) {
+                if let Some(event) = self.summoner.update(message) {
                     match event {
                         summoner::Event::UpdateProfile(name) => {
-                            let client = client.clone();
-
                             return Task::perform(
-                                core::Summoner::from_name(client, name, self.region),
-                                |summoner| {
-                                    Message::Summoner(summoner::Message::SummonerFetched(summoner))
-                                },
+                                fetch_data(name, self.region),
+                                Message::FetchedData,
                             );
                         }
                     }
@@ -134,9 +116,8 @@ impl Profile {
                         search_bar::Event::SearchRequested { riot_id, region } => {
                             self.region = region;
 
-                            let client = client.clone();
                             return Task::perform(
-                                fetch_data(client, riot_id, region),
+                                fetch_data(riot_id, region),
                                 Message::FetchedData,
                             );
                         }
@@ -211,35 +192,15 @@ fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
     .into()
 }
 
-async fn fetch_data(
-    client: core::Client,
-    name: String,
-    region: core::Region,
-) -> Result<Data, String> {
-    let Ok(summoner) = core::Summoner::from_name(client.clone(), name, region).await else {
-        return Err(String::from("Summoner not found!"));
-    };
+async fn fetch_data(name: String, region: core::Region) -> Result<core::summoner::Data, String> {
+    let worker_url = dotenv::var("WORKER_URL").map_err(|e| e.to_string())?;
+    let path = format!("{worker_url}/summoner/{region}/{}", name.replace("#", "-"));
+    tracing::info!("Requesting `{name}` ({region}) to {path}");
 
-    let Ok(leagues) = summoner
-        .leagues(&client, region)
+    reqwest::get(path)
+        .map_err(|e| e.to_string())
+        .await?
+        .json::<Data>()
+        .map_err(|e| e.to_string())
         .await
-        .map(|leagues| leagues.collect::<Vec<_>>())
-    else {
-        return Err(String::from("Failed to fetch summoner leagues."));
-    };
-
-    let mut games: Vec<core::Game> = stream::iter(summoner.matches(&client, 0..10, None).await)
-        .flat_map(|game_ids| {
-            stream::iter(game_ids).filter_map(|id| core::Game::from_id(&client, id).map(Result::ok))
-        })
-        .collect()
-        .await;
-
-    games.sort_unstable_by_key(|game| Reverse(game.created_at()));
-
-    Ok(Data {
-        summoner,
-        leagues,
-        games,
-    })
 }

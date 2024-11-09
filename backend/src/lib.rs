@@ -9,6 +9,7 @@ use tower_service::Service;
 use worker::*;
 
 use aery_core as core;
+use core::summoner;
 use futures::stream;
 use futures::StreamExt;
 use std::cmp::Reverse;
@@ -63,19 +64,12 @@ async fn fetch(
         .map_err(|_| ErrWrapper(worker::Error::Infallible))
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct Data {
-    summoner: core::Summoner,
-    leagues: Vec<core::summoner::League>,
-    games: Vec<core::Game>,
-}
-
 #[axum::debug_handler]
 #[worker::send]
 async fn fetch_summoner(
     Path((region, name)): Path<(String, String)>,
     State(api_key): State<String>,
-) -> Result<Json<Data>> {
+) -> Result<Json<summoner::Data>> {
     let client = core::Client::new(api_key);
     let region = core::Region::from(region);
     let riot_id = name.replace("-", "#");
@@ -107,7 +101,7 @@ async fn fetch_summoner(
 
     games.sort_unstable_by_key(|game| Reverse(game.created_at()));
 
-    Ok(axum::Json(Data {
+    Ok(axum::Json(summoner::Data {
         summoner,
         leagues,
         games,
