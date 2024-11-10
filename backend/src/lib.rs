@@ -68,10 +68,23 @@ impl response::IntoResponse for ErrWrapper {
 
 pub type Result<T> = std::result::Result<T, ErrWrapper>;
 
-fn router(api_key: String, kv: kv::KvStore) -> Router {
-    Router::new()
-        .route("/summoner/:region/:riot_id", get(fetch_summoner))
-        .with_state((api_key, kv))
+fn router(env: Env) -> Result<Router> {
+    let api_key = env.secret("RGAPI_KEY")?.to_string();
+
+    let summoner_kv = env.kv("summoners")?;
+    let matches_kv = env.kv("matches")?;
+
+    let router = Router::new()
+        .route(
+            "/summoner/:region/:riot_id",
+            get(fetch_summoner).with_state((api_key.clone(), summoner_kv)),
+        )
+        .route(
+            "/matches/:puuid",
+            get(fetch_matches).with_state((api_key, matches_kv)),
+        );
+
+    Ok(router)
 }
 
 #[event(fetch)]
@@ -81,11 +94,8 @@ async fn fetch(
     _ctx: Context,
 ) -> Result<axum::http::Response<axum::body::Body>> {
     console_error_panic_hook::set_once();
-    let api_key = env.secret("RGAPI_KEY")?;
-
-    let kv = env.kv("summoners")?;
-
-    router(api_key.to_string(), kv)
+    router(env)
+        .map_err(ErrWrapper::from_string)?
         .call(req)
         .await
         .map_err(|_| ErrWrapper(worker::Error::Infallible))
@@ -159,4 +169,59 @@ async fn fetch_summoner(
         .map_err(ErrWrapper::from_string)?;
 
     Ok(axum::Json(data))
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct Matches(Vec<core::Game>);
+
+#[axum::debug_handler]
+#[worker::send]
+async fn fetch_matches(
+    Path(puuid): Path<String>,
+    State((api_key, kv)): State<(String, kv::KvStore)>,
+) -> Result<Json<Matches>> {
+    let client = core::Client::new(api_key);
+
+    match kv
+        .get(&puuid)
+        .text()
+        .await
+        .map_err(ErrWrapper::from_string)?
+    {
+        Some(text) => {
+            let matches = serde_json::from_str(&text).map_err(ErrWrapper::from_string)?;
+
+            tracing::debug!("returning cached summoner");
+            return Ok(axum::Json(matches));
+        }
+        None => tracing::debug!("summoner not found in KV"),
+    }
+
+    let mut games: Vec<core::Game> =
+        stream::iter(summoner::matches(&puuid, &client, 0..10, None).await)
+            .flat_map(|game_ids| {
+                stream::iter(game_ids).filter_map(|id| {
+                    core::Game::from_id(&client, id)
+                        .map_err(ErrWrapper::from_string)
+                        .map(Result::ok)
+                })
+            })
+            .collect()
+            .await;
+
+    games.sort_unstable_by_key(|game| Reverse(game.created_at()));
+
+    let matches = Matches(games);
+
+    let kv_data = serde_json::to_string(&matches).map_err(ErrWrapper::from_string)?;
+
+    kv.put(&puuid, kv_data)
+        .inspect_err(|e| tracing::error!("put failed: {e}"))
+        .map_err(ErrWrapper::from_string)?
+        .execute()
+        .await
+        .inspect_err(|e| tracing::error!("execute failed: {e}"))
+        .map_err(ErrWrapper::from_string)?;
+
+    Ok(axum::Json(matches))
 }

@@ -123,3 +123,27 @@ impl Summoner {
             .map(|leagues| leagues.into_iter().map(League))
     }
 }
+
+pub async fn matches(
+    puuid: &str,
+    client: &Client,
+    range: std::ops::Range<u32>,
+    queue: impl Into<Option<game::Queue>>,
+) -> Result<impl Iterator<Item = game::Id>, RequestError> {
+    client
+        .as_ref()
+        .match_v5()
+        .get_match_ids_by_puuid(
+            RegionalRoute::AMERICAS,
+            puuid,
+            Some((range.end - range.start) as i32),
+            None,
+            queue.into().map(game::Queue::into),
+            None,
+            Some(range.start as i32),
+            None,
+        )
+        .await
+        .map_err(|error| RequestError::RequestFailed(InternalApiError(error.to_string())))
+        .map(|list| list.into_iter().filter_map(|s| s.try_into().ok()))
+}
