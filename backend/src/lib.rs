@@ -20,6 +20,8 @@ use tracing_web::{performance_layer, MakeConsoleWriter};
 mod error;
 use error::Error;
 
+mod cache;
+
 #[event(start)]
 fn start() {
     let fmt_layer = tracing_subscriber::fmt::layer()
@@ -79,14 +81,8 @@ async fn fetch_summoner(
     let region = core::Region::from(region);
     let riot_id = name.replace("-", "#");
 
-    match kv.get(&riot_id).text().await.map_err(Error::from_string)? {
-        Some(text) => {
-            let data = serde_json::from_str(&text).map_err(Error::from_string)?;
-
-            tracing::debug!("returning cached summoner");
-            return Ok(axum::Json(data));
-        }
-        None => tracing::debug!("summoner not found in KV"),
+    if let Ok(Some(data)) = cache::get(&kv, &riot_id).await {
+        return Ok(axum::Json(data));
     }
 
     let Ok(summoner) = core::Summoner::from_name(client.clone(), riot_id.clone(), region).await
@@ -121,15 +117,7 @@ async fn fetch_summoner(
         games,
     };
 
-    let kv_data = serde_json::to_string(&data).map_err(Error::from_string)?;
-
-    kv.put(&riot_id, kv_data)
-        .inspect_err(|e| tracing::error!("put failed: {e}"))
-        .map_err(Error::from_string)?
-        .execute()
-        .await
-        .inspect_err(|e| tracing::error!("execute failed: {e}"))
-        .map_err(Error::from_string)?;
+    let _ = cache::insert(&kv, &riot_id, &data).await;
 
     Ok(axum::Json(data))
 }
@@ -145,14 +133,8 @@ async fn fetch_matches(
 ) -> Result<Json<Matches>> {
     let client = core::Client::new(api_key);
 
-    match kv.get(&puuid).text().await.map_err(Error::from_string)? {
-        Some(text) => {
-            let matches = serde_json::from_str(&text).map_err(Error::from_string)?;
-
-            tracing::debug!("returning cached summoner");
-            return Ok(axum::Json(matches));
-        }
-        None => tracing::debug!("summoner not found in KV"),
+    if let Ok(Some(matches)) = cache::get(&kv, &puuid).await {
+        return Ok(axum::Json(matches));
     }
 
     let mut games: Vec<core::Game> =
@@ -171,15 +153,7 @@ async fn fetch_matches(
 
     let matches = Matches(games);
 
-    let kv_data = serde_json::to_string(&matches).map_err(Error::from_string)?;
-
-    kv.put(&puuid, kv_data)
-        .inspect_err(|e| tracing::error!("put failed: {e}"))
-        .map_err(Error::from_string)?
-        .execute()
-        .await
-        .inspect_err(|e| tracing::error!("execute failed: {e}"))
-        .map_err(Error::from_string)?;
+    let _ = cache::insert(&kv, &puuid, &matches).await;
 
     Ok(axum::Json(matches))
 }
