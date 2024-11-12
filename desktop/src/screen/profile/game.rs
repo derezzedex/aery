@@ -3,9 +3,9 @@ use crate::assets::load_item_icon;
 use crate::assets::load_runes_icon;
 use crate::assets::load_summoner_spell_icon;
 use crate::core;
+use crate::core::account;
 use crate::core::game;
 use crate::core::game::item;
-use crate::core::summoner;
 use crate::formatting;
 use crate::theme;
 use crate::theme::icon;
@@ -139,9 +139,9 @@ impl Player {
         let info = game::Player {
             puuid: String::from("dummy"),
             name: String::from("dummy"),
-            riot_id: summoner::RiotId {
+            riot_id: account::RiotId {
                 name: None,
-                tagline: String::from("dummy"),
+                tagline: None,
             },
             team: core::Team::BLUE,
             result: game::Result::Victory,

@@ -1,5 +1,5 @@
 use crate::assets::Assets;
-use crate::core::summoner;
+use crate::core::account;
 use crate::profile;
 use crate::theme;
 
@@ -47,7 +47,7 @@ pub enum Event {
 
 pub struct Summoner {
     summoner_name: String,
-    riot_id: Option<summoner::RiotId>,
+    riot_id: Option<account::RiotId>,
     level: u32,
     icon_image: Option<image::Handle>,
 }
@@ -92,15 +92,15 @@ impl Summoner {
         let (name, previously): (Element<_>, Option<Element<_>>) = match &self.riot_id {
             Some(riot_id) => match &riot_id.name {
                 Some(riot_name) => (
-                    row![
-                        text(riot_name).size(24),
-                        text(format!("#{}", riot_id.tagline))
-                            .size(24)
-                            .color(theme::SUB_TEXT)
-                    ]
-                    .spacing(8)
-                    .align_y(iced::Alignment::Center)
-                    .into(),
+                    row![text(riot_name).size(24),]
+                        .push_maybe(riot_id.tagline.as_ref().map(|tagline| {
+                            text(format!("#{}", tagline))
+                                .size(24)
+                                .color(theme::SUB_TEXT)
+                        }))
+                        .spacing(8)
+                        .align_y(iced::Alignment::Center)
+                        .into(),
                     Some(
                         text(format!("Prev. {}", &self.summoner_name))
                             .color(theme::SUB_TEXT)
@@ -109,15 +109,15 @@ impl Summoner {
                     ),
                 ),
                 None => (
-                    row![
-                        text(&self.summoner_name).size(24),
-                        text(format!("#{}", riot_id.tagline))
-                            .size(20)
-                            .color(theme::GRAY_TEXT)
-                    ]
-                    .spacing(2)
-                    .align_y(iced::Alignment::Center)
-                    .into(),
+                    row![text(&self.summoner_name).size(24),]
+                        .push_maybe(riot_id.tagline.as_ref().map(|tagline| {
+                            text(format!("#{}", tagline))
+                                .size(20)
+                                .color(theme::GRAY_TEXT)
+                        }))
+                        .spacing(2)
+                        .align_y(iced::Alignment::Center)
+                        .into(),
                     None,
                 ),
             },

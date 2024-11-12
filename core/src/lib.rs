@@ -8,8 +8,29 @@ pub mod summoner;
 use riven::consts::{PlatformRoute, RegionalRoute};
 pub use summoner::Summoner;
 
+pub mod account;
+pub use account::Account;
+
 pub mod game;
 pub use game::Game;
+
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+pub struct InternalApiError(String);
+
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum RequestError {
+    #[error("not found")]
+    NotFound,
+    #[error("request failed")]
+    RequestFailed(InternalApiError),
+}
+
+impl RequestError {
+    pub fn internal(error: impl ToString) -> Self {
+        Self::RequestFailed(InternalApiError(error.to_string()))
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Champion(u32);
