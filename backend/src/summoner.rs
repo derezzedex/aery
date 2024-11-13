@@ -9,8 +9,9 @@ use std::cmp::Reverse;
 use worker::kv;
 
 use crate::cache;
+use crate::game;
 use crate::{Error, Result};
-use aery_core::{account, game, summoner};
+use aery_core::{account, summoner};
 use aery_core::{Client, Game, Region, Summoner};
 
 #[worker::send]
@@ -41,7 +42,7 @@ pub async fn fetch(
     let mut games: Vec<Game> = stream::iter(games(summoner.puuid(), &client, 0..10, None).await)
         .flat_map(|game_ids| {
             stream::iter(game_ids).filter_map(|id| {
-                Game::from_id(&client, id)
+                game::fetch(&client, id)
                     .map_err(Error::from_string)
                     .map(Result::ok)
             })
@@ -80,7 +81,7 @@ pub async fn matches(
     let mut games: Vec<Game> = stream::iter(games(&puuid, &client, 0..10, None).await)
         .flat_map(|game_ids| {
             stream::iter(game_ids).filter_map(|id| {
-                Game::from_id(&client, id)
+                game::fetch(&client, id)
                     .map_err(Error::from_string)
                     .map(Result::ok)
             })

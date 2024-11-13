@@ -7,10 +7,6 @@ pub mod item;
 pub mod rune;
 pub use item::Item;
 
-use crate::Client;
-
-use riven::consts::RegionalRoute;
-
 #[derive(Debug)]
 pub struct Id(String);
 
@@ -40,30 +36,10 @@ pub enum RequestError {
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct Event(riven::models::match_v5::EventsTimeLine);
+pub struct Event(pub riven::models::match_v5::EventsTimeLine);
 
-impl Event {
-    pub async fn from_id(client: &Client, id: Id) -> core::result::Result<Vec<Self>, RequestError> {
-        client
-            .as_ref()
-            .match_v5()
-            .get_timeline(RegionalRoute::AMERICAS, &id.0)
-            .await
-            .map_err(RequestError::RequestFailed)
-            .and_then(|timeline| {
-                timeline
-                    .map(|tl| {
-                        tl.info
-                            .frames
-                            .into_iter()
-                            .flat_map(|frame| frame.events.into_iter())
-                            .map(Event)
-                            .collect::<Vec<_>>()
-                    })
-                    .ok_or(RequestError::NotFound)
-            })
-    }
-}
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct Timeline(pub Vec<Event>);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Result {
@@ -93,7 +69,7 @@ impl Result {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct Game(riven::models::match_v5::Match);
+pub struct Game(pub riven::models::match_v5::Match);
 
 impl Game {
     pub fn id(&self) -> Id {
@@ -122,37 +98,6 @@ impl Game {
 
     pub fn participants(&self) -> Vec<Player> {
         self.0.info.participants.iter().map(Player::from).collect()
-    }
-
-    pub async fn from_id(client: &Client, id: Id) -> core::result::Result<Self, RequestError> {
-        client
-            .as_ref()
-            .match_v5()
-            .get_match(RegionalRoute::AMERICAS, &id.0)
-            .await
-            .map_err(RequestError::RequestFailed)
-            .and_then(|game| game.map(Game).ok_or(RequestError::NotFound))
-    }
-
-    pub async fn events(&self, client: &Client) -> core::result::Result<Vec<Event>, RequestError> {
-        client
-            .as_ref()
-            .match_v5()
-            .get_timeline(RegionalRoute::AMERICAS, &self.0.metadata.match_id)
-            .await
-            .map_err(RequestError::RequestFailed)
-            .and_then(|timeline| {
-                timeline
-                    .map(|tl| {
-                        tl.info
-                            .frames
-                            .into_iter()
-                            .flat_map(|frame| frame.events.into_iter())
-                            .map(Event)
-                            .collect::<Vec<_>>()
-                    })
-                    .ok_or(RequestError::NotFound)
-            })
     }
 
     pub fn participant(&self, puuid: &str) -> Option<Player> {

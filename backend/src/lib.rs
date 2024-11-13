@@ -12,6 +12,7 @@ mod error;
 use error::Error;
 
 mod cache;
+mod game;
 mod summoner;
 
 #[event(start)]
