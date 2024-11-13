@@ -11,6 +11,7 @@ use tracing_web::{performance_layer, MakeConsoleWriter};
 mod error;
 use error::Error;
 
+mod assets;
 mod cache;
 mod game;
 mod summoner;
@@ -45,7 +46,8 @@ fn router(env: Env) -> Result<Router> {
         .route(
             "/matches/:puuid",
             get(summoner::matches).with_state((api_key, matches_kv)),
-        );
+        )
+        .route("/assets/:version", get(assets::fetch).with_state(env));
 
     Ok(router)
 }
