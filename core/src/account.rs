@@ -5,7 +5,7 @@ pub struct RiotId {
 }
 
 impl RiotId {
-    pub(crate) fn new(name: impl ToString, tagline: impl ToString) -> Self {
+    pub fn new(name: impl ToString, tagline: impl ToString) -> Self {
         Self {
             name: Some(name.to_string()),
             tagline: Some(tagline.to_string()),

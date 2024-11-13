@@ -91,7 +91,7 @@ impl From<RegionalRoute> for Route {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Region(PlatformRoute);
+pub struct Region(pub PlatformRoute);
 
 impl From<String> for Region {
     fn from(value: String) -> Self {

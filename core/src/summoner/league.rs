@@ -1,7 +1,7 @@
 use crate::game;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct League(pub(crate) riven::models::league_v4::LeagueEntry);
+pub struct League(pub riven::models::league_v4::LeagueEntry);
 
 impl League {
     pub fn queue_kind(&self) -> game::Queue {

@@ -9,6 +9,10 @@ impl Error {
         Error(worker::Error::Infallible)
     }
 
+    pub fn not_found() -> Self {
+        Error(worker::Error::RustError(String::from("not found")))
+    }
+
     pub fn from_string(value: impl ToString) -> Self {
         Error(worker::Error::RustError(value.to_string()))
     }
