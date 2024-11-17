@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 aery_core = { path = "../core" }
-iced = { git = "https://github.com/iced-rs/iced", rev = "c217500a5abd1fbfc1e598fb98dadd3ee85d8a51", features = ["image", "advanced", "tokio", "svg"] }
+iced = { git = "https://github.com/iced-rs/iced", rev = "2a2e20b0a35bcf4da9ac34ab2f664485c4e1dbe3", features = ["image", "advanced", "tokio", "svg"] }
 itertools = "0.13"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

@@ -428,7 +428,7 @@ pub fn search_text_input(_theme: &iced::Theme, status: text_input::Status) -> te
 
     match status {
         text_input::Status::Active => active,
-        text_input::Status::Hovered | text_input::Status::Focused => text_input::Style {
+        text_input::Status::Hovered | text_input::Status::Focused { .. } => text_input::Style {
             background: Background::Color(LIGHTER_ALPHA),
             ..active
         },
