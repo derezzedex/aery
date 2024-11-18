@@ -16,6 +16,12 @@ impl RiotId {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Puuid(String);
 
+impl AsRef<str> for Puuid {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Account {
     pub puuid: Puuid,

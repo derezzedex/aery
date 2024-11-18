@@ -1,4 +1,4 @@
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::Json;
 use futures::stream;
 use futures::FutureExt;
@@ -66,10 +66,23 @@ pub async fn fetch(
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Matches(Vec<Game>);
 
+#[derive(serde::Deserialize)]
+pub struct Page {
+    start_at: u32,
+    count: u32,
+}
+
+impl Page {
+    fn range(&self) -> std::ops::Range<u32> {
+        self.start_at..self.start_at + self.count
+    }
+}
+
 #[worker::send]
 #[axum::debug_handler]
 pub async fn matches(
     Path(puuid): Path<String>,
+    Query(page): Query<Page>,
     State((api_key, kv)): State<(String, kv::KvStore)>,
 ) -> Result<Json<Matches>> {
     let client = Client::new(api_key);
@@ -78,7 +91,7 @@ pub async fn matches(
         return Ok(axum::Json(matches));
     }
 
-    let mut games: Vec<Game> = stream::iter(games(&puuid, &client, 0..10, None).await)
+    let mut games: Vec<Game> = stream::iter(games(&puuid, &client, page.range(), None).await)
         .flat_map(|game_ids| {
             stream::iter(game_ids).filter_map(|id| {
                 game::fetch(&client, id)
