@@ -5,10 +5,10 @@ mod theme;
 mod widget;
 
 use assets::Assets;
-use screen::profile;
+use screen::{profile, search_bar};
 
-use iced::widget::{container, text};
-use iced::{Element, Length, Task};
+use iced::widget::{column, container, horizontal_space, row, text};
+use iced::{Alignment, Element, Length, Task};
 
 use aery_core as core;
 use tracing_subscriber::EnvFilter;
@@ -31,6 +31,7 @@ pub fn main() -> iced::Result {
 }
 
 enum Screen {
+    Landing(screen::SearchBar),
     Profile(screen::Profile),
 }
 
@@ -43,8 +44,10 @@ enum Aery {
 #[derive(Debug, Clone)]
 enum Message {
     AssetsLoaded(Result<Assets, assets::Error>),
+    ProfileLoaded(Result<profile::Data, profile::Error>),
 
     Profile(profile::Message),
+    Landing(search_bar::Message),
 }
 
 impl Aery {
@@ -54,7 +57,7 @@ impl Aery {
 
     fn with_assets(assets: Assets) -> Self {
         Self::Loaded {
-            screen: Screen::Profile(screen::Profile::dummy(&assets)),
+            screen: Screen::Landing(screen::SearchBar::new()),
             assets,
         }
     }
@@ -66,14 +69,44 @@ impl Aery {
                 Task::none()
             }
             Message::AssetsLoaded(Err(error)) => panic!("assets load failed: {error:?}"),
+            Message::ProfileLoaded(Ok(profile)) => {
+                let Self::Loaded { screen, assets } = self else {
+                    return Task::none();
+                };
+
+                *screen = Screen::Profile(screen::Profile::from_profile(assets, profile));
+
+                Task::none()
+            }
+            Message::ProfileLoaded(Err(error)) => panic!("profile load failed: {error:?}"),
             Message::Profile(message) => {
                 let Self::Loaded { screen, assets } = self else {
                     return Task::none();
                 };
 
-                let Screen::Profile(profile) = screen;
+                if let Screen::Profile(profile) = screen {
+                    return profile.update(message, assets).map(Message::Profile);
+                }
 
-                profile.update(message, assets).map(Message::Profile)
+                Task::none()
+            }
+            Message::Landing(message) => {
+                let Self::Loaded { screen, .. } = self else {
+                    return Task::none();
+                };
+
+                if let Screen::Landing(search_bar) = screen {
+                    if let Some(search_bar::Event::SearchRequested { riot_id, region }) =
+                        search_bar.update(message)
+                    {
+                        return Task::perform(
+                            profile::fetch_data(riot_id, region),
+                            Message::ProfileLoaded,
+                        );
+                    }
+                }
+
+                Task::none()
             }
         }
     }
@@ -83,6 +116,22 @@ impl Aery {
             Self::Loading => loading(),
             Self::Loaded { screen, .. } => match screen {
                 Screen::Profile(profile) => profile.view().map(Message::Profile),
+                Screen::Landing(search_bar) => container(
+                    column![
+                        text("Aery").size(48),
+                        row![
+                            horizontal_space().width(Length::FillPortion(2)),
+                            search_bar.view().map(Message::Landing),
+                            horizontal_space().width(Length::FillPortion(2)),
+                        ]
+                        .align_y(Alignment::Center),
+                    ]
+                    .spacing(8)
+                    .align_x(Alignment::Center),
+                )
+                .center(Length::Fill)
+                .style(theme::timeline)
+                .into(),
             },
         }
     }

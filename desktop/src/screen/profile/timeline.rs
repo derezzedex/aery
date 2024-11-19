@@ -1,10 +1,6 @@
 use super::game::{self, Game};
-use crate::assets::load_champion_icon;
-use crate::core;
-use crate::core::game::Role;
 use crate::profile;
 use crate::theme;
-use crate::theme::icon;
 
 use iced::padding;
 use iced::widget::{column, container, scrollable};
@@ -34,54 +30,6 @@ impl Timeline {
             .collect();
 
         Timeline { summary, games }
-    }
-
-    pub fn new(assets: &crate::assets::Assets) -> Self {
-        let champions = vec![
-            summary::Champion {
-                handle: load_champion_icon(assets, core::Champion::new(4)),
-                wins: 2,
-                losses: 1,
-                kda: 1.15,
-                lane: icon::role(Role::Mid),
-            },
-            summary::Champion {
-                handle: load_champion_icon(assets, core::Champion::new(61)),
-                wins: 3,
-                losses: 0,
-                kda: 2.0,
-                lane: icon::role(Role::Bottom),
-            },
-            summary::Champion {
-                handle: load_champion_icon(assets, core::Champion::new(1)),
-                wins: 2,
-                losses: 2,
-                kda: 3.0,
-                lane: icon::role(Role::Support),
-            },
-            summary::Champion {
-                handle: load_champion_icon(assets, core::Champion::new(14)),
-                wins: 0,
-                losses: 3,
-                kda: 0.5,
-                lane: icon::role(Role::Top),
-            },
-        ];
-
-        Timeline {
-            summary: Summary::new(champions),
-            games: (0..5)
-                .flat_map(|_| {
-                    [
-                        Game::new(true, assets, core::Champion::new(1)),
-                        Game::new(false, assets, core::Champion::new(14)),
-                        Game::new(true, assets, core::Champion::new(122)),
-                        Game::new(false, assets, core::Champion::new(897)),
-                        Game::new(false, assets, core::Champion::new(62)),
-                    ]
-                })
-                .collect(),
-        }
     }
 
     pub fn update(&mut self, message: Message) {
@@ -246,22 +194,6 @@ pub mod summary {
                 role,
                 role_stats,
 
-                champions,
-            }
-        }
-
-        pub fn new(champions: Vec<Champion>) -> Summary {
-            Summary {
-                wins: 6,
-                losses: 4,
-                role: Role::Mid,
-                role_stats: RoleStats {
-                    wins: 6,
-                    losses: 4,
-                    kills: 25,
-                    deaths: 4,
-                    assists: 50,
-                },
                 champions,
             }
         }

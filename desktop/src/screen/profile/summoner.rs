@@ -45,6 +45,7 @@ pub enum Event {
     UpdateProfile(String),
 }
 
+#[derive(Debug, Clone)]
 pub struct Summoner {
     summoner_name: String,
     riot_id: Option<account::RiotId>,
@@ -68,15 +69,6 @@ impl Summoner {
             riot_id,
             level,
             icon_image,
-        }
-    }
-
-    pub fn new(_icon: u32) -> Self {
-        Summoner {
-            summoner_name: String::from("Summoner"),
-            riot_id: None,
-            level: 111,
-            icon_image: None,
         }
     }
 

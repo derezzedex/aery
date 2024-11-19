@@ -3,7 +3,6 @@ use crate::assets::load_item_icon;
 use crate::assets::load_runes_icon;
 use crate::assets::load_summoner_spell_icon;
 use crate::core;
-use crate::core::account;
 use crate::core::game;
 use crate::core::game::item;
 use crate::formatting;
@@ -124,84 +123,6 @@ pub struct Player {
 }
 
 impl Player {
-    fn dummy_with_puuid(assets: &crate::Assets, champion: core::Champion, puuid: String) -> Self {
-        let dummy = Self::dummy(assets, champion);
-        Self {
-            info: game::Player {
-                puuid,
-                ..dummy.info
-            },
-            ..dummy
-        }
-    }
-
-    fn dummy(assets: &crate::Assets, champion: core::Champion) -> Self {
-        let info = game::Player {
-            puuid: String::from("dummy"),
-            name: String::from("dummy"),
-            riot_id: account::RiotId {
-                name: None,
-                tagline: None,
-            },
-            team: core::Team::BLUE,
-            result: game::Result::Victory,
-            role: Some(game::Role::Mid),
-            inventory: item::Inventory::from([
-                Some(game::Item(1001)),
-                Some(game::Item(6630)),
-                Some(game::Item(4401)),
-                Some(game::Item(3143)),
-                Some(game::Item(3742)),
-                Some(game::Item(6333)),
-            ]),
-            trinket: item::Trinket(3364),
-            champion,
-            summoner_spells: game::player::SummonerSpells::from([
-                game::player::SummonerSpell::new(14),
-                game::player::SummonerSpell::new(4),
-            ]),
-            rune_page: game::rune::Page {
-                primary: game::rune::path::Primary {
-                    path: game::rune::path::Kind::Precision,
-                    keystone: game::rune::Rune(8010).into(),
-                    runes: [
-                        game::rune::Rune(9111),
-                        game::rune::Rune(9105),
-                        game::rune::Rune(8299),
-                    ],
-                },
-                secondary: game::rune::path::Secondary {
-                    path: game::rune::path::Kind::Resolve,
-                    runes: [game::rune::Rune(8463), game::rune::Rune(8473)],
-                },
-                shards: game::rune::Shards {
-                    offense: game::rune::Shard::AdaptiveForce,
-                    flex: game::rune::Shard::AdaptiveForce,
-                    defense: game::rune::Shard::Health,
-                },
-            },
-            stats: game::player::Stats {
-                level: 5,
-                kills: 1,
-                deaths: 6,
-                assists: 12,
-                creep_score: 151,
-                monster_score: 10,
-                vision_score: 18,
-                damage_dealt: 12456,
-                damage_taken: 20520,
-                gold: 13521,
-                control_wards: 5,
-                wards_placed: 10,
-                wards_removed: 3,
-            },
-        };
-
-        let assets = PlayerAssets::from_participant(assets, &info);
-
-        Self { assets, info }
-    }
-
     pub fn from_participant(assets: &crate::Assets, participant: &game::Player) -> Self {
         let assets = PlayerAssets::from_participant(assets, participant);
 
@@ -283,39 +204,6 @@ impl Game {
         }
     }
 
-    pub fn new(win: bool, assets: &crate::assets::Assets, champion: core::Champion) -> Self {
-        let puuid = String::from("player");
-        let player = Player::dummy_with_puuid(assets, champion, puuid);
-        let dummy = |id| Player::dummy(assets, core::Champion::new(id));
-
-        let teams = vec![
-            Team {
-                id: core::Team::BLUE,
-                result: win.into(),
-                players: vec![player.clone(), dummy(1), dummy(101), dummy(14), dummy(122)],
-            },
-            Team {
-                id: core::Team::RED,
-                result: (!win).into(),
-                players: vec![dummy(897), dummy(62), dummy(4), dummy(61), dummy(202)],
-            },
-        ];
-
-        Game {
-            result: if win {
-                game::Result::Victory
-            } else {
-                game::Result::Defeat
-            },
-            queue: game::Queue::RankedFlex,
-            time: time::OffsetDateTime::now_utc().saturating_sub(time::Duration::days(1)),
-            duration: time::Duration::minutes(28).saturating_add(time::Duration::seconds(33)),
-            player,
-            teams,
-
-            is_expanded: false,
-        }
-    }
     pub fn update(&mut self, message: Message) {
         match message {
             Message::ExpandPressed => self.is_expanded = !self.is_expanded,

@@ -52,6 +52,13 @@ pub const LIGHTER_ALPHA: Color = color!(0x333333, 0.7);
 pub const LIGHT_ALPHA: Color = color!(0x666666, 0.9);
 pub const BLUE_ALPHA: Color = color!(0x0094ff, 0.7);
 
+pub fn logo<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
+    container(iced::widget::Space::new(28.0, 28.0))
+        .style(icon)
+        .max_width(28.0)
+        .max_height(28.0)
+}
+
 pub mod icon {
     use crate::core::game;
     use iced::widget::image;

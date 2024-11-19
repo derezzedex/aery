@@ -1,20 +1,21 @@
 mod game;
 mod ranked_overview;
-mod search_bar;
 mod summoner;
 mod timeline;
 
 use futures::TryFutureExt;
 use iced::widget::button;
+use iced::widget::horizontal_space;
 use iced::widget::pick_list;
 use iced::widget::text;
 use iced::widget::vertical_space;
+use iced::Alignment;
 use ranked_overview::RankedOverview;
-use search_bar::SearchBar;
 use summoner::Summoner;
 use timeline::Timeline;
 
 use crate::core;
+use crate::screen::search_bar::{self, SearchBar};
 use crate::theme;
 
 use core::game::Queue;
@@ -23,6 +24,8 @@ use iced::widget::{column, container, row};
 use iced::{Element, Length, Task};
 
 pub use core::summoner::Data;
+
+pub type Error = String;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum QueueFilter {
@@ -64,6 +67,7 @@ pub enum Message {
     QueueFilterChanged(QueueFilter),
 }
 
+#[derive(Debug, Clone)]
 pub struct Profile {
     region: core::Region,
     queue_filter: QueueFilter,
@@ -75,14 +79,15 @@ pub struct Profile {
 }
 
 impl Profile {
-    pub fn dummy(assets: &crate::Assets) -> Self {
+    pub fn from_profile(assets: &mut crate::Assets, profile: Data) -> Self {
         Self {
             region: core::Region::default(),
             queue_filter: QueueFilter::default(),
-            timeline: Timeline::new(assets),
-            summoner: Summoner::new(5843),
+
             search_bar: SearchBar::new(),
-            ranked_overview: RankedOverview::new(assets),
+            summoner: Summoner::from_profile(assets, &profile),
+            timeline: Timeline::from_profile(assets, &profile),
+            ranked_overview: RankedOverview::from_profile(assets, &profile),
         }
     }
 
@@ -141,8 +146,20 @@ impl Profile {
         )
         .center_x(Length::Fill);
 
+        let top_bar = container(
+            row![
+                theme::logo(),
+                horizontal_space().width(Length::FillPortion(2)),
+                self.search_bar.view().map(Message::SearchBar),
+                horizontal_space().width(Length::FillPortion(2)),
+            ]
+            .align_y(Alignment::Center),
+        )
+        .padding(8)
+        .style(theme::dark);
+
         container(column![
-            self.search_bar.view().map(Message::SearchBar),
+            top_bar,
             vertical_space().height(16),
             self.summoner.view().map(Message::Summoner),
             vertical_space().height(16),
@@ -192,7 +209,10 @@ fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
     .into()
 }
 
-async fn fetch_data(name: String, region: core::Region) -> Result<core::summoner::Data, String> {
+pub async fn fetch_data(
+    name: String,
+    region: core::Region,
+) -> Result<core::summoner::Data, String> {
     let worker_url = dotenv::var("WORKER_URL").map_err(|e| e.to_string())?;
     let path = format!("{worker_url}/summoner/{region}/{}", name.replace("#", "-"));
     tracing::info!("Requesting `{name}` ({region}) to {path}");

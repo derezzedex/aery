@@ -141,6 +141,7 @@ pub enum Message {
     Expand,
 }
 
+#[derive(Debug, Clone)]
 struct Stats {
     tier: Tier,
     wins: u16,
@@ -148,6 +149,7 @@ struct Stats {
     handle: image::Handle,
 }
 
+#[derive(Debug, Clone)]
 pub struct RankedOverview {
     solo_duo: Option<Stats>,
     flex: Option<Stats>,
@@ -194,18 +196,6 @@ impl RankedOverview {
             });
 
         Self { solo_duo, flex }
-    }
-
-    pub fn new(assets: &crate::assets::Assets) -> RankedOverview {
-        RankedOverview {
-            solo_duo: Some(Stats {
-                handle: assets.emblems.get("emblem-challenger.png").unwrap().clone(),
-                tier: Tier::Challenger(650),
-                wins: 295,
-                losses: 208,
-            }),
-            flex: None,
-        }
     }
 
     pub fn update(&mut self, _message: Message) {}
