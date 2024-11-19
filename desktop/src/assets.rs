@@ -1,4 +1,6 @@
+use iced::font;
 use iced::widget::image::Handle;
+use iced::Task;
 use image::GenericImageView;
 
 use std::collections::HashMap;
@@ -8,6 +10,9 @@ use std::io::Read;
 use crate::core;
 use crate::core::game;
 use crate::core::game::rune;
+use crate::theme;
+
+pub type Error = iced::font::Error;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum DataFile {
@@ -96,7 +101,12 @@ impl Assets {
     const RUNES_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/runes");
     const EMBLEMS_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/emblems");
 
-    pub async fn new() -> Assets {
+    pub fn load() -> Task<crate::Message> {
+        Task::perform(Assets::new(), crate::Message::AssetsLoaded)
+            .then(|msg| font::load(theme::ROBOTO_FLEX_TTF).map(move |_| msg.clone()))
+    }
+
+    pub async fn new() -> Result<Assets, Error> {
         let summoner_icons = SummonerIconMap::default();
 
         let timer = std::time::Instant::now();
@@ -183,13 +193,13 @@ impl Assets {
         tracing::debug!("Loaded emblems in {:?}", emblem_timer.elapsed());
         tracing::debug!("Total time: {:?}", timer.elapsed());
 
-        Assets {
+        Ok(Assets {
             sprites,
             data,
             runes,
             emblems,
             summoner_icons,
-        }
+        })
     }
 
     pub fn get_summoner_icon(&mut self, icon: usize) -> Handle {

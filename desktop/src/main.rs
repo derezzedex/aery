@@ -4,15 +4,11 @@ mod screen;
 mod theme;
 mod widget;
 
+use assets::Assets;
 use screen::profile;
 
-use iced::{
-    font,
-    widget::{container, text},
-    Element, Length, Task,
-};
-
-use assets::Assets;
+use iced::widget::{container, text};
+use iced::{Element, Length, Task};
 
 use aery_core as core;
 use tracing_subscriber::EnvFilter;
@@ -46,21 +42,14 @@ enum Aery {
 
 #[derive(Debug, Clone)]
 enum Message {
-    LoadedAssets(Assets),
-    FontLoaded(Result<(), font::Error>),
+    AssetsLoaded(Result<Assets, assets::Error>),
 
     Profile(profile::Message),
 }
 
 impl Aery {
     fn new() -> (Self, Task<Message>) {
-        (
-            Self::Loading,
-            Task::batch(vec![
-                Task::perform(Assets::new(), Message::LoadedAssets),
-                font::load(theme::ROBOTO_FLEX_TTF).map(Message::FontLoaded),
-            ]),
-        )
+        (Self::Loading, Assets::load())
     }
 
     fn with_assets(assets: Assets) -> Self {
@@ -72,12 +61,11 @@ impl Aery {
 
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
-            Message::LoadedAssets(assets) => {
+            Message::AssetsLoaded(Ok(assets)) => {
                 *self = Self::with_assets(assets);
                 Task::none()
             }
-            Message::FontLoaded(Err(err)) => panic!("font load failed: {err:?}"),
-            Message::FontLoaded(Ok(_)) => Task::none(),
+            Message::AssetsLoaded(Err(error)) => panic!("assets load failed: {error:?}"),
             Message::Profile(message) => {
                 let Self::Loaded { screen, assets } = self else {
                     return Task::none();
@@ -92,14 +80,18 @@ impl Aery {
 
     fn view(&self) -> Element<Message> {
         match self {
-            Self::Loading => container(text!("Loading").size(24))
-                .style(theme::timeline)
-                .center_x(Length::Fill)
-                .center_y(Length::Fill)
-                .into(),
+            Self::Loading => loading(),
             Self::Loaded { screen, .. } => match screen {
                 Screen::Profile(profile) => profile.view().map(Message::Profile),
             },
         }
     }
+}
+
+fn loading<'a>() -> Element<'a, Message> {
+    container(text!("Loading").size(24))
+        .style(theme::timeline)
+        .center_x(Length::Fill)
+        .center_y(Length::Fill)
+        .into()
 }
