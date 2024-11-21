@@ -4,15 +4,16 @@ use iced::Task;
 use image::GenericImageView;
 
 use std::collections::HashMap;
-use std::fs;
+use std::fs::File;
 use std::io::Read;
+use std::sync::Arc;
+use std::time::Instant;
+use std::{ffi, fs, io};
 
-use crate::core;
 use crate::core::game;
 use crate::core::game::rune;
 use crate::theme;
-
-pub type Error = iced::font::Error;
+use crate::{core, Message};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum DataFile {
@@ -84,6 +85,22 @@ pub type EmblemMap = HashMap<String, Handle>;
 
 pub type SummonerIconMap = HashMap<usize, Handle>;
 
+#[derive(thiserror::Error, Debug, Clone)]
+pub enum Error {
+    #[error("failed to load file")]
+    LoadingFile(#[from] Arc<io::Error>),
+    #[error("failed to load image")]
+    LoadingImage(#[from] Arc<image::ImageError>),
+    #[error("failed to load sprite: {0}")]
+    LoadingSprite(&'static str),
+    #[error("failed to load data: {0}")]
+    LoadingData(&'static str),
+    #[error("failed to load json")]
+    LoadingJSON(#[from] Arc<serde_json::Error>),
+    #[error("invalid file name: {0:?}")]
+    InvalidFileName(ffi::OsString),
+}
+
 #[derive(Debug, Clone)]
 pub struct Assets {
     pub sprites: SpriteMap,
@@ -101,91 +118,113 @@ impl Assets {
     const RUNES_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/runes");
     const EMBLEMS_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/emblems");
 
-    pub fn load() -> Task<crate::Message> {
-        Task::perform(Assets::new(), crate::Message::AssetsLoaded)
-            .then(|msg| font::load(theme::ROBOTO_FLEX_TTF).map(move |_| msg.clone()))
+    pub fn load() -> Task<Message> {
+        Task::batch(vec![
+            Task::perform(Assets::new(), Message::AssetsLoaded),
+            font::load(theme::ROBOTO_FLEX_TTF).map(Message::FontLoaded),
+        ])
     }
 
     pub async fn new() -> Result<Assets, Error> {
         let summoner_icons = SummonerIconMap::default();
 
-        let timer = std::time::Instant::now();
+        let timer = Instant::now();
         let mut sprites = HashMap::default();
-        let img_path = fs::read_dir(Assets::SPRITE_PATH).unwrap();
+        let img_path = fs::read_dir(Assets::SPRITE_PATH).map_err(Arc::new)?;
         for sprite in img_path {
-            let file = sprite.unwrap();
+            let file = sprite.map_err(Arc::new)?;
             let sprite = {
-                let name = file.file_name().into_string().unwrap();
+                let name = file
+                    .file_name()
+                    .into_string()
+                    .map_err(Error::InvalidFileName)?;
                 if name.starts_with(".") {
                     continue;
                 }
 
                 tracing::info!("{name:?}");
-                name.try_into().unwrap()
+                Sprite::try_from(name).map_err(Error::LoadingSprite)?
             };
             let image = image::ImageReader::open(file.path())
-                .unwrap()
+                .map_err(Arc::new)?
                 .decode()
-                .unwrap();
+                .map_err(Arc::new)?;
 
             sprites.insert(sprite, image);
         }
         tracing::debug!("Loaded sprites in {:?}", timer.elapsed());
 
-        let json_timer = std::time::Instant::now();
+        let json_timer = Instant::now();
         let mut data = HashMap::default();
-        let data_path = fs::read_dir(Assets::DATA_PATH).unwrap();
+        let data_path = fs::read_dir(Assets::DATA_PATH).map_err(Arc::new)?;
         for data_dir in data_path {
-            let file = data_dir.unwrap();
+            let file = data_dir.map_err(Arc::new)?;
             let sprite = {
-                let name = file.file_name().into_string().unwrap();
-                name.try_into().unwrap()
+                let name = file
+                    .file_name()
+                    .into_string()
+                    .map_err(Error::InvalidFileName)?;
+                DataFile::try_from(name).map_err(Error::LoadingData)?
             };
             let mut bytes = Vec::new();
-            fs::File::open(file.path())
-                .unwrap()
+            File::open(file.path())
+                .map_err(Arc::new)?
                 .read_to_end(&mut bytes)
-                .unwrap();
-            let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+                .map_err(Arc::new)?;
+            let value: serde_json::Value = serde_json::from_slice(&bytes).map_err(Arc::new)?;
 
             data.insert(sprite, value);
         }
         tracing::debug!("Loaded JSON data in {:?}", json_timer.elapsed());
 
-        let runes_timer = std::time::Instant::now();
+        let runes_timer = Instant::now();
         let mut runes = HashMap::default();
         let value: serde_json::Value = serde_json::from_reader(
-            fs::File::open(format!("{}/{}", Assets::DATA_PATH, "runesReforged.json")).unwrap(),
+            File::open(format!("{}/{}", Assets::DATA_PATH, "runesReforged.json"))
+                .map_err(Arc::new)?,
         )
-        .unwrap();
+        .map_err(Arc::new)?;
 
-        for value in value.as_array().unwrap() {
+        for value in value.as_array().ok_or(Error::LoadingData("not an array"))? {
             let path = value["icon"]
                 .as_str()
-                .unwrap()
+                .ok_or(Error::LoadingData("not a string"))?
                 .trim_start_matches("perk-images/");
-            let id = value["id"].as_u64().unwrap();
+            let id = value["id"]
+                .as_u64()
+                .ok_or(Error::LoadingData("not a u64"))?;
             runes.insert(rune::Rune(id as usize), path.to_string());
 
-            for slots in value["slots"].as_array().unwrap() {
-                for rune in slots["runes"].as_array().unwrap() {
+            for slots in value["slots"]
+                .as_array()
+                .ok_or(Error::LoadingData("not an array"))?
+            {
+                for rune in slots["runes"]
+                    .as_array()
+                    .ok_or(Error::LoadingData("not an array"))?
+                {
                     let path = rune["icon"]
                         .as_str()
-                        .unwrap()
+                        .ok_or(Error::LoadingData("not a string"))?
                         .trim_start_matches("perk-images/");
-                    let lesser_id = rune["id"].as_u64().unwrap();
+                    let lesser_id = rune["id"]
+                        .as_u64()
+                        .ok_or(Error::LoadingData("not an array"))?;
                     runes.insert(rune::Rune(lesser_id as usize), path.to_string());
                 }
             }
         }
         tracing::debug!("Loaded rune data in {:?}", runes_timer.elapsed());
 
-        let emblem_timer = std::time::Instant::now();
+        let emblem_timer = Instant::now();
         let mut emblems = HashMap::default();
-        let img_path = fs::read_dir(Assets::EMBLEMS_PATH).unwrap();
+        let img_path = fs::read_dir(Assets::EMBLEMS_PATH).map_err(Arc::new)?;
         for sprite in img_path {
-            let file = sprite.unwrap();
-            let sprite = file.file_name().into_string().unwrap();
+            let file = sprite.map_err(Arc::new)?;
+            let sprite = file
+                .file_name()
+                .into_string()
+                .map_err(Error::InvalidFileName)?;
             let image = iced::widget::image::Handle::from_path(file.path());
 
             emblems.insert(sprite, image);

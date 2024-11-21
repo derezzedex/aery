@@ -8,7 +8,7 @@ use assets::Assets;
 use screen::{profile, search_bar};
 
 use iced::widget::{column, container, horizontal_space, row, text};
-use iced::{Alignment, Element, Length, Task};
+use iced::{font, Alignment, Element, Length, Task};
 
 use aery_core as core;
 use tracing_subscriber::EnvFilter;
@@ -44,6 +44,7 @@ enum Aery {
 #[derive(Debug, Clone)]
 enum Message {
     AssetsLoaded(Result<Assets, assets::Error>),
+    FontLoaded(Result<(), font::Error>),
     ProfileLoaded(Result<profile::Data, profile::Error>),
 
     Profile(profile::Message),
@@ -65,10 +66,17 @@ impl Aery {
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::AssetsLoaded(Ok(assets)) => {
+                tracing::info!("assets loaded!");
                 *self = Self::with_assets(assets);
                 Task::none()
             }
             Message::AssetsLoaded(Err(error)) => panic!("assets load failed: {error:?}"),
+            Message::FontLoaded(Ok(_)) => {
+                tracing::info!("font loaded!");
+
+                Task::none()
+            }
+            Message::FontLoaded(Err(error)) => panic!("font load failed: {error:?}"),
             Message::ProfileLoaded(Ok(profile)) => {
                 let Self::Loaded { screen, assets } = self else {
                     return Task::none();
