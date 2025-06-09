@@ -23,11 +23,12 @@ pub fn main() -> iced::Result {
 
     tracing_subscriber::fmt().with_env_filter(env_filter).init();
 
-    iced::application("Aery", Aery::update, Aery::view)
+    iced::application(Aery::new, Aery::update, Aery::view)
+        .title("Aery")
         .antialiasing(true)
         .default_font(theme::DEFAULT_FONT)
         .window_size([1024.0, 768.0])
-        .run_with(Aery::new)
+        .run()
 }
 
 enum Screen {

@@ -95,11 +95,11 @@ pub mod summary {
     use itertools::Itertools;
 
     trait Fit {
-        fn fit(self, size: u16) -> Self;
+        fn fit(self, size: u32) -> Self;
     }
 
     impl<'a> Fit for iced::widget::Text<'a> {
-        fn fit(self, size: u16) -> iced::widget::Text<'a> {
+        fn fit(self, size: u32) -> iced::widget::Text<'a> {
             self.size(size)
                 .line_height(1.1)
                 .align_y(alignment::Vertical::Center)
@@ -233,10 +233,9 @@ pub mod summary {
                 .align_y(Alignment::Center)
                 .spacing(4);
 
-                let ratio_bar = progress_bar(0.0..=100.0, ratio)
+                let ratio_bar = container(progress_bar(0.0..=100.0, ratio).style(theme::ratio_bar))
                     .width(80.0)
-                    .height(4.0)
-                    .style(theme::ratio_bar);
+                    .height(4.0);
 
                 column![
                     text("Winrate").fit(10).color(theme::GRAY_TEXT),

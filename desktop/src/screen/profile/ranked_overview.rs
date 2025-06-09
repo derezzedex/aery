@@ -94,10 +94,9 @@ fn ranked_container<'a>(
                 ]
                 .align_y(Alignment::Center)
                 .spacing(4),
-                progress_bar(0.0..=100.0, win_rate)
+                container(progress_bar(0.0..=100.0, win_rate).style(theme::ratio_bar))
                     .width(120)
-                    .height(4)
-                    .style(theme::ratio_bar),
+                    .height(4),
             ]
             .spacing(2)
         ]

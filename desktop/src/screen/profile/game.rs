@@ -641,25 +641,29 @@ fn player<'a>(
     let damage = {
         let damage_dealt = column![
             smaller_text(player.info.stats.damage_dealt),
-            progress_bar(
-                0.0..=max_damage_dealt as f32,
-                player.info.stats.damage_dealt as f32
+            container(
+                progress_bar(
+                    0.0..=max_damage_dealt as f32,
+                    player.info.stats.damage_dealt as f32
+                )
+                .style(|_| theme::fill_bar(theme::RED)),
             )
             .width(48.0)
-            .height(6.0)
-            .style(|_| theme::fill_bar(theme::RED)),
+            .height(6.0),
         ]
         .align_x(Alignment::Center);
 
         let damage_taken = column![
             smaller_text(player.info.stats.damage_taken),
-            progress_bar(
-                0.0..=max_damage_taken as f32,
-                player.info.stats.damage_taken as f32
+            container(
+                progress_bar(
+                    0.0..=max_damage_taken as f32,
+                    player.info.stats.damage_taken as f32
+                )
+                .style(|_| theme::fill_bar(theme::LIGHT_BACKGROUND)),
             )
             .width(48.0)
-            .height(6.0)
-            .style(|_| theme::fill_bar(theme::LIGHT_BACKGROUND)),
+            .height(6.0),
         ]
         .align_x(Alignment::Center);
 

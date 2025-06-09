@@ -356,6 +356,7 @@ pub fn fill_bar(color: Color) -> progress_bar::Style {
 pub fn rule(color: iced::Color) -> widget::rule::Style {
     widget::rule::Style {
         color,
+        snap: true,
         width: 1,
         radius: 0.0.into(),
         fill_mode: widget::rule::FillMode::Full,
@@ -378,7 +379,7 @@ pub fn scrollable(
     };
 
     match status {
-        scrollable::Status::Active => scrollable::Style {
+        scrollable::Status::Active { .. } => scrollable::Style {
             container: container::Style::default(),
             vertical_rail: scrollbar,
             horizontal_rail: scrollbar,
@@ -387,10 +388,12 @@ pub fn scrollable(
         scrollable::Status::Hovered {
             is_horizontal_scrollbar_hovered: is_horizontal_scrollbar,
             is_vertical_scrollbar_hovered: is_vertical_scrollbar,
+            ..
         }
         | scrollable::Status::Dragged {
             is_horizontal_scrollbar_dragged: is_horizontal_scrollbar,
             is_vertical_scrollbar_dragged: is_vertical_scrollbar,
+            ..
         } => {
             let hovered = scrollable::Rail {
                 background: Some(Background::Color(DARK_BACKGROUND)),

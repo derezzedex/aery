@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 riven = { version = "2.69", features = ["tracing"] }
-thiserror = "1.0"
+thiserror = "2.0"
 tracing = "0.1"
 time = "0.3"
 serde = "1.0"
