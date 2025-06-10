@@ -123,13 +123,26 @@ pub mod summary {
         }
     }
 
+    fn kda(kills: usize, deaths: usize, assists: usize, total: usize) -> String {
+        if deaths == 0 {
+            return String::from("Perfect KDA");
+        }
+
+        format!(
+            "{:.1} KDA",
+            ((kills as f32 + assists as f32) / deaths as f32) / total as f32,
+        )
+    }
+
     #[derive(Debug, Clone)]
     pub struct Champion {
         pub handle: Handle,
         pub lane: Handle,
         pub wins: usize,
         pub losses: usize,
-        pub kda: f32,
+        pub kills: usize,
+        pub deaths: usize,
+        pub assists: usize,
     }
 
     #[derive(Debug, Clone, Default)]
@@ -200,7 +213,9 @@ pub mod summary {
                     lane: icon::role(role),
                     wins: stats.wins,
                     losses: stats.losses,
-                    kda: (stats.kills as f32 + stats.assists as f32) / stats.deaths as f32,
+                    kills: stats.kills,
+                    deaths: stats.deaths,
+                    assists: stats.assists,
                 })
                 .collect_vec();
 
@@ -305,12 +320,12 @@ pub mod summary {
                         horizontal_space().width(2),
                         row![
                             text("(").size(10).color(theme::RED),
-                            text!(
-                                "{:.1} KDA",
-                                ((self.role_stats.kills as f32 + self.role_stats.assists as f32)
-                                    / self.role_stats.deaths as f32)
-                                    / total as f32,
-                            )
+                            text(kda(
+                                self.role_stats.kills,
+                                self.role_stats.deaths,
+                                self.role_stats.assists,
+                                total
+                            ))
                             .size(10)
                             .color(theme::RED),
                             text(")").size(10).color(theme::RED)
@@ -356,7 +371,7 @@ pub mod summary {
                             row![
                                 image(champion.lane.clone()).width(12.0).height(12.0),
                                 container(
-                                    text!("{:.2} KDA", champion.kda)
+                                    text(kda(champion.kills, champion.deaths, champion.assists, 1))
                                         .size(10)
                                         .color(theme::GRAY_TEXT)
                                 )

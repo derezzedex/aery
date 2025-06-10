@@ -126,6 +126,10 @@ pub fn win(result: game::Result) -> String {
 }
 
 pub fn kda(kills: u32, deaths: u32, assists: u32) -> String {
+    if deaths == 0 {
+        return String::from("Perfect KDA");
+    }
+
     let mut kda = (kills as f32 + assists as f32) / deaths as f32;
     if !kda.is_normal() {
         kda = 0.0;
