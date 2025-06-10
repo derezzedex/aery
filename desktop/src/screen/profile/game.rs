@@ -370,14 +370,30 @@ impl Game {
         };
 
         let player_name_view = |player: &Player| {
-            let name = truncate(player.info.name.to_string(), 10);
+            let player_name = player
+                .info
+                .riot_id
+                .name
+                .as_ref()
+                .map(|name| {
+                    player
+                        .info
+                        .riot_id
+                        .tagline
+                        .as_ref()
+                        .map(|tag| format!("{name}#{tag}"))
+                })
+                .flatten()
+                .unwrap_or(String::from("Unknown player"));
             let summoner_icon = image(player.assets.champion_image.clone())
                 .width(16.0)
                 .height(16.0);
             let summoner_name = if self.player.info.puuid == player.info.puuid {
-                text(name).size(8.0).line_height(iced::Pixels(12.0))
+                text(truncated(player_name, 10))
+                    .size(8.0)
+                    .line_height(iced::Pixels(12.0))
             } else {
-                widget::small_text(name)
+                widget::small_text(truncated(player_name, 10))
                     .size(8.0)
                     .line_height(iced::Pixels(12.0))
             };
@@ -559,7 +575,7 @@ fn smaller_text<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message
     text(content).size(10).color(theme::SUB_TEXT).into()
 }
 
-fn truncate(string: String, max: usize) -> String {
+fn truncated(string: String, max: usize) -> String {
     match string.char_indices().nth(max) {
         None => string,
         Some((idx, _)) => format!("{string:.idx$}…"),
@@ -618,10 +634,25 @@ fn player<'a>(
             .align_x(Alignment::Center)
     };
 
+    let player_name = player
+        .info
+        .riot_id
+        .name
+        .as_ref()
+        .map(|name| {
+            player
+                .info
+                .riot_id
+                .tagline
+                .as_ref()
+                .map(|tag| format!("{name}#{tag}"))
+        })
+        .flatten()
+        .unwrap_or(String::from("Unknown player"));
     let name = if is_player {
-        text(&player.info.name).font(theme::SEMIBOLD).size(12)
+        text(player_name).font(theme::SEMIBOLD).size(12)
     } else {
-        text(&player.info.name).size(12)
+        text(truncated(player_name, 10)).size(12)
     };
 
     let kda = {

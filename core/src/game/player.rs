@@ -7,7 +7,6 @@ use crate::{Champion, Team};
 #[derive(Debug, Clone)]
 pub struct Player {
     pub puuid: String,
-    pub name: String,
     pub riot_id: account::RiotId,
 
     pub team: Team,
@@ -67,7 +66,6 @@ impl From<&riven::models::match_v5::Participant> for Player {
 
         Self {
             puuid: participant.puuid.clone(),
-            name: participant.summoner_name.clone(),
             riot_id: account::RiotId {
                 name: participant.riot_id_game_name.clone(),
                 tagline: participant.riot_id_tagline.clone(),
