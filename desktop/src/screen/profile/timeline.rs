@@ -3,7 +3,7 @@ use crate::profile;
 use crate::theme;
 
 use iced::padding;
-use iced::widget::{column, container, scrollable};
+use iced::widget::{column, container, scrollable, text};
 use iced::{Alignment, Element, Length};
 
 use summary::Summary;
@@ -20,11 +20,20 @@ pub struct Timeline {
 }
 
 impl Timeline {
-    pub fn from_profile(assets: &crate::assets::Assets, profile: &profile::Data) -> Self {
-        let summary = Summary::from_games(assets, &profile.summoner, &profile.games);
-
+    pub fn from_profile(
+        assets: &crate::assets::Assets,
+        profile: &profile::Data,
+        queue_filter: &profile::QueueFilter,
+    ) -> Self {
         let games = profile
             .games
+            .iter()
+            .filter(|game| *queue_filter == game.queue())
+            .collect::<Vec<_>>();
+
+        let summary = Summary::from_games(assets, &profile.summoner, &games);
+
+        let games = games
             .iter()
             .map(|game| Game::from_summoner_game(assets, &profile.summoner, game))
             .collect();
@@ -45,15 +54,23 @@ impl Timeline {
             .games
             .iter()
             .enumerate()
-            .map(|(i, game)| game.view().map(move |message| Message::Game(i, message)));
+            .map(|(i, game)| game.view().map(move |message| Message::Game(i, message)))
+            .collect::<Vec<_>>();
 
-        let content: Element<_> = column(games)
+        if games.is_empty() {
+            return container(text("No games found...").size(20))
+                .padding(8)
+                .height(Length::Fill)
+                .center_x(682)
+                .into();
+        }
+
+        let content = column(games)
             .width(Length::Fill)
             .clip(true)
             .padding(padding::right(12))
             .spacing(4)
-            .align_x(Alignment::Center)
-            .into();
+            .align_x(Alignment::Center);
 
         let summary = self.summary.view();
         let timeline = column![
@@ -139,7 +156,7 @@ pub mod summary {
         pub fn from_games(
             assets: &crate::Assets,
             player: &core::Summoner,
-            games: &[core::Game],
+            games: &[&core::Game],
         ) -> Summary {
             let games = games
                 .iter()

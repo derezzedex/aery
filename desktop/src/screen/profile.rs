@@ -19,6 +19,7 @@ use crate::screen::search_bar::{self, SearchBar};
 use crate::theme;
 
 use core::game::Queue;
+use std::sync::Arc;
 
 use iced::widget::{column, container, row};
 use iced::{Element, Length, Task};
@@ -44,6 +45,15 @@ impl QueueFilter {
         QueueFilter::Specific(Queue::BotBeginner),
         QueueFilter::Specific(Queue::BotIntermediate),
     ];
+}
+
+impl PartialEq<Queue> for QueueFilter {
+    fn eq(&self, other: &Queue) -> bool {
+        match self {
+            Self::All => true,
+            Self::Specific(queue) => queue == other,
+        }
+    }
 }
 
 impl std::fmt::Display for QueueFilter {
@@ -76,30 +86,37 @@ pub struct Profile {
     summoner: Summoner,
     search_bar: SearchBar,
     ranked_overview: RankedOverview,
+    data: Arc<Data>,
 }
 
 impl Profile {
     pub fn from_profile(assets: &mut crate::Assets, profile: Data) -> Self {
+        let queue_filter = QueueFilter::default();
+        let timeline = Timeline::from_profile(assets, &profile, &queue_filter);
+
         Self {
             region: core::Region::default(),
-            queue_filter: QueueFilter::default(),
+            queue_filter,
 
             search_bar: SearchBar::new(),
             summoner: Summoner::from_profile(assets, &profile),
-            timeline: Timeline::from_profile(assets, &profile),
+            timeline,
             ranked_overview: RankedOverview::from_profile(assets, &profile),
+            data: Arc::new(profile),
         }
     }
 
     pub fn update(&mut self, message: Message, assets: &mut crate::Assets) -> Task<Message> {
         match message {
             Message::QueueFilterChanged(new_filter) => {
+                self.timeline = Timeline::from_profile(assets, &self.data, &new_filter);
                 self.queue_filter = new_filter;
             }
             Message::FetchedData(Ok(data)) => {
                 self.summoner = Summoner::from_profile(assets, &data);
-                self.timeline = Timeline::from_profile(assets, &data);
+                self.timeline = Timeline::from_profile(assets, &data, &self.queue_filter);
                 self.ranked_overview = RankedOverview::from_profile(assets, &data);
+                self.data = Arc::new(data);
             }
             Message::FetchedData(Err(error)) => panic!("failed: {error}"),
             Message::Timeline(message) => self.timeline.update(message),
