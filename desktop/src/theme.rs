@@ -1,7 +1,6 @@
 use crate::core::game;
 
 use iced::border;
-use iced::color;
 use iced::font;
 use iced::overlay::menu;
 use iced::widget;
@@ -10,8 +9,8 @@ use iced::widget::container;
 use iced::widget::pick_list;
 use iced::widget::progress_bar;
 use iced::widget::text_input;
-use iced::Background;
-use iced::Color;
+use iced::Border;
+use iced::{Background, Color, Theme};
 
 pub const ROBOTO_FLEX_TTF: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -36,22 +35,6 @@ pub const BOLD: iced::Font = iced::Font {
     ..DEFAULT_FONT
 };
 
-pub const DARKER_BACKGROUND: Color = color!(0x0d0d0d);
-pub const DARK_BACKGROUND: Color = color!(0x1a1a1a);
-pub const LIGHTER_BACKGROUND: Color = color!(0x333333);
-pub const LIGHT_BACKGROUND: Color = color!(0xf2f2f2);
-
-pub const RED: Color = color!(0xff5733);
-pub const BLUE: Color = color!(0x0094ff);
-pub const GOLD: Color = color!(0xcd8837);
-
-pub const GRAY_TEXT: Color = color!(0x808080);
-pub const SUB_TEXT: Color = color!(0xcccccc);
-
-pub const LIGHTER_ALPHA: Color = color!(0x333333, 0.7);
-pub const LIGHT_ALPHA: Color = color!(0x666666, 0.9);
-pub const BLUE_ALPHA: Color = color!(0x0094ff, 0.7);
-
 pub fn logo<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
     container(iced::widget::Space::new(28.0, 28.0))
         .style(icon)
@@ -63,10 +46,12 @@ pub mod icon {
     use crate::core::game;
     use iced::widget::image;
     use iced::widget::svg;
-    use iced::Color;
+    use iced::Theme;
 
-    fn colored(color: Color) -> impl Fn(&iced::Theme, svg::Status) -> svg::Style {
-        move |_, _| svg::Style { color: Some(color) }
+    fn text(theme: &Theme, _status: svg::Status) -> svg::Style {
+        svg::Style {
+            color: Some(theme.palette().text),
+        }
     }
 
     pub fn chevron_down<'a>() -> svg::Svg<'a> {
@@ -75,7 +60,7 @@ pub mod icon {
             "/assets/img/icons/chevron-down.svg"
         ));
 
-        svg(path).style(colored(Color::WHITE))
+        svg(path).style(text)
     }
 
     pub fn chevron_up<'a>() -> svg::Svg<'a> {
@@ -84,7 +69,7 @@ pub mod icon {
             "/assets/img/icons/chevron-up.svg"
         ));
 
-        svg(path).style(colored(Color::WHITE))
+        svg(path).style(text)
     }
 
     pub fn search<'a>() -> svg::Svg<'a> {
@@ -93,7 +78,7 @@ pub mod icon {
             "/assets/img/icons/search.svg"
         ));
 
-        svg(path).style(colored(Color::WHITE))
+        svg(path).style(text)
     }
 
     pub fn clock<'a>() -> svg::Svg<'a> {
@@ -128,234 +113,299 @@ pub mod icon {
     }
 }
 
-pub fn left_bar(_theme: &iced::Theme) -> container::Style {
+pub fn victory(theme: &Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(theme.palette().success),
+    }
+}
+
+pub fn defeat(theme: &Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(theme.palette().danger),
+    }
+}
+
+pub fn text(theme: &Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(theme.palette().text.scale_alpha(0.8)),
+    }
+}
+
+pub fn left_bar(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
     container::Style {
-        background: Some(Background::Color(BLUE)),
+        background: Some(Background::Color(palette.primary.strong.color)),
         border: border::width(0),
-        text_color: Some(Color::WHITE),
+        text_color: Some(palette.primary.strong.text),
         ..Default::default()
     }
 }
 
-pub fn search_bar(_theme: &iced::Theme) -> container::Style {
+pub fn search_bar(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
+
     container::Style {
-        background: Some(Background::Color(LIGHTER_BACKGROUND)),
+        background: Some(Background::Color(palette.background.weakest.color)),
         border: border::width(0),
-        text_color: Some(SUB_TEXT),
+        text_color: Some(palette.background.weakest.text),
         ..Default::default()
     }
 }
 
-pub fn timeline(_theme: &iced::Theme) -> container::Style {
+pub fn timeline(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
     container::Style {
-        background: Some(Background::Color(DARKER_BACKGROUND)),
+        background: Some(Background::Color(palette.background.strong.color)),
         border: border::width(0),
-        text_color: Some(Color::WHITE),
+        text_color: Some(palette.background.strong.text),
         ..Default::default()
     }
 }
 
-pub fn summoner_icon(_theme: &iced::Theme) -> container::Style {
+pub fn summoner_icon(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
     container::Style {
-        background: Some(Background::Color(LIGHT_BACKGROUND)),
-        border: border::rounded(2).width(2).color(GOLD),
-        text_color: Some(Color::WHITE),
+        background: Some(Background::Color(palette.background.weak.color)),
+        border: border::rounded(2)
+            .width(2)
+            .color(palette.warning.weak.color),
+        text_color: Some(palette.background.weak.text),
         ..Default::default()
     }
 }
 
-pub fn summoner_level(_theme: &iced::Theme) -> container::Style {
+pub fn summoner_level(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
     container::Style {
-        background: Some(Background::Color(DARK_BACKGROUND)),
-        border: border::rounded(2).width(1).color(GOLD),
-        text_color: Some(Color::WHITE),
+        background: Some(Background::Color(palette.background.base.color)),
+        border: border::rounded(2)
+            .width(1)
+            .color(palette.warning.weak.color),
+        text_color: Some(palette.background.base.text),
         ..Default::default()
     }
 }
 
-pub fn dark(_theme: &iced::Theme) -> container::Style {
+pub fn dark(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
+
     container::Style {
-        background: Some(Background::Color(DARK_BACKGROUND)),
+        background: Some(Background::Color(palette.background.base.color)),
         border: border::rounded(4),
-        text_color: Some(Color::WHITE),
+        text_color: Some(palette.background.base.text),
         ..Default::default()
     }
 }
 
-pub fn icon(_theme: &iced::Theme) -> container::Style {
+pub fn icon(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
     container::Style {
-        background: Some(Background::Color(LIGHT_BACKGROUND)),
+        background: Some(Background::Color(palette.background.weak.color)),
         border: border::width(0),
-        text_color: Some(Color::BLACK),
+        text_color: Some(palette.background.weak.text),
         ..Default::default()
     }
 }
 
-pub fn left_border(result: game::Result) -> container::Style {
+pub fn left_border(theme: &Theme, result: game::Result) -> container::Style {
+    let palette = theme.extended_palette();
     container::Style {
-        background: Some(Background::Color(win_color(result))),
+        background: Some(Background::Color(win_color(theme, result))),
         border: border::rounded(border::left(4)),
-        text_color: Some(Color::WHITE),
+        text_color: Some(palette.background.weak.text),
         ..Default::default()
     }
 }
 
-pub fn team_header(_theme: &iced::Theme) -> container::Style {
+pub fn team_header(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
     container::Style {
-        background: Some(Background::Color(DARK_BACKGROUND)),
+        background: Some(Background::Color(palette.background.base.color)),
         border: border::width(0),
-        text_color: Some(Color::WHITE),
+        text_color: Some(palette.background.base.color),
         ..Default::default()
     }
 }
 
-pub fn team_player(is_player: bool) -> container::Style {
+pub fn team_player(theme: &Theme, is_player: bool) -> container::Style {
+    let palette = theme.extended_palette();
     if is_player {
         container::Style {
-            background: Some(Background::Color(LIGHTER_ALPHA)),
+            background: Some(Background::Color(palette.background.weak.color)),
             border: border::width(0),
-            text_color: Some(Color::WHITE),
+            text_color: Some(palette.background.weak.text),
             ..Default::default()
         }
     } else {
         container::Style {
-            background: Some(Background::Color(DARK_BACKGROUND)),
+            background: Some(Background::Color(palette.background.base.color)),
             border: border::width(0),
-            text_color: Some(Color::WHITE),
+            text_color: Some(palette.background.base.text),
             ..Default::default()
         }
     }
 }
 
-pub fn win_color(result: impl Into<game::Result>) -> Color {
+pub fn win_color(theme: &Theme, result: impl Into<game::Result>) -> Color {
+    let palette = theme.extended_palette();
     match result.into() {
-        game::Result::Remake => SUB_TEXT,
-        game::Result::Surrender | game::Result::Defeat => RED,
-        game::Result::Victory => BLUE,
+        game::Result::Remake => palette.background.weak.color,
+        game::Result::Surrender | game::Result::Defeat => palette.danger.base.color,
+        game::Result::Victory => palette.success.base.color,
     }
 }
 
-pub fn expander(expanded: bool, status: button::Status) -> button::Style {
+pub fn expander(theme: &Theme, status: button::Status, expanded: bool) -> button::Style {
+    let palette = theme.extended_palette();
     let background = if matches!(status, button::Status::Hovered) {
-        Some(Background::Color(LIGHT_ALPHA))
+        Some(Background::Color(palette.background.strongest.color))
     } else {
-        Some(Background::Color(LIGHTER_ALPHA))
+        Some(Background::Color(palette.background.weak.color))
     };
 
     if expanded {
         button::Style {
-            background,
+            background: Some(Background::Color(palette.background.strongest.color)),
             border: border::rounded(border::right(4)),
-            text_color: Color::WHITE,
+            text_color: palette.background.base.text,
             ..Default::default()
         }
     } else {
         button::Style {
             background,
             border: border::rounded(border::right(4).bottom(4)),
-            text_color: Color::WHITE,
+            text_color: palette.background.base.text,
             ..Default::default()
         }
     }
 }
 
-pub fn update(_theme: &iced::Theme, status: button::Status) -> button::Style {
-    let background = if matches!(status, button::Status::Hovered) {
-        Some(Background::Color(BLUE_ALPHA))
-    } else {
-        Some(Background::Color(BLUE))
-    };
-
+pub fn update(theme: &Theme, status: button::Status) -> button::Style {
     button::Style {
-        background,
         border: border::rounded(2),
-        text_color: Color::WHITE,
-        ..Default::default()
+        ..button::primary(theme, status)
     }
 }
 
-pub fn region(theme: &iced::Theme, status: pick_list::Status) -> pick_list::Style {
+pub fn region(theme: &Theme, status: pick_list::Status) -> pick_list::Style {
+    let palette = theme.extended_palette();
+    let background = if matches!(status, pick_list::Status::Hovered) {
+        Background::Color(palette.background.strong.color)
+    } else {
+        Background::Color(palette.background.weakest.color)
+    };
+
     pick_list::Style {
-        background: Background::Color(LIGHTER_BACKGROUND),
+        background,
         border: border::width(0),
         ..pick_list::default(theme, status)
     }
 }
 
-pub fn region_menu(theme: &iced::Theme) -> menu::Style {
+pub fn region_menu(theme: &Theme) -> menu::Style {
+    let palette = theme.extended_palette();
     menu::Style {
-        background: Background::Color(LIGHTER_BACKGROUND),
+        background: Background::Color(palette.background.weakest.color),
         border: border::width(0),
-        selected_background: Background::Color(LIGHT_ALPHA),
+        selected_background: Background::Color(palette.background.weak.color.scale_alpha(0.9)),
+        selected_text_color: palette.background.base.text,
         ..menu::default(theme)
     }
 }
 
-pub fn expand(_theme: &iced::Theme, status: button::Status) -> button::Style {
+pub fn expand(theme: &Theme, status: button::Status) -> button::Style {
+    let palette = theme.extended_palette();
     let background = if matches!(status, button::Status::Hovered) {
-        Some(Background::Color(LIGHT_ALPHA))
+        Some(Background::Color(palette.background.weak.color))
     } else {
-        Some(Background::Color(LIGHTER_BACKGROUND))
+        Some(Background::Color(palette.background.weakest.color))
     };
 
     button::Style {
         background,
         border: border::rounded(2),
-        text_color: Color::WHITE,
+        text_color: palette.background.weak.text,
         ..Default::default()
     }
 }
 
 pub fn queue_picklist(
     selected: bool,
-    theme: &iced::Theme,
+    theme: &Theme,
     status: pick_list::Status,
 ) -> pick_list::Style {
-    let color = if selected { LIGHT_ALPHA } else { LIGHTER_ALPHA };
+    let palette = theme.extended_palette();
+
+    let background = if matches!(status, pick_list::Status::Hovered) {
+        Background::Color(palette.background.strong.color)
+    } else if selected {
+        Background::Color(palette.background.strongest.color)
+    } else {
+        Background::Color(palette.background.weakest.color)
+    };
 
     pick_list::Style {
-        background: Background::Color(color),
+        text_color: palette.background.weak.text,
+        placeholder_color: palette.background.base.text.scale_alpha(0.7),
+        background,
         border: border::rounded(2),
         ..pick_list::default(theme, status)
     }
 }
 
-pub fn queue_filter(selected: bool, status: button::Status) -> button::Style {
-    let background = if matches!(status, button::Status::Hovered) {
-        Some(Background::Color(LIGHT_BACKGROUND.scale_alpha(0.4)))
-    } else if selected {
-        Some(Background::Color(LIGHT_ALPHA))
+pub fn queue_filter(theme: &Theme, status: button::Status, selected: bool) -> button::Style {
+    let palette = theme.extended_palette();
+
+    let color = if selected {
+        palette.background.strongest.color
     } else {
-        Some(Background::Color(LIGHTER_ALPHA))
+        palette.background.weakest.color
     };
 
-    button::Style {
-        background,
+    let base = button::Style {
+        background: Some(Background::Color(color)),
         border: border::rounded(4),
-        text_color: Color::WHITE,
+        text_color: palette.background.weakest.text,
         ..Default::default()
+    };
+
+    match status {
+        button::Status::Active | button::Status::Pressed => base,
+        button::Status::Hovered => button::Style {
+            background: Some(Background::Color(palette.background.strong.color)),
+            ..base
+        },
+        button::Status::Disabled => button::Style {
+            background: Some(Background::Color(
+                palette.background.weakest.color.scale_alpha(0.5),
+            )),
+            text_color: palette.background.weakest.text.scale_alpha(0.5),
+            ..base
+        },
     }
 }
 
-pub fn ratio_bar(_theme: &iced::Theme) -> progress_bar::Style {
+pub fn ratio_bar(theme: &Theme) -> progress_bar::Style {
+    let palette = theme.extended_palette();
     progress_bar::Style {
-        background: Background::Color(RED),
-        bar: Background::Color(BLUE),
+        background: Background::Color(palette.danger.base.color),
+        bar: Background::Color(palette.success.base.color),
         border: border::rounded(0),
     }
 }
 
-pub fn fill_bar(color: Color) -> progress_bar::Style {
+pub fn fill_bar(theme: &Theme, color: Color) -> progress_bar::Style {
+    let palette = theme.extended_palette();
     progress_bar::Style {
-        background: Background::Color(LIGHTER_BACKGROUND),
+        background: Background::Color(palette.background.strong.color),
         bar: Background::Color(color),
         border: border::rounded(border::radius(0)),
     }
 }
 
-pub fn rule(color: iced::Color) -> widget::rule::Style {
+pub fn rule(theme: &Theme) -> widget::rule::Style {
     widget::rule::Style {
-        color,
+        color: theme.palette().text.scale_alpha(0.6),
         snap: true,
         width: 1,
         radius: 0.0.into(),
@@ -363,17 +413,15 @@ pub fn rule(color: iced::Color) -> widget::rule::Style {
     }
 }
 
-pub fn scrollable(
-    _theme: &iced::Theme,
-    status: widget::scrollable::Status,
-) -> widget::scrollable::Style {
+pub fn scrollable(theme: &Theme, status: widget::scrollable::Status) -> widget::scrollable::Style {
     use widget::scrollable;
+    let palette = theme.extended_palette();
 
     let scrollbar = scrollable::Rail {
-        background: None,
+        background: Some(Background::Color(palette.background.strongest.color)),
         border: border::rounded(2),
         scroller: scrollable::Scroller {
-            color: LIGHTER_ALPHA,
+            color: palette.background.weak.color,
             border: border::rounded(2),
         },
     };
@@ -396,9 +444,8 @@ pub fn scrollable(
             ..
         } => {
             let hovered = scrollable::Rail {
-                background: Some(Background::Color(DARK_BACKGROUND)),
                 scroller: scrollable::Scroller {
-                    color: LIGHT_ALPHA,
+                    color: palette.background.weakest.color,
                     ..scrollbar.scroller
                 },
                 ..scrollbar
@@ -422,29 +469,56 @@ pub fn scrollable(
     }
 }
 
-pub fn search_text_input(_theme: &iced::Theme, status: text_input::Status) -> text_input::Style {
+pub fn search(theme: &Theme, status: button::Status) -> button::Style {
+    let palette = theme.extended_palette();
+    let background = if matches!(status, button::Status::Hovered) {
+        Some(Background::Color(palette.background.strong.color))
+    } else {
+        Some(Background::Color(Color::TRANSPARENT))
+    };
+
+    button::Style {
+        background,
+        text_color: palette.background.base.text,
+        ..Default::default()
+    }
+}
+
+pub fn search_text_input(theme: &Theme, status: text_input::Status) -> text_input::Style {
+    let palette = theme.extended_palette();
+    let background = if matches!(status, text_input::Status::Hovered) {
+        Background::Color(palette.background.strongest.color)
+    } else {
+        Background::Color(Color::TRANSPARENT)
+    };
+
     let active = text_input::Style {
-        background: Background::Color(Color::TRANSPARENT),
+        background,
         border: iced::Border {
             radius: 0.0.into(),
             width: 0.0,
             color: Color::TRANSPARENT,
         },
         icon: Color::TRANSPARENT,
-        placeholder: SUB_TEXT,
-        value: Color::WHITE,
-        selection: BLUE,
+        placeholder: palette.background.base.text,
+        value: palette.background.base.text,
+        selection: palette.background.base.color,
     };
 
     match status {
-        text_input::Status::Active => active,
-        text_input::Status::Hovered | text_input::Status::Focused { .. } => text_input::Style {
-            background: Background::Color(LIGHTER_ALPHA),
+        text_input::Status::Hovered | text_input::Status::Active => active,
+        text_input::Status::Focused { .. } => text_input::Style {
+            background: Background::Color(palette.background.strongest.color),
+            border: Border {
+                color: palette.primary.strong.color,
+                width: 2.0,
+                ..active.border
+            },
             ..active
         },
         text_input::Status::Disabled => widget::text_input::Style {
-            background: Background::Color(DARKER_BACKGROUND),
-            value: SUB_TEXT,
+            background: Background::Color(palette.background.strong.color.scale_alpha(0.5)),
+            value: palette.background.base.text.scale_alpha(0.5),
             ..active
         },
     }

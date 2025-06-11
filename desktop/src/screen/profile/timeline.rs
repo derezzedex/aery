@@ -237,7 +237,7 @@ pub mod summary {
 
             let title_bar = row![
                 text("Recent summary").font(theme::SEMIBOLD).size(12),
-                text!("last {total} games").color(theme::GRAY_TEXT).size(10)
+                text!("last {total} games").style(theme::text).size(10)
             ]
             .padding(padding::top(2).right(6).left(6))
             .align_y(Alignment::Center)
@@ -248,19 +248,21 @@ pub mod summary {
                     row![
                         row![
                             text!("{}", self.wins).fit(12),
-                            text("W").fit(12).color(theme::GRAY_TEXT)
+                            text("W").fit(12).style(theme::text)
                         ]
                         .spacing(1),
                         row![
                             text!("{}", self.losses).fit(12),
-                            text("L").fit(12).color(theme::GRAY_TEXT)
+                            text("L").fit(12).style(theme::text)
                         ]
                     ]
                     .spacing(4),
-                    text("·").fit(18).color(theme::SUB_TEXT),
+                    text("·").fit(18).style(theme::text),
                     text!("{:.1}%", ratio)
                         .fit(12)
-                        .color(theme::win_color(is_positive_ratio)),
+                        .style(move |theme| text::Style {
+                            color: Some(theme::win_color(theme, is_positive_ratio))
+                        }),
                 ]
                 .align_y(Alignment::Center)
                 .spacing(4);
@@ -270,7 +272,7 @@ pub mod summary {
                     .height(4.0);
 
                 column![
-                    text("Winrate").fit(10).color(theme::GRAY_TEXT),
+                    text("Winrate").fit(10).style(theme::text),
                     vertical_space().height(2),
                     ratio_text,
                     ratio_bar,
@@ -295,31 +297,33 @@ pub mod summary {
                         row![
                             row![
                                 text!("{}", self.role_stats.wins).fit(12),
-                                text("W").fit(12).color(theme::GRAY_TEXT)
+                                text("W").fit(12).style(theme::text)
                             ]
                             .spacing(1),
                             row![
                                 text!("{}", self.role_stats.losses).fit(12),
-                                text("L").fit(12).color(theme::GRAY_TEXT)
+                                text("L").fit(12).style(theme::text)
                             ]
                         ]
                         .spacing(4),
-                        text("·").fit(18).color(theme::SUB_TEXT),
+                        text("·").fit(18).style(theme::text),
                         text!("{:.1}%", lane_ratio)
                             .fit(12)
-                            .color(theme::win_color(lane_ratio > 50.0)),
+                            .style(move |theme| text::Style {
+                                color: Some(theme::win_color(theme, lane_ratio > 50.0))
+                            }),
                     ]
                     .align_y(Alignment::Center)
                     .spacing(4),
                     row![
                         text!("{:.1}", kill_ratio).size(10),
-                        text("/").size(10).color(theme::GRAY_TEXT),
+                        text("/").size(10).style(theme::text),
                         text!("{:.1}", death_ratio).size(10),
-                        text("/").size(10).color(theme::GRAY_TEXT),
+                        text("/").size(10).style(theme::text),
                         text!("{:.1}", assist_ratio).size(10),
                         horizontal_space().width(2),
                         row![
-                            text("(").size(10).color(theme::RED),
+                            text("(").size(10).style(theme::defeat),
                             text(kda(
                                 self.role_stats.kills,
                                 self.role_stats.deaths,
@@ -327,8 +331,8 @@ pub mod summary {
                                 total
                             ))
                             .size(10)
-                            .color(theme::RED),
-                            text(")").size(10).color(theme::RED)
+                            .style(theme::defeat),
+                            text(")").size(10).style(theme::defeat)
                         ],
                     ]
                     .spacing(2)
@@ -336,7 +340,7 @@ pub mod summary {
                 ];
 
                 column![
-                    text("Lane").size(10).height(13).color(theme::GRAY_TEXT),
+                    text("Lane").size(10).height(13).style(theme::text),
                     vertical_space().height(1),
                     row![lane_icon, lane_info]
                         .align_y(Alignment::Center)
@@ -361,10 +365,12 @@ pub mod summary {
                             row![
                                 text!("{:.1}%", winrate)
                                     .size(10)
-                                    .color(theme::win_color(winrate > 50.0)),
+                                    .style(move |theme| text::Style {
+                                        color: Some(theme::win_color(theme, winrate > 50.0))
+                                    }),
                                 text!("({}W {}L)", champion.wins, champion.losses)
                                     .size(10)
-                                    .color(theme::GRAY_TEXT)
+                                    .style(theme::text)
                             ]
                             .align_y(Alignment::Center)
                             .spacing(2),
@@ -373,7 +379,7 @@ pub mod summary {
                                 container(
                                     text(kda(champion.kills, champion.deaths, champion.assists, 1))
                                         .size(10)
-                                        .color(theme::GRAY_TEXT)
+                                        .style(theme::text)
                                 )
                                 .padding(padding::top(2).left(2))
                                 .center_y(Length::Fill)
@@ -388,7 +394,7 @@ pub mod summary {
                 });
 
                 column![
-                    text("Champions").size(10).color(theme::GRAY_TEXT),
+                    text("Champions").size(10).style(theme::text),
                     row(content).spacing(8).align_y(Alignment::Center)
                 ]
                 .spacing(8)
@@ -404,7 +410,7 @@ pub mod summary {
 
             let content = column![
                 title_bar,
-                container(horizontal_rule(2).style(|_| theme::rule(theme::GRAY_TEXT)))
+                container(horizontal_rule(2).style(theme::rule))
                     .width(iced::Length::Fill)
                     .padding([0, 4]),
                 body

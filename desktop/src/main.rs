@@ -8,7 +8,7 @@ use assets::Assets;
 use screen::{profile, search_bar};
 
 use iced::widget::{column, container, horizontal_space, row, text};
-use iced::{font, Alignment, Element, Length, Task};
+use iced::{font, Alignment, Element, Length, Task, Theme};
 
 use aery_core as core;
 use tracing_subscriber::EnvFilter;
@@ -24,6 +24,7 @@ pub fn main() -> iced::Result {
     tracing_subscriber::fmt().with_env_filter(env_filter).init();
 
     iced::application(Aery::new, Aery::update, Aery::view)
+        .theme(Aery::theme)
         .title("Aery")
         .antialiasing(true)
         .default_font(theme::DEFAULT_FONT)
@@ -61,6 +62,20 @@ impl Aery {
         Self::Loaded {
             screen: Screen::Landing(screen::SearchBar::new()),
             assets,
+        }
+    }
+
+    fn theme(&self) -> Theme {
+        match self {
+            Self::Loading
+            | Self::Loaded {
+                screen: Screen::Landing(_),
+                ..
+            } => Theme::Moonfly,
+            Self::Loaded {
+                screen: Screen::Profile(profile),
+                ..
+            } => profile.theme(),
         }
     }
 

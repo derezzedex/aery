@@ -62,7 +62,7 @@ impl SearchBar {
                         .style(theme::search_text_input)
                         .size(12),
                     button(search)
-                        .style(button::text)
+                        .style(theme::search)
                         .on_press(Message::SearchPressed),
                 ]
                 .align_y(Alignment::Center)

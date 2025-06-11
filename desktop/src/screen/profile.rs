@@ -10,6 +10,7 @@ use iced::widget::pick_list;
 use iced::widget::text;
 use iced::widget::vertical_space;
 use iced::Alignment;
+use iced::Theme;
 use ranked_overview::RankedOverview;
 use summoner::Summoner;
 use timeline::Timeline;
@@ -75,6 +76,7 @@ pub enum Message {
     RankedOverview(ranked_overview::Message),
 
     QueueFilterChanged(QueueFilter),
+    ThemeChanged(Theme),
 }
 
 #[derive(Debug, Clone)]
@@ -87,12 +89,14 @@ pub struct Profile {
     search_bar: SearchBar,
     ranked_overview: RankedOverview,
     data: Arc<Data>,
+    theme: Theme,
 }
 
 impl Profile {
     pub fn from_profile(assets: &mut crate::Assets, profile: Data) -> Self {
         let queue_filter = QueueFilter::default();
         let timeline = Timeline::from_profile(assets, &profile, &queue_filter);
+        let theme = Theme::Moonfly;
 
         Self {
             region: core::Region::default(),
@@ -103,11 +107,15 @@ impl Profile {
             timeline,
             ranked_overview: RankedOverview::from_profile(assets, &profile),
             data: Arc::new(profile),
+            theme,
         }
     }
 
     pub fn update(&mut self, message: Message, assets: &mut crate::Assets) -> Task<Message> {
         match message {
+            Message::ThemeChanged(theme) => {
+                self.theme = theme;
+            }
             Message::QueueFilterChanged(new_filter) => {
                 self.timeline = Timeline::from_profile(assets, &self.data, &new_filter);
                 self.queue_filter = new_filter;
@@ -169,6 +177,10 @@ impl Profile {
                 horizontal_space().width(Length::FillPortion(2)),
                 self.search_bar.view().map(Message::SearchBar),
                 horizontal_space().width(Length::FillPortion(2)),
+                pick_list(Theme::ALL, Some(self.theme.clone()), Message::ThemeChanged)
+                    .style(|theme, status| theme::queue_picklist(false, theme, status))
+                    .menu_style(theme::region_menu)
+                    .text_size(12),
             ]
             .align_y(Alignment::Center),
         )
@@ -186,12 +198,16 @@ impl Profile {
         .style(theme::timeline)
         .into()
     }
+
+    pub fn theme(&self) -> Theme {
+        self.theme.clone()
+    }
 }
 
 fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
     let queue_button = |queue: QueueFilter| -> Element<Message> {
         button(text!("{queue}").size(12))
-            .style(move |_, status| theme::queue_filter(selected == queue, status))
+            .style(move |theme, status| theme::queue_filter(theme, status, selected == queue))
             .on_press(Message::QueueFilterChanged(queue))
             .into()
     };

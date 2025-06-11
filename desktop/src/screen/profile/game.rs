@@ -223,7 +223,7 @@ impl Game {
             let role: Element<_> = if let Some(role) = self.player.info.role {
                 row![
                     image(icon::role(role)).width(12.0).height(12.0),
-                    text(formatting::role(role)).color(theme::SUB_TEXT).size(10),
+                    text(formatting::role(role)).style(theme::text).size(10),
                 ]
                 .align_y(Alignment::Center)
                 .spacing(4)
@@ -235,13 +235,15 @@ impl Game {
             column![
                 text(formatting::win(self.result))
                     .font(theme::SEMIBOLD)
-                    .color(theme::win_color(self.result))
+                    .style(move |theme| text::Style {
+                        color: Some(theme::win_color(theme, self.result))
+                    })
                     .size(18),
                 column![
                     text(self.queue.to_string()).size(11),
                     container(
                         text(formatting::time_since(now, self.time))
-                            .color(theme::SUB_TEXT)
+                            .style(theme::text)
                             .size(10)
                     ),
                 ],
@@ -253,7 +255,7 @@ impl Game {
                         container(
                             text(formatting::duration(self.duration))
                                 .size(10)
-                                .color(theme::SUB_TEXT)
+                                .style(theme::text)
                         ),
                     ]
                     .align_y(Alignment::Center)
@@ -306,11 +308,11 @@ impl Game {
         let player_stats = {
             let kda = row![
                 text(self.player.info.stats.kills).size(15),
-                text("/").color(theme::GRAY_TEXT).size(15),
+                text("/").style(theme::text).size(15),
                 text(self.player.info.stats.deaths)
-                    .color(theme::RED)
+                    .style(theme::defeat)
                     .size(15),
-                text("/").color(theme::GRAY_TEXT).size(15),
+                text("/").style(theme::text).size(15),
                 text(self.player.info.stats.assists).size(15)
             ]
             .align_y(Alignment::Center)
@@ -323,7 +325,7 @@ impl Game {
                     self.player.info.stats.assists
                 ))
                 .size(10)
-                .color(theme::SUB_TEXT)]
+                .style(theme::text)]
                 .spacing(4)
                 .align_y(Alignment::Center),
                 row![text(formatting::creep_score(
@@ -331,14 +333,14 @@ impl Game {
                     self.duration.whole_minutes() as u32
                 ))
                 .size(10)
-                .color(theme::SUB_TEXT)]
+                .style(theme::text)]
                 .spacing(4)
                 .align_y(Alignment::Center),
                 row![text(formatting::vision_score(
                     self.player.info.stats.vision_score
                 ))
                 .size(10)
-                .color(theme::SUB_TEXT)]
+                .style(theme::text)]
                 .spacing(4)
                 .align_y(Alignment::Center),
             ]
@@ -432,7 +434,7 @@ impl Game {
         let expand_button = button(expand_content)
             .height(Length::Shrink)
             .on_press(Message::ExpandPressed)
-            .style(|_, status| theme::expander(self.is_expanded, status));
+            .style(|theme, status| theme::expander(theme, status, self.is_expanded));
 
         let overview = container(row![
             row![
@@ -512,11 +514,13 @@ fn team<'a>(
         row![
             text(formatting::win(team.result))
                 .font(theme::SEMIBOLD)
-                .color(theme::win_color(team.result))
+                .style(move |theme| text::Style {
+                    color: Some(theme::win_color(theme, team.result))
+                })
                 .size(12),
             text(format!("({})", formatting::team(team.id)))
                 .size(10)
-                .color(theme::SUB_TEXT),
+                .style(theme::text),
         ]
         .spacing(4)
         .align_y(Alignment::Center),
@@ -554,7 +558,7 @@ fn team<'a>(
     ];
 
     container(content)
-        .style(|_| theme::team_player(false))
+        .style(|theme| theme::team_player(theme, false))
         .into()
 }
 
@@ -568,11 +572,11 @@ fn small_item<'a>(item: Option<image::Handle>) -> Element<'a, Message> {
 }
 
 fn small_text<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message> {
-    text(content).size(12).color(theme::SUB_TEXT).into()
+    text(content).size(12).style(theme::text).into()
 }
 
 fn smaller_text<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message> {
-    text(content).size(10).color(theme::SUB_TEXT).into()
+    text(content).size(10).style(theme::text).into()
 }
 
 fn truncated(string: String, max: usize) -> String {
@@ -677,7 +681,7 @@ fn player<'a>(
                     0.0..=max_damage_dealt as f32,
                     player.info.stats.damage_dealt as f32
                 )
-                .style(|_| theme::fill_bar(theme::RED)),
+                .style(|theme| theme::fill_bar(theme, theme.palette().danger)),
             )
             .width(48.0)
             .height(6.0),
@@ -691,7 +695,10 @@ fn player<'a>(
                     0.0..=max_damage_taken as f32,
                     player.info.stats.damage_taken as f32
                 )
-                .style(|_| theme::fill_bar(theme::LIGHT_BACKGROUND)),
+                .style(|theme| theme::fill_bar(
+                    theme,
+                    theme.extended_palette().secondary.strong.color
+                )),
             )
             .width(48.0)
             .height(6.0),
@@ -755,7 +762,7 @@ fn player<'a>(
     .align_y(Alignment::Center);
 
     container(content)
-        .style(move |_| theme::team_player(is_player))
+        .style(move |theme| theme::team_player(theme, is_player))
         .padding(4)
         .into()
 }

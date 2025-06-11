@@ -86,16 +86,14 @@ impl Summoner {
                 Some(riot_name) => (
                     row![text(riot_name).size(24),]
                         .push_maybe(riot_id.tagline.as_ref().map(|tagline| {
-                            text(format!("#{}", tagline))
-                                .size(24)
-                                .color(theme::SUB_TEXT)
+                            text(format!("#{}", tagline)).size(24).style(theme::text)
                         }))
                         .spacing(8)
                         .align_y(iced::Alignment::Center)
                         .into(),
                     Some(
                         text(format!("Prev. {}", &self.summoner_name))
-                            .color(theme::SUB_TEXT)
+                            .style(theme::text)
                             .size(12)
                             .into(),
                     ),
@@ -103,9 +101,7 @@ impl Summoner {
                 None => (
                     row![text(&self.summoner_name).size(24),]
                         .push_maybe(riot_id.tagline.as_ref().map(|tagline| {
-                            text(format!("#{}", tagline))
-                                .size(20)
-                                .color(theme::GRAY_TEXT)
+                            text(format!("#{}", tagline)).size(20).style(theme::text)
                         }))
                         .spacing(2)
                         .align_y(iced::Alignment::Center)
