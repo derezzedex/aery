@@ -222,7 +222,7 @@ impl Game {
 
             let role: Element<_> = if let Some(role) = self.player.info.role {
                 row![
-                    image(icon::role(role)).width(12.0).height(12.0),
+                    icon::role(role).width(12.0).height(12.0),
                     text(formatting::role(role)).style(theme::text).size(10),
                 ]
                 .align_y(Alignment::Center)

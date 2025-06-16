@@ -101,7 +101,6 @@ pub mod summary {
 
     use iced::alignment;
     use iced::padding;
-    use iced::widget::image;
     use iced::widget::image::Handle;
     use iced::widget::vertical_space;
     use iced::widget::{
@@ -137,7 +136,7 @@ pub mod summary {
     #[derive(Debug, Clone)]
     pub struct Champion {
         pub handle: Handle,
-        pub lane: Handle,
+        pub lane: Role,
         pub wins: usize,
         pub losses: usize,
         pub kills: usize,
@@ -210,7 +209,7 @@ pub mod summary {
                 .take(4)
                 .map(|((role, champion), stats)| Champion {
                     handle: assets::load_champion_icon(assets, champion),
-                    lane: icon::role(role),
+                    lane: role,
                     wins: stats.wins,
                     losses: stats.losses,
                     kills: stats.kills,
@@ -281,7 +280,7 @@ pub mod summary {
             };
 
             let summary_lane = {
-                let lane_icon = image(icon::role(self.role))
+                let lane_icon = icon::role(self.role)
                     .width(24.0)
                     .height(24.0)
                     .content_fit(iced::ContentFit::Fill);
@@ -375,7 +374,7 @@ pub mod summary {
                             .align_y(Alignment::Center)
                             .spacing(2),
                             row![
-                                image(champion.lane.clone()).width(12.0).height(12.0),
+                                icon::role(champion.lane).width(12.0).height(12.0),
                                 container(
                                     text(kda(champion.kills, champion.deaths, champion.assists, 1))
                                         .size(10)

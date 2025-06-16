@@ -60,7 +60,7 @@ pub mod icon {
             "/assets/img/icons/chevron-down.svg"
         ));
 
-        svg(path).style(text)
+        svg(path).style(text).opacity(0.85)
     }
 
     pub fn chevron_up<'a>() -> svg::Svg<'a> {
@@ -69,7 +69,7 @@ pub mod icon {
             "/assets/img/icons/chevron-up.svg"
         ));
 
-        svg(path).style(text)
+        svg(path).style(text).opacity(0.85)
     }
 
     pub fn search<'a>() -> svg::Svg<'a> {
@@ -78,7 +78,7 @@ pub mod icon {
             "/assets/img/icons/search.svg"
         ));
 
-        svg(path).style(text)
+        svg(path).style(text).opacity(0.85)
     }
 
     pub fn clock<'a>() -> svg::Svg<'a> {
@@ -87,7 +87,7 @@ pub mod icon {
             "/assets/img/icons/clock.svg"
         ));
 
-        svg(path)
+        svg(path).style(text).opacity(0.85)
     }
 
     pub fn unranked() -> image::Handle {
@@ -98,18 +98,21 @@ pub mod icon {
         image::Handle::from_path(path)
     }
 
-    pub fn role(role: game::Role) -> image::Handle {
+    pub fn role<'a>(role: game::Role) -> svg::Svg<'a> {
         let file = match role {
-            game::Role::Bottom => "bottom.png",
-            game::Role::Jungle => "jungle.png",
-            game::Role::Mid => "mid.png",
-            game::Role::Support => "support.png",
-            game::Role::Top => "top.png",
+            game::Role::Bottom => "bottom",
+            game::Role::Jungle => "jungle",
+            game::Role::Mid => "mid",
+            game::Role::Support => "support",
+            game::Role::Top => "top",
         };
 
-        let path = format!("{}/assets/img/position/{file}", env!("CARGO_MANIFEST_DIR"),);
+        let path = format!(
+            "{}/assets/img/position/{file}.svg",
+            env!("CARGO_MANIFEST_DIR"),
+        );
 
-        image::Handle::from_path(path)
+        svg(svg::Handle::from_path(path)).style(text).opacity(0.85)
     }
 }
 
