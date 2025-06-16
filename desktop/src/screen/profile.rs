@@ -4,6 +4,7 @@ mod summoner;
 mod timeline;
 
 use futures::TryFutureExt;
+use iced::border;
 use iced::widget::button;
 use iced::widget::horizontal_space;
 use iced::widget::pick_list;
@@ -185,7 +186,10 @@ impl Profile {
             .align_y(Alignment::Center),
         )
         .padding(8)
-        .style(theme::dark);
+        .style(|theme| container::Style {
+            border: border::rounded(0),
+            ..theme::dark(theme)
+        });
 
         container(column![
             top_bar,
