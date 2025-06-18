@@ -25,9 +25,9 @@ fn champion_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
     let icon = iced::widget::image(handle)
         .width(48.0)
         .height(48.0)
-        .content_fit(iced::ContentFit::Fill);
+        .content_fit(iced::ContentFit::Cover);
 
-    container(icon).width(48.0).height(48.0).into()
+    container(icon).into()
 }
 
 fn summoner_spell_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
@@ -66,7 +66,7 @@ fn item_icon<'a>(handle: Option<image::Handle>) -> Element<'a, Message> {
             .into()
     } else {
         container(iced::widget::Space::new(28.0, 28.0))
-            .style(theme::search_bar)
+            .style(theme::team_header)
             .into()
     };
 
@@ -274,10 +274,10 @@ impl Game {
             let champion_icon = champion_icon(self.player.assets.champion_image.clone());
             let champion_level = container(
                 text(self.player.info.stats.level)
-                    .font(theme::SEMIBOLD)
-                    .size(10),
+                    .font(theme::BOLD)
+                    .size(11),
             )
-            .padding(padding::right(4).bottom(1).left(4))
+            .padding([1, 4])
             .style(theme::summoner_level);
 
             // TODO: fix `champion_level` overlay not being clipped on the `scrollable`
@@ -285,7 +285,7 @@ impl Game {
                 champion_icon,
                 container(champion_level)
                     .align_bottom(Length::Fill)
-                    .align_x(Alignment::Start)
+                    .align_right(Length::Fill)
             ];
 
             let champion_spells = row![

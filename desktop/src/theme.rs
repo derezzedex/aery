@@ -184,7 +184,7 @@ pub fn summoner_icon(theme: &Theme) -> container::Style {
         background: Some(Background::Color(palette.background.weak.color)),
         border: border::rounded(2)
             .width(2)
-            .color(palette.warning.weak.color),
+            .color(palette.warning.strong.color),
         text_color: Some(palette.background.weak.text),
         ..Default::default()
     }
@@ -196,7 +196,7 @@ pub fn summoner_level(theme: &Theme) -> container::Style {
         background: Some(Background::Color(palette.background.base.color)),
         border: border::rounded(2)
             .width(1)
-            .color(palette.warning.weak.color),
+            .color(palette.warning.strong.color),
         text_color: Some(palette.background.base.text),
         ..Default::default()
     }
@@ -236,9 +236,8 @@ pub fn left_border(theme: &Theme, result: game::Result) -> container::Style {
 pub fn team_header(theme: &Theme) -> container::Style {
     let palette = theme.extended_palette();
     container::Style {
-        background: Some(Background::Color(palette.background.base.color)),
+        background: Some(Background::Color(palette.background.weak.color)),
         border: border::width(0),
-        text_color: Some(palette.background.base.color),
         ..Default::default()
     }
 }
@@ -247,7 +246,9 @@ pub fn team_player(theme: &Theme, is_player: bool) -> container::Style {
     let palette = theme.extended_palette();
     if is_player {
         container::Style {
-            background: Some(Background::Color(palette.background.weak.color)),
+            background: Some(Background::Color(
+                palette.background.strongest.color.scale_alpha(0.8),
+            )),
             border: border::width(0),
             text_color: Some(palette.background.weak.text),
             ..Default::default()
@@ -265,7 +266,7 @@ pub fn team_player(theme: &Theme, is_player: bool) -> container::Style {
 pub fn win_color(theme: &Theme, result: impl Into<game::Result>) -> Color {
     let palette = theme.extended_palette();
     match result.into() {
-        game::Result::Remake => palette.background.weak.color,
+        game::Result::Remake => palette.background.base.text.scale_alpha(0.8),
         game::Result::Surrender | game::Result::Defeat => palette.danger.base.color,
         game::Result::Victory => palette.success.base.color,
     }

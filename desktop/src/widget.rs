@@ -10,9 +10,3 @@ pub fn left_border<'a, Message: 'a>(
         .style(move |theme| theme::left_border(theme, result))
         .height(Length::Fill)
 }
-
-pub fn small_text<'a>(text: impl ToString) -> iced::widget::Text<'a> {
-    iced::widget::Text::new(text.to_string())
-        .style(theme::text)
-        .size(8.0)
-}

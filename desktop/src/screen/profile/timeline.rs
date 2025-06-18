@@ -74,7 +74,7 @@ impl Timeline {
 
         let summary = self.summary.view();
         let timeline = column![
-            container(summary).height(Length::FillPortion(2)),
+            container(summary),
             scrollable(content)
                 .style(theme::scrollable)
                 .width(Length::Fill)
@@ -106,7 +106,6 @@ pub mod summary {
     use iced::widget::{
         column, container, horizontal_rule, horizontal_space, progress_bar, row, text,
     };
-    use iced::Length;
     use iced::{Alignment, Element};
     use itertools::Itertools;
 
@@ -155,6 +154,7 @@ pub mod summary {
 
     #[derive(Debug, Clone)]
     pub struct Summary {
+        total: usize,
         wins: usize,
         losses: usize,
 
@@ -175,6 +175,7 @@ pub mod summary {
                 .map(|game| game.participant(player.puuid()).unwrap())
                 .collect_vec();
 
+            let total = games.iter().count();
             let wins = games.iter().filter(|game| game.result.won()).count();
             let losses = games.iter().filter(|game| game.result.lost()).count();
 
@@ -219,6 +220,7 @@ pub mod summary {
                 .collect_vec();
 
             Self {
+                total,
                 wins,
                 losses,
 
@@ -230,17 +232,20 @@ pub mod summary {
         }
 
         pub fn view(&self) -> Element<Message> {
-            let total = self.wins + self.losses;
-            let ratio = (self.wins as f32 / total as f32) * 100.0;
+            let played = self.wins + self.losses;
+            let ratio = (self.wins as f32 / played as f32) * 100.0;
             let is_positive_ratio = self.wins > self.losses;
 
             let title_bar = row![
-                text("Recent summary").font(theme::SEMIBOLD).size(12),
-                text!("last {total} games").style(theme::text).size(10)
+                container(text("Recent summary").font(theme::SEMIBOLD).size(11))
+                    .padding(padding::top(3)),
+                text!("last {} games", self.total)
+                    .style(theme::text)
+                    .size(11)
             ]
-            .padding(padding::top(2).right(6).left(6))
+            .padding(padding::top(3).right(6).left(6))
             .align_y(Alignment::Center)
-            .spacing(4);
+            .spacing(8);
 
             let summary_ratio = {
                 let ratio_text = row![
@@ -271,7 +276,7 @@ pub mod summary {
                     .height(4.0);
 
                 column![
-                    text("Winrate").fit(10).style(theme::text),
+                    text("Winrate").fit(11).style(theme::text),
                     vertical_space().height(2),
                     ratio_text,
                     ratio_bar,
@@ -339,8 +344,7 @@ pub mod summary {
                 ];
 
                 column![
-                    text("Lane").size(10).height(13).style(theme::text),
-                    vertical_space().height(1),
+                    text("Lane").size(11).style(theme::text),
                     row![lane_icon, lane_info]
                         .align_y(Alignment::Center)
                         .spacing(4)
@@ -381,7 +385,6 @@ pub mod summary {
                                         .style(theme::text)
                                 )
                                 .padding(padding::top(2).left(2))
-                                .center_y(Length::Fill)
                             ]
                             .spacing(2)
                             .align_y(Alignment::Center),
@@ -393,7 +396,7 @@ pub mod summary {
                 });
 
                 column![
-                    text("Champions").size(10).style(theme::text),
+                    text("Champions").size(11).style(theme::text),
                     row(content).spacing(8).align_y(Alignment::Center)
                 ]
                 .spacing(8)
@@ -404,8 +407,7 @@ pub mod summary {
                     .spacing(16)
                     .align_y(Alignment::Start),
             )
-            .padding(8)
-            .center_y(Length::Fill);
+            .padding(8);
 
             let content = column![
                 title_bar,
@@ -417,7 +419,6 @@ pub mod summary {
 
             container(content)
                 .width(iced::Length::Fill)
-                // .height(100)
                 .style(theme::dark)
                 .into()
         }

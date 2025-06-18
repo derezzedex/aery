@@ -4,7 +4,6 @@ use crate::profile;
 use crate::theme;
 
 use iced::alignment;
-use iced::padding;
 use iced::widget::column;
 use iced::widget::stack;
 use iced::widget::{button, container, image, row, text, vertical_space};
@@ -30,8 +29,8 @@ fn summoner_icon<'a>(icon: Option<image::Handle>, level: u32) -> Element<'a, Mes
             .padding(2.0)
             .style(theme::summoner_icon),
         container(
-            container(text(level).font(theme::SEMIBOLD).size(10))
-                .padding(padding::top(1).right(4).bottom(2).left(4)) // TODO: fix this alignment issue (text doesnt seem to get centered)
+            container(text(level).font(theme::BOLD).size(12))
+                .padding([2, 4])
                 .style(theme::summoner_level),
         )
         .align_bottom(Length::Fill)
@@ -48,17 +47,14 @@ pub enum Event {
 #[derive(Debug, Clone)]
 pub struct Summoner {
     summoner_name: String,
-    riot_id: Option<account::RiotId>,
+    riot_id: account::RiotId,
     level: u32,
     icon_image: Option<image::Handle>,
 }
 
 impl Summoner {
     pub fn from_profile(assets: &mut Assets, profile: &profile::Data) -> Self {
-        let riot_id = profile
-            .games
-            .first()
-            .map(|game| game.participant(profile.summoner.puuid()).unwrap().riot_id);
+        let riot_id = profile.summoner.riot_id.clone();
         let summoner_name = profile.summoner.name().to_string();
         let level = profile.summoner.level();
         let icon = profile.summoner.icon_id() as u32;
@@ -81,52 +77,28 @@ impl Summoner {
     pub fn view(&self) -> Element<Message> {
         let icon = summoner_icon(self.icon_image.clone(), self.level);
 
-        let (name, previously): (Element<_>, Option<Element<_>>) = match &self.riot_id {
-            Some(riot_id) => match &riot_id.name {
-                Some(riot_name) => (
-                    row![text(riot_name).size(24),]
-                        .push_maybe(riot_id.tagline.as_ref().map(|tagline| {
-                            text(format!("#{}", tagline)).size(24).style(theme::text)
-                        }))
-                        .spacing(8)
-                        .align_y(iced::Alignment::Center)
-                        .into(),
-                    Some(
-                        text(format!("Prev. {}", &self.summoner_name))
-                            .style(theme::text)
-                            .size(12)
-                            .into(),
-                    ),
-                ),
-                None => (
-                    row![text(&self.summoner_name).size(24),]
-                        .push_maybe(riot_id.tagline.as_ref().map(|tagline| {
-                            text(format!("#{}", tagline)).size(20).style(theme::text)
-                        }))
-                        .spacing(2)
-                        .align_y(iced::Alignment::Center)
-                        .into(),
-                    None,
-                ),
-            },
-            None => (text(&self.summoner_name).size(24).into(), None),
-        };
+        let name = self.riot_id.name.clone().unwrap_or(String::from("Unknown"));
+
+        let name = row![text(name).size(24),]
+            .push_maybe(
+                self.riot_id
+                    .tagline
+                    .as_ref()
+                    .map(|tagline| text(format!("#{}", tagline)).size(24).style(theme::text)),
+            )
+            .spacing(8)
+            .align_y(iced::Alignment::Center);
 
         let update_button = button("Update")
             .style(theme::update)
             .on_press(Message::Update);
 
-        let mut inner = column![name];
-
-        if let Some(text) = previously {
-            inner = inner.push(text);
-        }
-
-        inner = inner.push(
+        let inner = column![
+            name,
             container(update_button)
                 .height(48)
-                .align_y(alignment::Vertical::Bottom),
-        );
+                .align_y(alignment::Vertical::Bottom)
+        ];
 
         // TODO: display ladder rank and past season ranks
 
