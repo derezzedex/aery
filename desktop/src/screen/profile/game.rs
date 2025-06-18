@@ -9,11 +9,13 @@ use crate::formatting;
 use crate::theme;
 use crate::theme::icon;
 use crate::widget;
+use aery_core::account;
 use iced::padding;
 use iced::widget::horizontal_space;
 use iced::widget::image;
 use iced::widget::progress_bar;
 use iced::widget::stack;
+use iced::widget::tooltip;
 use iced::widget::vertical_space;
 use iced::widget::{button, column, container, row, text, Space};
 use iced::{alignment, Alignment, Element, Length};
@@ -372,33 +374,15 @@ impl Game {
         };
 
         let player_name_view = |player: &Player| {
-            let player_name = player
-                .info
-                .riot_id
-                .name
-                .as_ref()
-                .map(|name| {
-                    player
-                        .info
-                        .riot_id
-                        .tagline
-                        .as_ref()
-                        .map(|tag| format!("{name}#{tag}"))
-                })
-                .flatten()
-                .unwrap_or(String::from("Unknown player"));
             let summoner_icon = image(player.assets.champion_image.clone())
                 .width(16.0)
                 .height(16.0);
-            let summoner_name = if self.player.info.puuid == player.info.puuid {
-                text(truncated(player_name, 10))
-                    .size(8.0)
-                    .line_height(iced::Pixels(12.0))
-            } else {
-                widget::small_text(truncated(player_name, 10))
-                    .size(8.0)
-                    .line_height(iced::Pixels(12.0))
-            };
+
+            let summoner_name = player_name(
+                &player.info.riot_id,
+                8,
+                self.player.info.puuid == player.info.puuid,
+            );
 
             row![summoner_icon, summoner_name]
                 .align_y(Alignment::Center)
@@ -417,7 +401,9 @@ impl Game {
             .map(|team| team.players.iter().map(player_name_view))
             .unwrap();
 
-        let teams = row![column(blue_team).spacing(2), column(red_team).spacing(2),].spacing(8);
+        let teams = row![column(blue_team).spacing(2), column(red_team).spacing(2),]
+            .padding(padding::right(8))
+            .spacing(8);
 
         let chevron_icon = if self.is_expanded {
             icon::chevron_up()
@@ -447,7 +433,6 @@ impl Game {
                 player_items,
                 horizontal_space().width(Length::Fill),
                 teams,
-                horizontal_space().width(Length::Fill),
             ]
             .width(Length::Fill)
             .padding(4)
@@ -579,11 +564,50 @@ fn smaller_text<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message
     text(content).size(10).style(theme::text).into()
 }
 
-fn truncated(string: String, max: usize) -> String {
-    match string.char_indices().nth(max) {
-        None => string,
-        Some((idx, _)) => format!("{string:.idx$}…"),
+fn truncated(mut string: String, max: usize) -> String {
+    let count = string.chars().filter(|c| !c.is_ascii()).count();
+    let max = if count > max / 2 { max * 2 } else { max };
+    let n = string.len().min(max);
+    if let Some(i) = (0..=n).rfind(|&m| string.is_char_boundary(m)) {
+        string.truncate(i);
+        string.push('…');
     }
+
+    string
+}
+
+fn player_name<'a>(riot_id: &account::RiotId, size: u32, is_player: bool) -> Element<'a, Message> {
+    let mut name = riot_id.name.clone().unwrap_or(String::from("Unknown"));
+    let tag = riot_id.tagline.clone().unwrap_or(String::from("UKNW"));
+
+    let overlay = container(
+        text(format!("{name}#{tag}"))
+            .color(iced::Color::WHITE)
+            .font(theme::NOTO_SANS)
+            .shaping(text::Shaping::Advanced)
+            .size(14),
+    )
+    .padding(4)
+    .style(container::dark);
+
+    if !is_player {
+        name = truncated(name, 8);
+    }
+
+    let mut content = text(name)
+        .font(theme::NOTO_SANS)
+        .shaping(text::Shaping::Advanced)
+        .line_height(text::LineHeight::Absolute(12.0.into()))
+        .size(size);
+
+    if is_player {
+        content = content.font(iced::Font {
+            weight: iced::font::Weight::ExtraBold,
+            ..theme::NOTO_SANS
+        });
+    }
+
+    tooltip(content, overlay, tooltip::Position::Top).into()
 }
 
 fn player<'a>(
@@ -638,26 +662,7 @@ fn player<'a>(
             .align_x(Alignment::Center)
     };
 
-    let player_name = player
-        .info
-        .riot_id
-        .name
-        .as_ref()
-        .map(|name| {
-            player
-                .info
-                .riot_id
-                .tagline
-                .as_ref()
-                .map(|tag| format!("{name}#{tag}"))
-        })
-        .flatten()
-        .unwrap_or(String::from("Unknown player"));
-    let name = if is_player {
-        text(player_name).font(theme::SEMIBOLD).size(12)
-    } else {
-        text(truncated(player_name, 10)).size(12)
-    };
+    let name = player_name(&player.info.riot_id, 14, is_player);
 
     let kda = {
         let stats = player.info.stats;

@@ -12,6 +12,12 @@ use iced::widget::text_input;
 use iced::Border;
 use iced::{Background, Color, Theme};
 
+pub const NOTO_SANS_TTF: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/assets/font/NotoSans-Regular.ttf"
+))
+.as_slice();
+
 pub const ROBOTO_FLEX_TTF: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/assets/font/RobotoFlex-Regular.ttf"
@@ -33,6 +39,13 @@ pub const SEMIBOLD: iced::Font = iced::Font {
 pub const BOLD: iced::Font = iced::Font {
     weight: iced::font::Weight::Bold,
     ..DEFAULT_FONT
+};
+
+pub const NOTO_SANS: iced::Font = iced::Font {
+    family: font::Family::Name("Noto Sans"),
+    weight: font::Weight::Normal,
+    stretch: font::Stretch::Normal,
+    style: font::Style::Normal,
 };
 
 pub fn logo<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {

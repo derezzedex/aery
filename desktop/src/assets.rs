@@ -122,6 +122,7 @@ impl Assets {
         Task::batch(vec![
             Task::perform(Assets::new(), Message::AssetsLoaded),
             font::load(theme::ROBOTO_FLEX_TTF).map(Message::FontLoaded),
+            font::load(theme::NOTO_SANS_TTF).map(Message::FontLoaded),
         ])
     }
 
