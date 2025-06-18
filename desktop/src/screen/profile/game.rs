@@ -401,9 +401,11 @@ impl Game {
             .map(|team| team.players.iter().map(player_name_view))
             .unwrap();
 
-        let teams = row![column(blue_team).spacing(2), column(red_team).spacing(2),]
-            .padding(padding::right(8))
-            .spacing(8);
+        let teams = row![
+            column(blue_team).spacing(2).width(Length::Fill),
+            column(red_team).spacing(2).width(Length::Fill),
+        ]
+        .spacing(8);
 
         let chevron_icon = if self.is_expanded {
             icon::chevron_up()
@@ -422,24 +424,27 @@ impl Game {
             .on_press(Message::ExpandPressed)
             .style(|theme, status| theme::expander(theme, status, self.is_expanded));
 
-        let overview = container(row![
+        let match_info = row![
+            match_stats.width(Length::FillPortion(2)),
             row![
-                match_stats,
-                horizontal_space().width(Length::Fill),
                 champion_info,
                 horizontal_space().width(Length::Fill),
                 player_stats,
                 horizontal_space().width(Length::Fill),
                 player_items,
                 horizontal_space().width(Length::Fill),
-                teams,
             ]
-            .width(Length::Fill)
-            .padding(4)
-            .align_y(Alignment::Center),
-            expand_button.padding(0),
-        ])
-        .max_height(100.0);
+            .align_y(Alignment::Center)
+            .spacing(8)
+            .width(Length::FillPortion(6)),
+            container(teams).center_x(Length::FillPortion(3)),
+        ]
+        .spacing(8)
+        .width(Length::Fill)
+        .padding(4)
+        .align_y(Alignment::Center);
+
+        let overview = container(row![match_info, expand_button.padding(0),]).max_height(100.0);
 
         let game = if self.is_expanded {
             let max_damage_dealt = self
