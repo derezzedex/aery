@@ -37,7 +37,7 @@ pub const SEMIBOLD: iced::Font = iced::Font {
 };
 
 pub const BOLD: iced::Font = iced::Font {
-    weight: iced::font::Weight::Bold,
+    weight: iced::font::Weight::ExtraBold,
     ..DEFAULT_FONT
 };
 

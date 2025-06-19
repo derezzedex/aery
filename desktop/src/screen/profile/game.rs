@@ -10,7 +10,6 @@ use crate::theme;
 use crate::theme::icon;
 use crate::widget;
 use aery_core::account;
-use iced::padding;
 use iced::widget::horizontal_space;
 use iced::widget::image;
 use iced::widget::progress_bar;
@@ -499,53 +498,67 @@ fn team<'a>(
     max_damage_taken: u32,
     game_duration: time::Duration,
 ) -> Element<'a, Message> {
-    // TODO: align header with content
-    let header = row![
-        row![
-            text(formatting::win(team.result))
-                .font(theme::SEMIBOLD)
-                .style(move |theme| text::Style {
-                    color: Some(theme::win_color(theme, team.result))
-                })
-                .size(12),
-            text(format!("({})", formatting::team(team.id)))
-                .size(10)
-                .style(theme::text),
-        ]
-        .spacing(4)
-        .align_y(Alignment::Center),
-        horizontal_space().width(Length::Fill),
-        small_text("KDA"),
-        horizontal_space().width(Length::Fill),
-        small_text("Damage"),
-        horizontal_space().width(Length::Fill),
-        small_text("Vision"),
-        horizontal_space().width(Length::Fill),
-        small_text("CS"),
-        horizontal_space().width(Length::Fill),
-        small_text("Items"),
-        horizontal_space().width(Length::Fill),
+    let result = row![
+        text(formatting::win(team.result))
+            .font(theme::BOLD)
+            .style(move |theme| text::Style {
+                color: Some(theme::win_color(theme, team.result))
+            })
+            .size(14),
+        text(format!("({})", formatting::team(team.id)))
+            .size(12)
+            .style(theme::text),
     ]
-    .padding(4);
+    .spacing(6)
+    .align_y(Alignment::Center);
+
+    let column = |content: Element<'a, Message>, size| {
+        column![container(content)
+            .style(theme::team_header)
+            .center_x(Length::Fill)]
+        .spacing(4)
+        .align_x(Alignment::Center)
+        .width(Length::FillPortion(size))
+    };
+
+    let columns = vec![
+        column![container(result)
+            .padding(4)
+            .style(theme::team_header)
+            .align_left(Length::Fill)]
+        .spacing(4)
+        .width(Length::FillPortion(3)),
+        column(header("KDA"), 2),
+        column(header("Damage"), 2),
+        column(header("Vision"), 1),
+        column(header("CS"), 1),
+        column(header("Items"), 3),
+    ];
 
     let total_team_kills = team.players.iter().map(|p| p.info.stats.kills).sum();
-    let players = team.players.iter().map(|p| {
-        player(
-            p,
-            summoner,
-            max_damage_dealt,
-            max_damage_taken,
-            total_team_kills,
-            game_duration,
-        )
-    });
 
-    let content = column![
-        container(header.padding(4))
-            .style(theme::team_header)
-            .padding(1),
-        column(players).padding(1).spacing(4),
-    ];
+    let team = team
+        .players
+        .iter()
+        .map(|p| {
+            player(
+                p,
+                summoner,
+                max_damage_dealt,
+                max_damage_taken,
+                total_team_kills,
+                game_duration,
+            )
+        })
+        .fold(columns, |columns, player| {
+            columns
+                .into_iter()
+                .zip(player.into_iter())
+                .map(|(col, item)| col.push(container(item).center_y(Length::Fill)))
+                .collect()
+        });
+
+    let content = row(team.into_iter().map(Element::from));
 
     container(content)
         .style(|theme| theme::team_player(theme, false))
@@ -556,17 +569,19 @@ fn small_item<'a>(item: Option<image::Handle>) -> Element<'a, Message> {
     match item {
         Some(handle) => image(handle).width(20.0).height(20.0).into(),
         None => container(iced::widget::Space::new(20.0, 20.0))
-            .style(theme::search_bar)
+            .style(theme::team_header)
             .into(),
     }
 }
 
-fn small_text<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message> {
-    text(content).size(12).style(theme::text).into()
+fn header<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message> {
+    container(text(content).font(theme::BOLD).size(14).style(theme::text))
+        .padding(4)
+        .into()
 }
 
 fn smaller_text<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message> {
-    text(content).size(10).style(theme::text).into()
+    text(content).size(11).style(theme::text).into()
 }
 
 fn truncated(mut string: String, max: usize) -> String {
@@ -622,22 +637,21 @@ fn player<'a>(
     max_damage_taken: u32,
     total_team_kills: u32,
     game_duration: time::Duration,
-) -> Element<'a, Message> {
+) -> [Element<'a, Message>; 7] {
     let is_player = player.info.puuid == summoner.info.puuid;
 
     let champion_icon = image(player.assets.champion_image.clone())
         .width(32.0)
         .height(32.0);
-    let champion_level = container(text(player.info.stats.level).font(theme::SEMIBOLD).size(8))
-        .padding(padding::top(1).right(2).bottom(2))
+    let champion_level = container(text(player.info.stats.level).font(theme::BOLD).size(10))
+        .padding([1, 2])
         .style(theme::summoner_level);
 
-    // TODO: fix `champion_level` overlay not being clipped on the `scrollable`
     let champion = stack![
         champion_icon,
         container(champion_level)
             .align_bottom(Length::Fill)
-            .align_x(Alignment::Start)
+            .align_right(Length::Fill)
     ];
 
     let spell_and_runes = {
@@ -662,6 +676,7 @@ fn player<'a>(
         ]
         .spacing(2)
         .align_y(Alignment::Center);
+
         column![champion_spells, champion_runes]
             .spacing(2)
             .align_x(Alignment::Center)
@@ -748,31 +763,16 @@ fn player<'a>(
 
     let ward = small_item(player.assets.trinket_image.clone());
 
-    let content = row![
-        champion,
-        horizontal_space().width(4),
-        spell_and_runes,
-        horizontal_space().width(8),
-        name,
-        horizontal_space().width(Length::Fill),
-        kda,
-        horizontal_space().width(16),
-        damage,
-        horizontal_space().width(16),
-        wards,
-        horizontal_space().width(16),
-        cs,
-        horizontal_space().width(16),
-        items,
-        horizontal_space().width(4),
-        ward,
-        horizontal_space().width(16),
+    [
+        row![champion, spell_and_runes, name]
+            .spacing(4)
+            .padding(4)
+            .into(),
+        kda.into(),
+        damage.into(),
+        wards.into(),
+        cs.into(),
+        items.into(),
+        ward.into(),
     ]
-    .width(Length::Fill)
-    .align_y(Alignment::Center);
-
-    container(content)
-        .style(move |theme| theme::team_player(theme, is_player))
-        .padding(4)
-        .into()
 }
