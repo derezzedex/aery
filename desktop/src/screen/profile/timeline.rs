@@ -261,7 +261,7 @@ pub mod summary {
                         ]
                     ]
                     .spacing(4),
-                    text("·").fit(18).style(theme::text),
+                    text("·").fit(18),
                     text!("{:.1}%", ratio)
                         .fit(12)
                         .style(move |theme| text::Style {
@@ -276,12 +276,11 @@ pub mod summary {
                     .height(4.0);
 
                 column![
-                    text("Winrate").fit(11).style(theme::text),
+                    text("Winrate").fit(11).font(theme::SEMIBOLD),
                     vertical_space().height(2),
                     ratio_text,
                     ratio_bar,
                 ]
-                .spacing(2)
             };
 
             let summary_lane = {
@@ -344,12 +343,11 @@ pub mod summary {
                 ];
 
                 column![
-                    text("Lane").size(11).style(theme::text),
+                    text("Lane").size(11).font(theme::SEMIBOLD),
                     row![lane_icon, lane_info]
                         .align_y(Alignment::Center)
                         .spacing(4)
                 ]
-                .spacing(2)
             };
 
             let summary_champions = {
@@ -396,10 +394,10 @@ pub mod summary {
                 });
 
                 column![
-                    text("Champions").size(11).style(theme::text),
-                    row(content).spacing(8).align_y(Alignment::Center)
+                    text("Champions").size(11).font(theme::SEMIBOLD),
+                    row(content).spacing(4).align_y(Alignment::Center)
                 ]
-                .spacing(8)
+                .spacing(4)
             };
 
             let body = container(

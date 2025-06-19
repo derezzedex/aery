@@ -32,7 +32,7 @@ pub const DEFAULT_FONT: iced::Font = iced::Font {
 };
 
 pub const SEMIBOLD: iced::Font = iced::Font {
-    weight: iced::font::Weight::Semibold,
+    weight: iced::font::Weight::Bold,
     ..DEFAULT_FONT
 };
 
@@ -238,6 +238,7 @@ pub fn team_header(theme: &Theme) -> container::Style {
     container::Style {
         background: Some(Background::Color(palette.background.weak.color)),
         border: border::width(0),
+        snap: true,
         ..Default::default()
     }
 }
@@ -251,6 +252,7 @@ pub fn team_player(theme: &Theme, is_player: bool) -> container::Style {
             )),
             border: border::width(0),
             text_color: Some(palette.background.weak.text),
+            snap: true,
             ..Default::default()
         }
     } else {
@@ -258,6 +260,7 @@ pub fn team_player(theme: &Theme, is_player: bool) -> container::Style {
             background: Some(Background::Color(palette.background.base.color)),
             border: border::width(0),
             text_color: Some(palette.background.base.text),
+            snap: true,
             ..Default::default()
         }
     }

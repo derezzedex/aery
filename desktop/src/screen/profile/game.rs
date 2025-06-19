@@ -317,13 +317,18 @@ impl Game {
 
         let player_stats = {
             let kda = row![
-                text(self.player.info.stats.kills).size(15),
-                text("/").style(theme::text).size(15),
+                text(self.player.info.stats.kills)
+                    .font(theme::SEMIBOLD)
+                    .size(14),
+                text("/").style(theme::text).size(14),
                 text(self.player.info.stats.deaths)
+                    .font(theme::SEMIBOLD)
                     .style(theme::defeat)
-                    .size(15),
-                text("/").style(theme::text).size(15),
-                text(self.player.info.stats.assists).size(15)
+                    .size(14),
+                text("/").style(theme::text).size(14),
+                text(self.player.info.stats.assists)
+                    .font(theme::SEMIBOLD)
+                    .size(14)
             ]
             .align_y(Alignment::Center)
             .spacing(2);
@@ -334,7 +339,7 @@ impl Game {
                     self.player.info.stats.deaths,
                     self.player.info.stats.assists
                 ))
-                .size(10)
+                .size(11)
                 .style(theme::text)]
                 .spacing(4)
                 .align_y(Alignment::Center),
@@ -342,14 +347,14 @@ impl Game {
                     self.player.info.stats.creep_score,
                     self.duration.whole_minutes() as u32
                 ))
-                .size(10)
+                .size(11)
                 .style(theme::text)]
                 .spacing(4)
                 .align_y(Alignment::Center),
                 row![text(formatting::vision_score(
                     self.player.info.stats.vision_score
                 ))
-                .size(10)
+                .size(11)
                 .style(theme::text)]
                 .spacing(4)
                 .align_y(Alignment::Center),
@@ -513,14 +518,12 @@ fn team<'a>(
 ) -> Element<'a, Message> {
     let result = row![
         text(formatting::win(team.result))
-            .font(theme::BOLD)
+            .font(theme::SEMIBOLD)
             .style(move |theme| text::Style {
                 color: Some(theme::win_color(theme, team.result))
             })
-            .size(14),
-        text(format!("({})", formatting::team(team.id)))
-            .size(12)
-            .style(theme::text),
+            .size(12),
+        text(format!("({})", formatting::team(team.id))).size(12),
     ]
     .spacing(6)
     .align_y(Alignment::Center);
@@ -529,7 +532,6 @@ fn team<'a>(
         column![container(content)
             .style(theme::team_header)
             .center_x(Length::Fill)]
-        .spacing(4)
         .align_x(Alignment::Center)
         .width(Length::FillPortion(size))
     };
@@ -539,7 +541,6 @@ fn team<'a>(
             .padding(4)
             .style(theme::team_header)
             .align_left(Length::Fill)]
-        .spacing(4)
         .width(Length::FillPortion(3)),
         column(header("KDA"), 2),
         column(header("Damage"), 2),
@@ -567,7 +568,7 @@ fn team<'a>(
             columns
                 .into_iter()
                 .zip(player.into_iter())
-                .map(|(col, item)| col.push(container(item).center_y(Length::Fill)))
+                .map(|(col, item)| col.push(item))
                 .collect()
         });
 
@@ -588,9 +589,14 @@ fn small_item<'a>(item: Option<image::Handle>) -> Element<'a, Message> {
 }
 
 fn header<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message> {
-    container(text(content).font(theme::BOLD).size(14).style(theme::text))
-        .padding(4)
-        .into()
+    container(
+        text(content)
+            .font(theme::SEMIBOLD)
+            .size(12)
+            .style(theme::text),
+    )
+    .padding(4)
+    .into()
 }
 
 fn smaller_text<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message> {
@@ -634,10 +640,7 @@ fn player_name<'a>(riot_id: &account::RiotId, size: u32, is_player: bool) -> Ele
         .size(size);
 
     if is_player {
-        name = name.font(iced::Font {
-            weight: iced::font::Weight::ExtraBold,
-            ..theme::NOTO_SANS
-        });
+        name = name.font(theme::SEMIBOLD);
     }
 
     let content = button(name)
@@ -700,7 +703,7 @@ fn player<'a>(
             .align_x(Alignment::Center)
     };
 
-    let name = player_name(&player.info.riot_id, 14, is_player);
+    let name = player_name(&player.info.riot_id, 12, is_player);
 
     let kda = {
         let stats = player.info.stats;
@@ -781,17 +784,27 @@ fn player<'a>(
 
     let ward = small_item(player.assets.trinket_image.clone());
 
+    let player = row![champion, spell_and_runes, name]
+        .align_y(Alignment::Center)
+        .spacing(4)
+        .padding(4);
+
+    let styled = |el: Element<'a, Message>| {
+        container(el)
+            .center(Length::Fill)
+            .style(move |theme| theme::team_player(theme, is_player))
+    };
+
     [
-        row![champion, spell_and_runes, name]
-            .align_y(Alignment::Center)
-            .spacing(4)
-            .padding(4)
-            .into(),
-        kda.into(),
-        damage.into(),
-        wards.into(),
-        cs.into(),
-        items.into(),
-        ward.into(),
+        styled(player.into())
+            .height(Length::Fill)
+            .align_left(Length::Fill),
+        styled(kda.into()),
+        styled(damage.into()),
+        styled(wards.into()),
+        styled(cs.into()),
+        styled(items.into()),
+        styled(ward.into()),
     ]
+    .map(Element::from)
 }
