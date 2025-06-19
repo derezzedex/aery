@@ -765,6 +765,7 @@ fn player<'a>(
 
     [
         row![champion, spell_and_runes, name]
+            .align_y(Alignment::Center)
             .spacing(4)
             .padding(4)
             .into(),
