@@ -153,9 +153,15 @@ pub struct Game {
     is_expanded: bool,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum Message {
     ExpandPressed,
+    NamePressed(account::RiotId),
+}
+
+#[derive(Debug, Clone)]
+pub enum Event {
+    NamePressed(account::RiotId),
 }
 
 impl Game {
@@ -205,10 +211,13 @@ impl Game {
         }
     }
 
-    pub fn update(&mut self, message: Message) {
+    pub fn update(&mut self, message: Message) -> Option<Event> {
         match message {
             Message::ExpandPressed => self.is_expanded = !self.is_expanded,
+            Message::NamePressed(riot_id) => return Some(Event::NamePressed(riot_id)),
         }
+
+        None
     }
 
     pub fn view(&self) -> Element<Message> {
@@ -614,18 +623,23 @@ fn player_name<'a>(riot_id: &account::RiotId, size: u32, is_player: bool) -> Ele
         name = truncated(name, 8);
     }
 
-    let mut content = text(name)
+    let mut name = text(name)
         .font(theme::NOTO_SANS)
         .shaping(text::Shaping::Advanced)
         .line_height(text::LineHeight::Absolute(12.0.into()))
         .size(size);
 
     if is_player {
-        content = content.font(iced::Font {
+        name = name.font(iced::Font {
             weight: iced::font::Weight::ExtraBold,
             ..theme::NOTO_SANS
         });
     }
+
+    let content = button(name)
+        .style(button::text)
+        .padding(0)
+        .on_press(Message::NamePressed(riot_id.clone()));
 
     tooltip(content, overlay, tooltip::Position::Top).into()
 }

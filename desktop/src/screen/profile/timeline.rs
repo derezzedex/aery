@@ -8,7 +8,7 @@ use iced::{Alignment, Element, Length};
 
 use summary::Summary;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum Message {
     Game(usize, game::Message),
 }
@@ -41,10 +41,10 @@ impl Timeline {
         Timeline { summary, games }
     }
 
-    pub fn update(&mut self, message: Message) {
+    pub fn update(&mut self, message: Message) -> Option<game::Event> {
         match message {
             Message::Game(index, message) => unsafe {
-                self.games.get_unchecked_mut(index).update(message);
+                self.games.get_unchecked_mut(index).update(message)
             },
         }
     }

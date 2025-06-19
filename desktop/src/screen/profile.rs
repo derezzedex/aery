@@ -128,7 +128,21 @@ impl Profile {
                 self.data = Arc::new(data);
             }
             Message::FetchedData(Err(error)) => panic!("failed: {error}"),
-            Message::Timeline(message) => self.timeline.update(message),
+            Message::Timeline(message) => {
+                if let Some(game::Event::NamePressed(riot_id)) = self.timeline.update(message) {
+                    return riot_id
+                        .name
+                        .as_ref()
+                        .zip(riot_id.tagline.as_ref())
+                        .map(|(name, tag)| {
+                            Task::perform(
+                                fetch_data(format!("{name}#{tag}"), self.region),
+                                Message::FetchedData,
+                            )
+                        })
+                        .unwrap_or(Task::none());
+                }
+            }
             Message::Summoner(message) => {
                 if let Some(event) = self.summoner.update(message) {
                     match event {
