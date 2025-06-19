@@ -467,15 +467,19 @@ impl Game {
                 .flat_map(|t| t.players.iter().map(|p| p.info.stats.damage_taken))
                 .max()
                 .unwrap();
-            let teams = self.teams.iter().map(|t| {
-                team(
-                    t,
-                    &self.player,
-                    max_damage_dealt,
-                    max_damage_taken,
-                    self.duration,
-                )
-            });
+            let teams = self
+                .teams
+                .iter()
+                .sorted_by_key(|team| team.id != self.player.info.team)
+                .map(|t| {
+                    team(
+                        t,
+                        &self.player,
+                        max_damage_dealt,
+                        max_damage_taken,
+                        self.duration,
+                    )
+                });
 
             let match_details = container(column(teams));
 
