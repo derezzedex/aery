@@ -105,11 +105,9 @@ impl Summoner {
         container(
             column![row![icon, inner.spacing(1)].spacing(16)]
                 .spacing(8)
-                .width(Length::Fill)
-                .max_width(920)
                 .padding([8, 0]),
         )
-        .center_x(Length::Fill)
+        .width(Length::Fill)
         .style(theme::timeline)
         .into()
     }

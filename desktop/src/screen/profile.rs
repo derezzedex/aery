@@ -162,16 +162,6 @@ impl Profile {
     }
 
     pub fn view(&self) -> Element<Message> {
-        let timeline = container(
-            row![
-                self.ranked_overview.view().map(Message::RankedOverview),
-                self.timeline.view().map(Message::Timeline),
-            ]
-            .padding(8)
-            .spacing(8),
-        )
-        .center_x(Length::Fill);
-
         let top_bar = container(
             row![
                 theme::logo(),
@@ -191,13 +181,25 @@ impl Profile {
             ..theme::dark(theme)
         });
 
+        let timeline = row![
+            self.ranked_overview.view().map(Message::RankedOverview),
+            self.timeline.view().map(Message::Timeline),
+        ]
+        .spacing(8);
+
+        let content = column![
+            self.summoner.view().map(Message::Summoner),
+            filter_bar(self.queue_filter),
+            timeline,
+        ]
+        .width(968)
+        .spacing(8)
+        .padding(8);
+
         container(column![
             top_bar,
             vertical_space().height(16),
-            self.summoner.view().map(Message::Summoner),
-            vertical_space().height(16),
-            filter_bar(self.queue_filter),
-            timeline,
+            container(content).center_x(Length::Fill),
         ])
         .style(theme::timeline)
         .into()
@@ -219,30 +221,26 @@ fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
     let picked = Some(selected).filter(|queue| QueueFilter::ALTERNATIVE.contains(queue));
 
     container(
-        container(
-            row![
-                queue_button(QueueFilter::All),
-                queue_button(QueueFilter::Specific(Queue::RankedSolo)),
-                queue_button(QueueFilter::Specific(Queue::RankedFlex)),
-                queue_button(QueueFilter::Specific(Queue::ARAM)),
-                pick_list(
-                    QueueFilter::ALTERNATIVE,
-                    picked,
-                    Message::QueueFilterChanged
-                )
-                .text_size(12)
-                .placeholder("Queue type")
-                .style(move |theme, status| theme::queue_picklist(picked.is_some(), theme, status))
-                .menu_style(theme::region_menu),
-            ]
-            .spacing(4),
-        )
-        .padding(8)
-        .style(theme::dark)
-        .max_width(970)
-        .width(Length::Fill),
+        row![
+            queue_button(QueueFilter::All),
+            queue_button(QueueFilter::Specific(Queue::RankedSolo)),
+            queue_button(QueueFilter::Specific(Queue::RankedFlex)),
+            queue_button(QueueFilter::Specific(Queue::ARAM)),
+            pick_list(
+                QueueFilter::ALTERNATIVE,
+                picked,
+                Message::QueueFilterChanged
+            )
+            .text_size(12)
+            .placeholder("Queue type")
+            .style(move |theme, status| theme::queue_picklist(picked.is_some(), theme, status))
+            .menu_style(theme::region_menu),
+        ]
+        .spacing(4),
     )
-    .center_x(Length::Fill)
+    .width(Length::Fill)
+    .padding(8)
+    .style(theme::dark)
     .into()
 }
 
