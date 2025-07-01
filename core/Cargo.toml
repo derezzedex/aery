@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-riven = { version = "2.69", features = ["tracing"] }
+riven = { version = "2.72", features = ["tracing"] }
 thiserror = "2.0"
 tracing = "0.1"
 time = "0.3"
