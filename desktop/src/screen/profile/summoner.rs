@@ -58,7 +58,11 @@ impl Summoner {
         let summoner_name = profile.summoner.name().to_string();
         let level = profile.summoner.level();
         let icon = profile.summoner.icon_id() as u32;
+        #[cfg(not(target_arch = "wasm32"))]
         let icon_image = Some(assets.get_summoner_icon(icon as usize));
+
+        #[cfg(target_arch = "wasm32")]
+        let icon_image = None;
 
         Self {
             summoner_name,

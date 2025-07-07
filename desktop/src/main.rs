@@ -11,24 +11,35 @@ use iced::widget::{column, container, horizontal_space, row, text};
 use iced::{font, Alignment, Element, Length, Task, Theme};
 
 use aery_core as core;
-use tracing_subscriber::EnvFilter;
 
 pub fn main() -> iced::Result {
-    let env_filter = EnvFilter::builder()
-        .with_default_directive(tracing::Level::INFO.into())
-        .from_env()
-        .unwrap_or_default()
-        .add_directive("aery_desktop=trace".parse().unwrap_or_default())
-        .add_directive("wgpu=warn".parse().unwrap_or_default());
+    #[cfg(target_arch = "wasm32")]
+    {
+        console_log::init().expect("Initialize logger");
+        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+    }
 
-    tracing_subscriber::fmt().with_env_filter(env_filter).init();
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        use tracing_subscriber::EnvFilter;
+        let env_filter = EnvFilter::builder()
+            .with_default_directive(tracing::Level::INFO.into())
+            .from_env()
+            .unwrap_or_default()
+            .add_directive("aery_desktop=trace".parse().unwrap_or_default())
+            .add_directive("wgpu=warn".parse().unwrap_or_default());
+
+        tracing_subscriber::fmt().with_env_filter(env_filter).init();
+    }
+
+    tracing::error!("Starting!");
 
     iced::application(Aery::new, Aery::update, Aery::view)
         .theme(Aery::theme)
         .title("Aery")
-        .antialiasing(true)
-        .default_font(theme::DEFAULT_FONT)
-        .window_size([1024.0, 768.0])
+        // .antialiasing(true)
+        // .default_font(theme::DEFAULT_FONT)
+        // .window_size([1024.0, 768.0])
         .run()
 }
 
@@ -55,7 +66,17 @@ enum Message {
 
 impl Aery {
     fn new() -> (Self, Task<Message>) {
-        (Self::Loading, Assets::load())
+        (
+            Self::Loading,
+            Assets::load(),
+            // Assets::load().chain(Task::perform(
+            //     profile::fetch_data(
+            //         String::from("ruthless#easy"),
+            //         core::Region::from(String::from("BR1")),
+            //     ),
+            //     Message::ProfileLoaded,
+            // )),
+        )
     }
 
     fn with_assets(assets: Assets) -> Self {

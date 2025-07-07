@@ -25,7 +25,10 @@ pub const ROBOTO_FLEX_TTF: &[u8] = include_bytes!(concat!(
 .as_slice();
 
 pub const DEFAULT_FONT: iced::Font = iced::Font {
+    #[cfg(not(target_arch = "wasm32"))]
     family: font::Family::Name("RobotoFlex"),
+    #[cfg(target_arch = "wasm32")]
+    family: font::Family::SansSerif,
     weight: font::Weight::Normal,
     stretch: font::Stretch::Normal,
     style: font::Style::Normal,
@@ -42,7 +45,10 @@ pub const BOLD: iced::Font = iced::Font {
 };
 
 pub const NOTO_SANS: iced::Font = iced::Font {
+    #[cfg(not(target_arch = "wasm32"))]
     family: font::Family::Name("Noto Sans"),
+    #[cfg(target_arch = "wasm32")]
+    family: font::Family::SansSerif,
     weight: font::Weight::Normal,
     stretch: font::Stretch::Normal,
     style: font::Style::Normal,
@@ -61,6 +67,12 @@ pub mod icon {
     use iced::widget::svg;
     use iced::Theme;
 
+    #[cfg(not(target_arch = "wasm32"))]
+    const ASSETS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets");
+
+    #[cfg(target_arch = "wasm32")]
+    const ASSETS_PATH: &str = "assets";
+
     fn text(theme: &Theme, _status: svg::Status) -> svg::Style {
         svg::Style {
             color: Some(theme.palette().text),
@@ -68,47 +80,34 @@ pub mod icon {
     }
 
     pub fn chevron_down<'a>() -> svg::Svg<'a> {
-        let path = svg::Handle::from_path(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/icons/chevron-down.svg"
-        ));
-
-        svg(path).style(text).opacity(0.85)
+        svg(format!("{}/img/icons/chevron-down.svg", ASSETS_PATH))
+            .style(text)
+            .opacity(0.85)
     }
 
     pub fn chevron_up<'a>() -> svg::Svg<'a> {
-        let path = svg::Handle::from_path(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/icons/chevron-up.svg"
-        ));
-
-        svg(path).style(text).opacity(0.85)
+        svg(format!("{}/img/icons/chevron-up.svg", ASSETS_PATH))
+            .style(text)
+            .opacity(0.85)
     }
 
     pub fn search<'a>() -> svg::Svg<'a> {
-        let path = svg::Handle::from_path(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/icons/search.svg"
-        ));
-
-        svg(path).style(text).opacity(0.85)
+        svg(format!("{}/img/icons/search.svg", ASSETS_PATH))
+            .style(text)
+            .opacity(0.85)
     }
 
     pub fn clock<'a>() -> svg::Svg<'a> {
-        let path = svg::Handle::from_path(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/icons/clock.svg"
-        ));
-
-        svg(path).style(text).opacity(0.85)
+        svg(format!("{}/img/icons/clock.svg", ASSETS_PATH))
+            .style(text)
+            .opacity(0.85)
     }
 
     pub fn unranked() -> image::Handle {
-        let path = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/emblems/minicrests/unranked.png"
-        );
-        image::Handle::from_path(path)
+        image::Handle::from_path(format!(
+            "{}/img/emblems/minicrests/unranked.png",
+            ASSETS_PATH
+        ))
     }
 
     pub fn role<'a>(role: game::Role) -> svg::Svg<'a> {
@@ -120,12 +119,9 @@ pub mod icon {
             game::Role::Top => "top",
         };
 
-        let path = format!(
-            "{}/assets/img/position/{file}.svg",
-            env!("CARGO_MANIFEST_DIR"),
-        );
-
-        svg(svg::Handle::from_path(path)).style(text).opacity(0.85)
+        svg(format!("{}/img/position/{file}.svg", ASSETS_PATH))
+            .style(text)
+            .opacity(0.85)
     }
 }
 

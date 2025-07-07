@@ -262,7 +262,10 @@ pub async fn fetch_data(
     name: String,
     region: core::Region,
 ) -> Result<core::summoner::Data, String> {
+    #[cfg(not(target_arch = "wasm32"))]
     let worker_url = dotenv::var("WORKER_URL").map_err(|e| e.to_string())?;
+    #[cfg(target_arch = "wasm32")]
+    let worker_url = "http://127.0.0.1:8787";
     let path = format!("{worker_url}/summoner/{region}/{}", name.replace("#", "-"));
     tracing::info!("Requesting `{name}` ({region}) to {path}");
 

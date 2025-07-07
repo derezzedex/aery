@@ -3,11 +3,11 @@ use iced::widget::image::Handle;
 use iced::Task;
 use image::GenericImageView;
 
+use iced::time::Instant;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::sync::Arc;
-use std::time::Instant;
 use std::{ffi, fs, io};
 
 use crate::core::game;
@@ -119,13 +119,33 @@ impl Assets {
     const EMBLEMS_PATH: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/img/emblems");
 
     pub fn load() -> Task<Message> {
-        Task::batch(vec![
-            Task::perform(Assets::new(), Message::AssetsLoaded),
-            font::load(theme::ROBOTO_FLEX_TTF).map(Message::FontLoaded),
-            font::load(theme::NOTO_SANS_TTF).map(Message::FontLoaded),
-        ])
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            Task::batch(vec![
+                Task::perform(Assets::new(), Message::AssetsLoaded),
+                font::load(theme::ROBOTO_FLEX_TTF).map(Message::FontLoaded),
+                font::load(theme::NOTO_SANS_TTF).map(Message::FontLoaded),
+            ])
+        }
+
+        #[cfg(target_arch = "wasm32")]
+        Task::perform(Assets::new(), Message::AssetsLoaded)
     }
 
+    #[cfg(target_arch = "wasm32")]
+    pub async fn new() -> Result<Assets, Error> {
+        let assets = Assets {
+            sprites: HashMap::default(),
+            data: HashMap::default(),
+            runes: HashMap::default(),
+            emblems: HashMap::default(),
+            summoner_icons: HashMap::default(),
+        };
+
+        Ok(assets)
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
     pub async fn new() -> Result<Assets, Error> {
         let summoner_icons = SummonerIconMap::default();
 
@@ -254,7 +274,7 @@ impl Assets {
     }
 }
 
-// TODO: use champion id instead of name
+#[cfg(not(target_arch = "wasm32"))]
 pub fn load_champion_icon(assets: &Assets, champion: core::Champion) -> Handle {
     let icon_data = assets.data.get(&DataFile::Champion).unwrap();
     let name = champion.identifier().unwrap();
@@ -271,6 +291,12 @@ pub fn load_champion_icon(assets: &Assets, champion: core::Champion) -> Handle {
     Handle::from_rgba(icon.width(), icon.height(), icon.to_image().into_vec())
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn load_champion_icon(assets: &Assets, champion: core::Champion) -> Handle {
+    Handle::from_rgba(1, 1, vec![0u8, 0, 0, 0])
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub fn load_summoner_spell_icon(
     assets: &Assets,
     summoner_spell: game::player::SummonerSpell,
@@ -296,6 +322,15 @@ pub fn load_summoner_spell_icon(
     Handle::from_rgba(icon.width(), icon.height(), icon.to_image().into_vec())
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn load_summoner_spell_icon(
+    assets: &Assets,
+    summoner_spell: game::player::SummonerSpell,
+) -> Handle {
+    Handle::from_rgba(1, 1, vec![0u8, 0, 0, 0])
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub fn load_runes_icon(assets: &Assets, rune: rune::Rune) -> Handle {
     let rune_path = assets.runes.get(&rune).unwrap();
     let mut path = std::path::PathBuf::from(Assets::RUNES_PATH);
@@ -304,6 +339,12 @@ pub fn load_runes_icon(assets: &Assets, rune: rune::Rune) -> Handle {
     Handle::from_path(path)
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn load_runes_icon(assets: &Assets, rune: rune::Rune) -> Handle {
+    Handle::from_rgba(1, 1, vec![0u8, 0, 0, 0])
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub fn load_item_icon(assets: &Assets, item: game::Item) -> Handle {
     let icon_data = assets.data.get(&DataFile::Item).unwrap();
     let icon = &icon_data["data"][item.0.to_string()]["image"];
@@ -317,4 +358,9 @@ pub fn load_item_icon(assets: &Assets, item: game::Item) -> Handle {
     let icon_sprite = assets.sprites.get(&sprite).unwrap();
     let icon = icon_sprite.view(x + offset, y + offset, w - offset * 2, h - offset * 2);
     Handle::from_rgba(icon.width(), icon.height(), icon.to_image().into_vec())
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn load_item_icon(assets: &Assets, item: game::Item) -> Handle {
+    Handle::from_rgba(1, 1, vec![0u8, 0, 0, 0])
 }

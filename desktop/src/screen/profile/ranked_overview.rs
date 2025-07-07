@@ -165,6 +165,7 @@ impl RankedOverview {
                 tier: league.tier().unwrap(),
                 wins: league.wins() as u16,
                 losses: league.losses() as u16,
+                #[cfg(not(target_arch = "wasm32"))]
                 handle: assets
                     .emblems
                     .get(&format!(
@@ -173,6 +174,9 @@ impl RankedOverview {
                     ))
                     .unwrap()
                     .clone(),
+
+                #[cfg(target_arch = "wasm32")]
+                handle: image::Handle::from_rgba(1, 1, vec![0u8, 0, 0, 0]),
             });
 
         let flex = profile
@@ -184,6 +188,7 @@ impl RankedOverview {
                 tier: league.tier().unwrap(),
                 wins: league.wins() as u16,
                 losses: league.losses() as u16,
+                #[cfg(not(target_arch = "wasm32"))]
                 handle: assets
                     .emblems
                     .get(&format!(
@@ -192,6 +197,9 @@ impl RankedOverview {
                     ))
                     .unwrap()
                     .clone(),
+
+                #[cfg(target_arch = "wasm32")]
+                handle: image::Handle::from_rgba(1, 1, vec![0u8, 0, 0, 0]),
             });
 
         Self { solo_duo, flex }

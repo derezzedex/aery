@@ -352,6 +352,9 @@ pub mod summary {
 
             let summary_champions = {
                 let content = self.champions.iter().map(|champion| {
+                    #[cfg(target_arch = "wasm32")]
+                    let icon = vertical_space().width(48.0).height(48.0);
+                    #[cfg(not(target_arch = "wasm32"))]
                     let icon = iced::widget::image(champion.handle.clone())
                         .width(24.0)
                         .height(24.0)

@@ -21,37 +21,53 @@ use iced::{alignment, Alignment, Element, Length};
 use itertools::Itertools;
 
 fn champion_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
+    #[cfg(not(target_arch = "wasm32"))]
     let icon = iced::widget::image(handle)
         .width(48.0)
         .height(48.0)
         .content_fit(iced::ContentFit::Cover);
 
+    #[cfg(target_arch = "wasm32")]
+    let icon = vertical_space().width(48.0).height(48.0);
+
     container(icon).into()
 }
 
 fn summoner_spell_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
+    #[cfg(not(target_arch = "wasm32"))]
     let icon = iced::widget::image(handle)
         .width(22.0)
         .height(22.0)
         .content_fit(iced::ContentFit::Fill);
 
+    #[cfg(target_arch = "wasm32")]
+    let icon = vertical_space().width(48.0).height(48.0);
+
     container(icon).width(22.0).height(22.0).into()
 }
 
 fn summoner_rune_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
+    #[cfg(not(target_arch = "wasm32"))]
     let icon = iced::widget::image(handle)
         .width(30.0)
         .height(30.0)
         .content_fit(iced::ContentFit::Cover);
 
+    #[cfg(target_arch = "wasm32")]
+    let icon = vertical_space().width(48.0).height(48.0);
+
     container(icon).width(22.0).height(22.0).into()
 }
 
 fn summoner_rune2_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
+    #[cfg(not(target_arch = "wasm32"))]
     let icon = iced::widget::image(handle)
         .width(16.0)
         .height(16.0)
         .content_fit(iced::ContentFit::Fill);
+
+    #[cfg(target_arch = "wasm32")]
+    let icon = vertical_space().width(48.0).height(48.0);
 
     container(icon).center_x(22.0).center_y(22.0).into()
 }
@@ -94,6 +110,7 @@ impl PlayerAssets {
             load_runes_icon(assets, participant.rune_page.secondary.path.into()),
         ];
 
+        #[cfg(not(target_arch = "wasm32"))]
         let item_images = participant
             .inventory
             .into_iter()
@@ -101,6 +118,9 @@ impl PlayerAssets {
             .collect::<Vec<_>>()
             .try_into()
             .unwrap();
+
+        #[cfg(target_arch = "wasm32")]
+        let item_images = [const { None }; 6];
 
         let trinket_image = match participant.trinket {
             item::Trinket(0) => None,
