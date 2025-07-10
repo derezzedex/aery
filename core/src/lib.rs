@@ -1,11 +1,10 @@
+pub mod assets;
+pub use assets::Assets;
+
 pub mod client;
-
-use std::str::FromStr;
-
 pub use client::Client;
 
 pub mod summoner;
-use riven::consts::{PlatformRoute, RegionalRoute};
 pub use summoner::Summoner;
 
 pub mod account;
@@ -13,6 +12,9 @@ pub use account::Account;
 
 pub mod game;
 pub use game::Game;
+
+use riven::consts::{PlatformRoute, RegionalRoute};
+use std::str::FromStr;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
