@@ -1,7 +1,7 @@
 use crate::assets;
 use std::collections::HashMap;
 
-#[derive(bitcode::Encode, bitcode::Decode, PartialEq, Eq, Hash)]
+#[derive(bitcode::Encode, bitcode::Decode, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Id(pub u16);
 
 #[derive(bitcode::Encode, bitcode::Decode)]

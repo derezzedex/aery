@@ -1,4 +1,5 @@
 pub mod champion;
+pub mod emblem;
 pub mod item;
 pub mod rune;
 pub mod spell;
@@ -12,6 +13,7 @@ pub struct Assets {
     pub rune: rune::AssetMap,
     pub spell: spell::AssetMap,
     pub item: item::AssetMap,
+    pub emblem: emblem::AssetMap,
 }
 
 impl Assets {
