@@ -1,5 +1,7 @@
 pub mod champion;
+pub mod item;
 pub mod rune;
+pub mod spell;
 
 #[derive(bitcode::Encode, bitcode::Decode)]
 pub struct Image(pub Vec<u8>);
@@ -8,6 +10,8 @@ pub struct Image(pub Vec<u8>);
 pub struct Assets {
     pub champion: champion::AssetMap,
     pub rune: rune::AssetMap,
+    pub spell: spell::AssetMap,
+    pub item: item::AssetMap,
 }
 
 impl Assets {
