@@ -1,7 +1,3 @@
-use crate::assets::load_champion_icon;
-use crate::assets::load_item_icon;
-use crate::assets::load_runes_icon;
-use crate::assets::load_summoner_spell_icon;
 use crate::core;
 use crate::core::game;
 use crate::core::game::item;
@@ -83,28 +79,28 @@ pub struct PlayerAssets {
 
 impl PlayerAssets {
     fn from_participant(assets: &crate::Assets, participant: &game::Player) -> Self {
-        let champion_image = load_champion_icon(assets, participant.champion);
+        let champion_image = assets.champion(&participant.champion);
 
         let summoner_spell_images = [
-            load_summoner_spell_icon(assets, participant.summoner_spells.first()),
-            load_summoner_spell_icon(assets, participant.summoner_spells.second()),
+            assets.spell(&participant.summoner_spells.first()),
+            assets.spell(&participant.summoner_spells.second()),
         ];
         let runes_images = [
-            load_runes_icon(assets, participant.rune_page.primary.keystone.rune),
-            load_runes_icon(assets, participant.rune_page.secondary.path.into()),
+            assets.rune(&participant.rune_page.primary.keystone.rune),
+            assets.rune(&participant.rune_page.secondary.path.into()),
         ];
 
         let item_images = participant
             .inventory
             .into_iter()
-            .map(|item| item.map(|item| load_item_icon(assets, item)))
+            .map(|item| item.map(|item| assets.item(&item)))
             .collect::<Vec<_>>()
             .try_into()
             .unwrap();
 
         let trinket_image = match participant.trinket {
             item::Trinket(0) => None,
-            trinket => Some(load_item_icon(assets, trinket.into())),
+            trinket => Some(assets.item(&trinket.into())),
         };
 
         Self {

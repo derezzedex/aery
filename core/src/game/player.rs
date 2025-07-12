@@ -108,7 +108,7 @@ pub struct Stats {
     pub wards_removed: u32,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SummonerSpell(u32);
 
 impl SummonerSpell {

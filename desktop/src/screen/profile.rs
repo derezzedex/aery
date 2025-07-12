@@ -104,7 +104,7 @@ impl Profile {
             queue_filter,
 
             search_bar: SearchBar::new(),
-            summoner: Summoner::from_profile(assets, &profile),
+            summoner: Summoner::from_profile(&profile),
             timeline,
             ranked_overview: RankedOverview::from_profile(assets, &profile),
             data: Arc::new(profile),
@@ -122,7 +122,7 @@ impl Profile {
                 self.queue_filter = new_filter;
             }
             Message::FetchedData(Ok(data)) => {
-                self.summoner = Summoner::from_profile(assets, &data);
+                self.summoner = Summoner::from_profile(&data);
                 self.timeline = Timeline::from_profile(assets, &data, &self.queue_filter);
                 self.ranked_overview = RankedOverview::from_profile(assets, &data);
                 self.data = Arc::new(data);

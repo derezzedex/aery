@@ -1,4 +1,3 @@
-use crate::assets::Assets;
 use crate::core::account;
 use crate::profile;
 use crate::theme;
@@ -53,12 +52,11 @@ pub struct Summoner {
 }
 
 impl Summoner {
-    pub fn from_profile(assets: &mut Assets, profile: &profile::Data) -> Self {
+    pub fn from_profile(profile: &profile::Data) -> Self {
         let riot_id = profile.summoner.riot_id.clone();
         let summoner_name = profile.summoner.name().to_string();
         let level = profile.summoner.level();
-        let icon = profile.summoner.icon_id() as u32;
-        let icon_image = Some(assets.get_summoner_icon(icon as usize));
+        let icon_image = Some(image::Handle::from_bytes(profile.icon.clone()));
 
         Self {
             summoner_name,

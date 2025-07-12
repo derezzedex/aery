@@ -94,7 +94,6 @@ impl Timeline {
 pub mod summary {
     use super::theme;
     use super::Message;
-    use crate::assets;
     use crate::core;
     use crate::core::game::Role;
     use crate::theme::icon;
@@ -209,7 +208,7 @@ pub mod summary {
                 .sorted_unstable_by(|(_, a), (_, b)| b.wins.cmp(&a.wins))
                 .take(4)
                 .map(|((role, champion), stats)| Champion {
-                    handle: assets::load_champion_icon(assets, champion),
+                    handle: assets.champion(&champion),
                     lane: role,
                     wins: stats.wins,
                     losses: stats.losses,

@@ -45,7 +45,7 @@ enum Aery {
 
 #[derive(Debug, Clone)]
 enum Message {
-    AssetsLoaded(Result<Assets, assets::Error>),
+    AssetsLoaded(Result<Assets, String>),
     FontLoaded(Result<(), font::Error>),
     ProfileLoaded(Result<profile::Data, profile::Error>),
 

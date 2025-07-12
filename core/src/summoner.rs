@@ -6,6 +6,7 @@ use crate::game;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Data {
+    pub icon: Vec<u8>,
     pub summoner: Summoner,
     pub leagues: Vec<League>,
     pub games: Vec<game::Game>,

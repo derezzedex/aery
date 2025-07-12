@@ -1,7 +1,7 @@
-use crate::assets;
+use crate::{assets, summoner};
 use std::collections::HashMap;
 
-#[derive(bitcode::Encode, bitcode::Decode, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(bitcode::Encode, bitcode::Decode, Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Id(pub u8);
 
 impl Id {
@@ -17,6 +17,23 @@ impl Id {
         Id(8),
         Id(9),
     ];
+
+    pub fn from_tier(tier: &summoner::Tier) -> Self {
+        let id = match tier {
+            summoner::Tier::Iron(_) => 0,
+            summoner::Tier::Bronze(_) => 1,
+            summoner::Tier::Silver(_) => 2,
+            summoner::Tier::Gold(_) => 3,
+            summoner::Tier::Platinum(_) => 4,
+            summoner::Tier::Emerald(_) => 5,
+            summoner::Tier::Diamond(_) => 6,
+            summoner::Tier::Master(_) => 7,
+            summoner::Tier::Grandmaster(_) => 8,
+            summoner::Tier::Challenger(_) => 9,
+        };
+
+        Self(id)
+    }
 
     pub fn from_key(key: &String) -> Self {
         let id = match key.as_str() {

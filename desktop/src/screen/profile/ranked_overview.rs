@@ -165,14 +165,7 @@ impl RankedOverview {
                 tier: league.tier().unwrap(),
                 wins: league.wins() as u16,
                 losses: league.losses() as u16,
-                handle: assets
-                    .emblems
-                    .get(&format!(
-                        "emblem-{}.png",
-                        formatting::tier(league.tier().unwrap()).to_lowercase()
-                    ))
-                    .unwrap()
-                    .clone(),
+                handle: assets.emblem(&league.tier().unwrap()),
             });
 
         let flex = profile
@@ -184,14 +177,7 @@ impl RankedOverview {
                 tier: league.tier().unwrap(),
                 wins: league.wins() as u16,
                 losses: league.losses() as u16,
-                handle: assets
-                    .emblems
-                    .get(&format!(
-                        "emblem-{}.png",
-                        formatting::tier(league.tier().unwrap()).to_lowercase()
-                    ))
-                    .unwrap()
-                    .clone(),
+                handle: assets.emblem(&league.tier().unwrap()),
             });
 
         Self { solo_duo, flex }
