@@ -14,13 +14,13 @@ use iced::{Background, Color, Theme};
 
 pub const NOTO_SANS_TTF: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/assets/font/NotoSans-Regular.ttf"
+    "/assets/font/noto/NotoSans-Regular.ttf"
 ))
 .as_slice();
 
 pub const ROBOTO_FLEX_TTF: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/assets/font/RobotoFlex-Regular.ttf"
+    "/assets/font/roboto/RobotoFlex-Regular.ttf"
 ))
 .as_slice();
 
@@ -56,76 +56,120 @@ pub fn logo<'a, Message: 'a>() -> iced::widget::Container<'a, Message> {
 }
 
 pub mod icon {
+    use std::sync::LazyLock;
+
     use crate::core::game;
-    use iced::widget::image;
     use iced::widget::svg;
     use iced::Theme;
 
-    fn text(theme: &Theme, _status: svg::Status) -> svg::Style {
-        svg::Style {
-            color: Some(theme.palette().text),
-        }
+    fn icon<'a>(handle: svg::Handle) -> svg::Svg<'a> {
+        svg::Svg::new(handle)
+            .style(|theme: &Theme, _status| svg::Style {
+                color: Some(theme.palette().text),
+            })
+            .opacity(0.85)
     }
 
     pub fn chevron_down<'a>() -> svg::Svg<'a> {
-        let path = svg::Handle::from_path(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/icons/chevron-down.svg"
-        ));
+        static HANDLE: LazyLock<svg::Handle> = LazyLock::new(|| {
+            svg::Handle::from_memory(include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/assets/img/icons/chevron-down.svg"
+            )))
+        });
 
-        svg(path).style(text).opacity(0.85)
+        icon(HANDLE.clone())
     }
 
     pub fn chevron_up<'a>() -> svg::Svg<'a> {
-        let path = svg::Handle::from_path(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/icons/chevron-up.svg"
-        ));
+        static HANDLE: LazyLock<svg::Handle> = LazyLock::new(|| {
+            svg::Handle::from_memory(include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/assets/img/icons/chevron-up.svg"
+            )))
+        });
 
-        svg(path).style(text).opacity(0.85)
+        icon(HANDLE.clone())
     }
 
     pub fn search<'a>() -> svg::Svg<'a> {
-        let path = svg::Handle::from_path(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/icons/search.svg"
-        ));
+        static HANDLE: LazyLock<svg::Handle> = LazyLock::new(|| {
+            svg::Handle::from_memory(include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/assets/img/icons/search.svg"
+            )))
+        });
 
-        svg(path).style(text).opacity(0.85)
+        icon(HANDLE.clone())
     }
 
     pub fn clock<'a>() -> svg::Svg<'a> {
-        let path = svg::Handle::from_path(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/icons/clock.svg"
-        ));
+        static HANDLE: LazyLock<svg::Handle> = LazyLock::new(|| {
+            svg::Handle::from_memory(include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/assets/img/icons/clock.svg"
+            )))
+        });
 
-        svg(path).style(text).opacity(0.85)
+        icon(HANDLE.clone())
     }
 
-    pub fn unranked() -> image::Handle {
-        let path = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/assets/img/emblems/minicrests/unranked.png"
-        );
-        image::Handle::from_path(path)
+    pub fn unranked<'a>() -> svg::Svg<'a> {
+        static HANDLE: LazyLock<svg::Handle> = LazyLock::new(|| {
+            svg::Handle::from_memory(include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/assets/img/icons/unranked.svg"
+            )))
+        });
+
+        icon(HANDLE.clone())
     }
 
     pub fn role<'a>(role: game::Role) -> svg::Svg<'a> {
-        let file = match role {
-            game::Role::Bottom => "bottom",
-            game::Role::Jungle => "jungle",
-            game::Role::Mid => "mid",
-            game::Role::Support => "support",
-            game::Role::Top => "top",
+        static BOTTOM: LazyLock<svg::Handle> = LazyLock::new(|| {
+            svg::Handle::from_memory(include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/assets/img/position/bottom.svg"
+            )))
+        });
+
+        static JUNGLE: LazyLock<svg::Handle> = LazyLock::new(|| {
+            svg::Handle::from_memory(include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/assets/img/position/jungle.svg"
+            )))
+        });
+
+        static MID: LazyLock<svg::Handle> = LazyLock::new(|| {
+            svg::Handle::from_memory(include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/assets/img/position/mid.svg"
+            )))
+        });
+
+        static SUPPORT: LazyLock<svg::Handle> = LazyLock::new(|| {
+            svg::Handle::from_memory(include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/assets/img/position/support.svg"
+            )))
+        });
+
+        static TOP: LazyLock<svg::Handle> = LazyLock::new(|| {
+            svg::Handle::from_memory(include_bytes!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/assets/img/position/top.svg"
+            )))
+        });
+
+        let handle = match role {
+            game::Role::Bottom => BOTTOM.clone(),
+            game::Role::Jungle => JUNGLE.clone(),
+            game::Role::Mid => MID.clone(),
+            game::Role::Support => SUPPORT.clone(),
+            game::Role::Top => TOP.clone(),
         };
 
-        let path = format!(
-            "{}/assets/img/position/{file}.svg",
-            env!("CARGO_MANIFEST_DIR"),
-        );
-
-        svg(svg::Handle::from_path(path)).style(text).opacity(0.85)
+        icon(handle)
     }
 }
 

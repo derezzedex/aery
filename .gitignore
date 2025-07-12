@@ -5,6 +5,5 @@ target/
 *.pdb
 Cargo.lock
 .env
-desktop/**/assets/
 .vscode/
 .DS_Store

@@ -121,7 +121,7 @@ fn unranked_container<'a>(queue: game::Queue) -> Element<'a, Message> {
             text(queue.to_string()).font(theme::SEMIBOLD).size(14),
             horizontal_space().width(Length::Fill),
             row![
-                image(icon::unranked()).width(18.0).height(18.0),
+                icon::unranked().width(18.0).height(18.0),
                 text("Unranked").style(theme::text).size(12)
             ]
             .align_y(Alignment::Center)
