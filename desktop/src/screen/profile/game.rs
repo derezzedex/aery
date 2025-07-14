@@ -240,7 +240,7 @@ impl Game {
 
             column![
                 text(formatting::win(self.result))
-                    .font(theme::SEMIBOLD)
+                    .font(theme::BOLD)
                     .style(move |theme| text::Style {
                         color: Some(theme::win_color(theme, self.result))
                     })
@@ -278,7 +278,7 @@ impl Game {
             let champion_icon = champion_icon(self.player.assets.champion_image.clone());
             let champion_level = container(
                 text(self.player.info.stats.level)
-                    .font(theme::BOLD)
+                    .font(theme::EXTRA_BOLD)
                     .size(11),
             )
             .padding([1, 4])
@@ -314,16 +314,16 @@ impl Game {
         let player_stats = {
             let kda = row![
                 text(self.player.info.stats.kills)
-                    .font(theme::SEMIBOLD)
+                    .font(theme::BOLD)
                     .size(14),
                 text("/").style(theme::text).size(14),
                 text(self.player.info.stats.deaths)
-                    .font(theme::SEMIBOLD)
+                    .font(theme::BOLD)
                     .style(theme::defeat)
                     .size(14),
                 text("/").style(theme::text).size(14),
                 text(self.player.info.stats.assists)
-                    .font(theme::SEMIBOLD)
+                    .font(theme::BOLD)
                     .size(14)
             ]
             .align_y(Alignment::Center)
@@ -514,7 +514,7 @@ fn team<'a>(
 ) -> Element<'a, Message> {
     let result = row![
         text(formatting::win(team.result))
-            .font(theme::SEMIBOLD)
+            .font(theme::BOLD)
             .style(move |theme| text::Style {
                 color: Some(theme::win_color(theme, team.result))
             })
@@ -585,14 +585,9 @@ fn small_item<'a>(item: Option<image::Handle>) -> Element<'a, Message> {
 }
 
 fn header<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message> {
-    container(
-        text(content)
-            .font(theme::SEMIBOLD)
-            .size(12)
-            .style(theme::text),
-    )
-    .padding(4)
-    .into()
+    container(text(content).font(theme::BOLD).size(12).style(theme::text))
+        .padding(4)
+        .into()
 }
 
 fn smaller_text<'a>(content: impl text::IntoFragment<'a>) -> Element<'a, Message> {
@@ -636,7 +631,7 @@ fn player_name<'a>(riot_id: &account::RiotId, size: u32, is_player: bool) -> Ele
         .size(size);
 
     if is_player {
-        name = name.font(theme::SEMIBOLD);
+        name = name.font(theme::BOLD);
     }
 
     let content = button(name)
@@ -660,9 +655,13 @@ fn player<'a>(
     let champion_icon = image(player.assets.champion_image.clone())
         .width(32.0)
         .height(32.0);
-    let champion_level = container(text(player.info.stats.level).font(theme::BOLD).size(10))
-        .padding([1, 2])
-        .style(theme::summoner_level);
+    let champion_level = container(
+        text(player.info.stats.level)
+            .font(theme::EXTRA_BOLD)
+            .size(10),
+    )
+    .padding([1, 2])
+    .style(theme::summoner_level);
 
     let champion = stack![
         champion_icon,

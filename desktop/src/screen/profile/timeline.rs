@@ -236,7 +236,7 @@ pub mod summary {
             let is_positive_ratio = self.wins > self.losses;
 
             let title_bar = row![
-                container(text("Recent summary").font(theme::SEMIBOLD).size(11))
+                container(text("Recent summary").font(theme::BOLD).size(11))
                     .padding(padding::top(3)),
                 text!("last {} games", self.total)
                     .style(theme::text)
@@ -275,7 +275,7 @@ pub mod summary {
                     .height(4.0);
 
                 column![
-                    text("Winrate").fit(11).font(theme::SEMIBOLD),
+                    text("Winrate").fit(11).font(theme::BOLD),
                     vertical_space().height(2),
                     ratio_text,
                     ratio_bar,
@@ -342,7 +342,7 @@ pub mod summary {
                 ];
 
                 column![
-                    text("Lane").size(11).font(theme::SEMIBOLD),
+                    text("Lane").size(11).font(theme::BOLD),
                     row![lane_icon, lane_info]
                         .align_y(Alignment::Center)
                         .spacing(4)
@@ -393,7 +393,7 @@ pub mod summary {
                 });
 
                 column![
-                    text("Champions").size(11).font(theme::SEMIBOLD),
+                    text("Champions").size(11).font(theme::BOLD),
                     row(content).spacing(4).align_y(Alignment::Center)
                 ]
                 .spacing(4)

@@ -28,7 +28,7 @@ fn summoner_icon<'a>(icon: Option<image::Handle>, level: u32) -> Element<'a, Mes
             .padding(2.0)
             .style(theme::summoner_icon),
         container(
-            container(text(level).font(theme::BOLD).size(12))
+            container(text(level).font(theme::EXTRA_BOLD).size(12))
                 .padding([2, 4])
                 .style(theme::summoner_level),
         )

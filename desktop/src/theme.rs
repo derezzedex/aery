@@ -18,25 +18,37 @@ pub const NOTO_SANS_TTF: &[u8] = include_bytes!(concat!(
 ))
 .as_slice();
 
-pub const ROBOTO_FLEX_TTF: &[u8] = include_bytes!(concat!(
+pub const ROBOTO_REGULAR_TTF: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/assets/font/roboto/RobotoFlex-Regular.ttf"
+    "/assets/font/roboto/Roboto-Regular.ttf"
+))
+.as_slice();
+
+pub const ROBOTO_BOLD_TTF: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/assets/font/roboto/Roboto-Bold.ttf"
+))
+.as_slice();
+
+pub const ROBOTO_EXTRABOLD_TTF: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/assets/font/roboto/Roboto-ExtraBold.ttf"
 ))
 .as_slice();
 
 pub const DEFAULT_FONT: iced::Font = iced::Font {
-    family: font::Family::Name("RobotoFlex"),
+    family: font::Family::Name("Roboto"),
     weight: font::Weight::Normal,
     stretch: font::Stretch::Normal,
     style: font::Style::Normal,
 };
 
-pub const SEMIBOLD: iced::Font = iced::Font {
+pub const BOLD: iced::Font = iced::Font {
     weight: iced::font::Weight::Bold,
     ..DEFAULT_FONT
 };
 
-pub const BOLD: iced::Font = iced::Font {
+pub const EXTRA_BOLD: iced::Font = iced::Font {
     weight: iced::font::Weight::ExtraBold,
     ..DEFAULT_FONT
 };

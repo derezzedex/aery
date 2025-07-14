@@ -1,12 +1,10 @@
 use aery_core::summoner;
-use iced::font;
 use iced::widget::image::Handle;
 use iced::Task;
 
 use std::collections::HashMap;
 
 use crate::core::assets::emblem;
-use crate::theme;
 use crate::{core, Message};
 
 type HandleMap<T> = HashMap<T, Handle>;
@@ -22,11 +20,7 @@ pub struct Assets {
 
 impl Assets {
     pub fn load() -> Task<Message> {
-        Task::batch(vec![
-            Task::perform(Assets::new(), Message::AssetsLoaded),
-            font::load(theme::ROBOTO_FLEX_TTF).map(Message::FontLoaded),
-            font::load(theme::NOTO_SANS_TTF).map(Message::FontLoaded),
-        ])
+        Task::perform(Assets::new(), Message::AssetsLoaded)
     }
 
     pub async fn new() -> Result<Assets, String> {
@@ -108,7 +102,7 @@ impl Assets {
 pub async fn fetch() -> Result<Vec<u8>, String> {
     use futures::TryFutureExt;
 
-    let worker_url = dotenv::var("WORKER_URL").map_err(|e| e.to_string())?;
+    let worker_url = dotenv_codegen::dotenv!("WORKER_URL");
     let path = format!("{worker_url}/assets/latest");
     tracing::info!("Requesting assets to {path}");
 

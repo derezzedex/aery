@@ -262,7 +262,7 @@ pub async fn fetch_data(
     name: String,
     region: core::Region,
 ) -> Result<core::summoner::Data, String> {
-    let worker_url = dotenv::var("WORKER_URL").map_err(|e| e.to_string())?;
+    let worker_url = dotenv_codegen::dotenv!("WORKER_URL");
     let path = format!("{worker_url}/summoner/{region}/{}", name.replace("#", "-"));
     tracing::info!("Requesting `{name}` ({region}) to {path}");
 

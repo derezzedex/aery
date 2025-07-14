@@ -71,7 +71,7 @@ impl SearchBar {
             .width(Length::FillPortion(4)),
             horizontal_space().width(4),
             pick_list(Region::iter(), Some(self.region), Message::RegionSelected)
-                .font(theme::BOLD)
+                .font(theme::EXTRA_BOLD)
                 .text_size(12)
                 .padding(5)
                 .width(Length::Shrink)

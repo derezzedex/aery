@@ -60,7 +60,7 @@ fn ranked_container<'a>(
         row![
             left_bar,
             horizontal_space().width(4),
-            text(queue.to_string()).font(theme::SEMIBOLD).size(14),
+            text(queue.to_string()).font(theme::BOLD).size(14),
             horizontal_space().width(Length::Fill),
             button(chevron_down)
                 .style(theme::expand)
@@ -76,7 +76,7 @@ fn ranked_container<'a>(
                 .center_y(size),
             column![
                 row![
-                    text(tier).font(theme::SEMIBOLD).size(16),
+                    text(tier).font(theme::BOLD).size(16),
                     text("·").style(theme::text).size(16),
                     text(format!("{lp} LP")).style(theme::text).size(12)
                 ]
@@ -88,7 +88,7 @@ fn ranked_container<'a>(
                         .size(12),
                     text("·").style(theme::text),
                     text(format!("{win_rate:.0}%"))
-                        .font(theme::SEMIBOLD)
+                        .font(theme::BOLD)
                         .style(theme::victory)
                         .size(12)
                 ]
@@ -118,7 +118,7 @@ fn unranked_container<'a>(queue: game::Queue) -> Element<'a, Message> {
         row![
             left_bar,
             horizontal_space().width(4),
-            text(queue.to_string()).font(theme::SEMIBOLD).size(14),
+            text(queue.to_string()).font(theme::BOLD).size(14),
             horizontal_space().width(Length::Fill),
             row![
                 icon::unranked().width(18.0).height(18.0),

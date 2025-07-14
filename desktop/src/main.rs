@@ -8,28 +8,46 @@ use assets::Assets;
 use screen::{profile, search_bar};
 
 use iced::widget::{column, container, horizontal_space, row, text};
-use iced::{font, Alignment, Element, Length, Task, Theme};
+use iced::{Alignment, Element, Length, Task, Theme};
 
 use aery_core as core;
-use tracing_subscriber::EnvFilter;
 
 pub fn main() -> iced::Result {
-    let env_filter = EnvFilter::builder()
-        .with_default_directive(tracing::Level::INFO.into())
-        .from_env()
-        .unwrap_or_default()
-        .add_directive("aery_desktop=trace".parse().unwrap_or_default())
-        .add_directive("wgpu=warn".parse().unwrap_or_default());
+    #[cfg(target_arch = "wasm32")]
+    {
+        console_log::init().expect("Initialize logger");
+        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+    }
 
-    tracing_subscriber::fmt().with_env_filter(env_filter).init();
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        use tracing_subscriber::EnvFilter;
+        let env_filter = EnvFilter::builder()
+            .with_default_directive(tracing::Level::INFO.into())
+            .from_env()
+            .unwrap_or_default()
+            .add_directive("aery_desktop=trace".parse().unwrap_or_default())
+            .add_directive("wgpu=warn".parse().unwrap_or_default());
 
-    iced::application(Aery::new, Aery::update, Aery::view)
+        tracing_subscriber::fmt().with_env_filter(env_filter).init();
+    }
+
+    let mut aery = iced::application(Aery::new, Aery::update, Aery::view)
         .theme(Aery::theme)
         .title("Aery")
-        .antialiasing(true)
+        .font(theme::ROBOTO_REGULAR_TTF)
+        .font(theme::ROBOTO_BOLD_TTF)
+        .font(theme::ROBOTO_EXTRABOLD_TTF)
+        .font(theme::NOTO_SANS_TTF)
         .default_font(theme::DEFAULT_FONT)
-        .window_size([1024.0, 768.0])
-        .run()
+        .antialiasing(false);
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        aery = aery.window_size([1024.0, 768.0]);
+    }
+
+    aery.run()
 }
 
 enum Screen {
@@ -46,7 +64,6 @@ enum Aery {
 #[derive(Debug, Clone)]
 enum Message {
     AssetsLoaded(Result<Assets, String>),
-    FontLoaded(Result<(), font::Error>),
     ProfileLoaded(Result<profile::Data, profile::Error>),
 
     Profile(profile::Message),
@@ -87,12 +104,6 @@ impl Aery {
                 Task::none()
             }
             Message::AssetsLoaded(Err(error)) => panic!("assets load failed: {error:?}"),
-            Message::FontLoaded(Ok(_)) => {
-                tracing::info!("font loaded!");
-
-                Task::none()
-            }
-            Message::FontLoaded(Err(error)) => panic!("font load failed: {error:?}"),
             Message::ProfileLoaded(Ok(profile)) => {
                 let Self::Loaded { screen, assets } = self else {
                     return Task::none();
