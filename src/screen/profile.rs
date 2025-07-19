@@ -4,14 +4,14 @@ mod summoner;
 mod timeline;
 
 use futures::TryFutureExt;
+use iced::Alignment;
+use iced::Theme;
 use iced::border;
 use iced::widget::button;
 use iced::widget::horizontal_space;
 use iced::widget::pick_list;
 use iced::widget::text;
 use iced::widget::vertical_space;
-use iced::Alignment;
-use iced::Theme;
 use ranked_overview::RankedOverview;
 use summoner::Summoner;
 use timeline::Timeline;

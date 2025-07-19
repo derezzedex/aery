@@ -1,11 +1,11 @@
 use aery_core::summoner;
-use iced::widget::image::Handle;
 use iced::Task;
+use iced::widget::image::Handle;
 
 use std::collections::HashMap;
 
 use crate::core::assets::emblem;
-use crate::{core, Message};
+use crate::{Message, core};
 
 type HandleMap<T> = HashMap<T, Handle>;
 

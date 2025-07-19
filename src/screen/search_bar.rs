@@ -1,6 +1,6 @@
 use iced::{
-    widget::{button, container, horizontal_space, pick_list, row, text_input},
     Alignment, Element, Length,
+    widget::{button, container, horizontal_space, pick_list, row, text_input},
 };
 
 use crate::core::Region;

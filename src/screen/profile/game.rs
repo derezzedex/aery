@@ -12,8 +12,8 @@ use iced::widget::progress_bar;
 use iced::widget::stack;
 use iced::widget::tooltip;
 use iced::widget::vertical_space;
-use iced::widget::{button, column, container, row, text, Space};
-use iced::{alignment, Alignment, Element, Length};
+use iced::widget::{Space, button, column, container, row, text};
+use iced::{Alignment, Element, Length, alignment};
 use itertools::Itertools;
 
 fn champion_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
@@ -330,28 +330,34 @@ impl Game {
             .spacing(2);
 
             let other_stats = column![
-                row![text(formatting::kda(
-                    self.player.info.stats.kills,
-                    self.player.info.stats.deaths,
-                    self.player.info.stats.assists
-                ))
-                .size(11)
-                .style(theme::text)]
+                row![
+                    text(formatting::kda(
+                        self.player.info.stats.kills,
+                        self.player.info.stats.deaths,
+                        self.player.info.stats.assists
+                    ))
+                    .size(11)
+                    .style(theme::text)
+                ]
                 .spacing(4)
                 .align_y(Alignment::Center),
-                row![text(formatting::creep_score(
-                    self.player.info.stats.creep_score,
-                    self.duration.whole_minutes() as u32
-                ))
-                .size(11)
-                .style(theme::text)]
+                row![
+                    text(formatting::creep_score(
+                        self.player.info.stats.creep_score,
+                        self.duration.whole_minutes() as u32
+                    ))
+                    .size(11)
+                    .style(theme::text)
+                ]
                 .spacing(4)
                 .align_y(Alignment::Center),
-                row![text(formatting::vision_score(
-                    self.player.info.stats.vision_score
-                ))
-                .size(11)
-                .style(theme::text)]
+                row![
+                    text(formatting::vision_score(
+                        self.player.info.stats.vision_score
+                    ))
+                    .size(11)
+                    .style(theme::text)
+                ]
                 .spacing(4)
                 .align_y(Alignment::Center),
             ]
@@ -525,18 +531,22 @@ fn team<'a>(
     .align_y(Alignment::Center);
 
     let column = |content: Element<'a, Message>, size| {
-        column![container(content)
-            .style(theme::team_header)
-            .center_x(Length::Fill)]
+        column![
+            container(content)
+                .style(theme::team_header)
+                .center_x(Length::Fill)
+        ]
         .align_x(Alignment::Center)
         .width(Length::FillPortion(size))
     };
 
     let columns = vec![
-        column![container(result)
-            .padding(4)
-            .style(theme::team_header)
-            .align_left(Length::Fill)]
+        column![
+            container(result)
+                .padding(4)
+                .style(theme::team_header)
+                .align_left(Length::Fill)
+        ]
         .width(Length::FillPortion(3)),
         column(header("KDA"), 2),
         column(header("Damage"), 2),

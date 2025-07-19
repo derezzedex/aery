@@ -1,7 +1,7 @@
 use crate::core;
 use crate::theme;
-use iced::widget::{container, Space};
 use iced::Length;
+use iced::widget::{Space, container};
 
 pub fn left_border<'a, Message: 'a>(
     result: core::game::Result,

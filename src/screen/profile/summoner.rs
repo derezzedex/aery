@@ -2,12 +2,12 @@ use crate::core::account;
 use crate::profile;
 use crate::theme;
 
+use iced::Element;
+use iced::Length;
 use iced::alignment;
 use iced::widget::column;
 use iced::widget::stack;
 use iced::widget::{button, container, image, row, text, vertical_space};
-use iced::Element;
-use iced::Length;
 
 #[derive(Debug, Clone)]
 pub enum Message {

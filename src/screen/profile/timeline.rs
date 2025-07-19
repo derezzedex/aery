@@ -92,8 +92,8 @@ impl Timeline {
 }
 
 pub mod summary {
-    use super::theme;
     use super::Message;
+    use super::theme;
     use crate::core;
     use crate::core::game::Role;
     use crate::theme::icon;

@@ -1,7 +1,6 @@
 use iced::{
-    padding,
+    Alignment, Element, Length, padding,
     widget::{button, column, container, horizontal_space, image, progress_bar, row, text},
-    Alignment, Element, Length,
 };
 
 use crate::core::game;

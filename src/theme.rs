@@ -1,5 +1,6 @@
 use crate::core::game;
 
+use iced::Border;
 use iced::border;
 use iced::font;
 use iced::overlay::menu;
@@ -9,7 +10,6 @@ use iced::widget::container;
 use iced::widget::pick_list;
 use iced::widget::progress_bar;
 use iced::widget::text_input;
-use iced::Border;
 use iced::{Background, Color, Theme};
 
 pub const NOTO_SANS_TTF: &[u8] = include_bytes!(concat!(
@@ -71,8 +71,8 @@ pub mod icon {
     use std::sync::LazyLock;
 
     use crate::core::game;
-    use iced::widget::svg;
     use iced::Theme;
+    use iced::widget::svg;
 
     fn icon<'a>(handle: svg::Handle) -> svg::Svg<'a> {
         svg::Svg::new(handle)
