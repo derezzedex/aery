@@ -34,7 +34,7 @@ impl Assets {
             .map(|(id, asset)| {
                 (
                     core::Champion::new(id.0 as u32),
-                    Handle::from_bytes(asset.icon.0),
+                    Handle::from_bytes(asset.icon),
                 )
             })
             .collect();
@@ -42,7 +42,7 @@ impl Assets {
             .rune
             .0
             .into_iter()
-            .map(|(id, asset)| (core::Rune(id.0 as usize), Handle::from_bytes(asset.icon.0)))
+            .map(|(id, asset)| (core::Rune(id.0 as usize), Handle::from_bytes(asset.icon)))
             .collect();
         let spell = unloaded
             .spell
@@ -51,7 +51,7 @@ impl Assets {
             .map(|(id, asset)| {
                 (
                     core::SummonerSpell::new(id.0),
-                    Handle::from_bytes(asset.icon.0),
+                    Handle::from_bytes(asset.icon),
                 )
             })
             .collect();
@@ -59,13 +59,13 @@ impl Assets {
             .item
             .0
             .into_iter()
-            .map(|(id, asset)| (core::Item(id.0 as usize), Handle::from_bytes(asset.icon.0)))
+            .map(|(id, asset)| (core::Item(id.0 as usize), Handle::from_bytes(asset.icon)))
             .collect();
         let emblem = unloaded
             .emblem
             .0
             .into_iter()
-            .map(|(id, asset)| (id, Handle::from_bytes(asset.icon.0)))
+            .map(|(id, asset)| (id, Handle::from_bytes(asset.icon)))
             .collect();
 
         Ok(Assets {

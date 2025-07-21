@@ -37,7 +37,7 @@ impl RequestError {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, bitcode::Encode, bitcode::Decode)]
 pub struct Champion(u32);
 
 impl Champion {
@@ -63,7 +63,7 @@ impl From<riven::consts::Champion> for Champion {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, bitcode::Encode, bitcode::Decode)]
 pub struct Team(usize);
 
 impl Team {

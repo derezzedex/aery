@@ -4,7 +4,7 @@ use crate::game::item;
 use crate::game::rune;
 use crate::{Champion, Team};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct Player {
     pub puuid: String,
     pub riot_id: account::RiotId,
@@ -87,7 +87,7 @@ impl From<&riven::models::match_v5::Participant> for Player {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, bitcode::Encode, bitcode::Decode)]
 pub struct Stats {
     pub level: u32,
 
@@ -108,7 +108,7 @@ pub struct Stats {
     pub wards_removed: u32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, bitcode::Encode, bitcode::Decode)]
 pub struct SummonerSpell(u32);
 
 impl SummonerSpell {
@@ -121,7 +121,7 @@ impl SummonerSpell {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, bitcode::Encode, bitcode::Decode)]
 pub struct SummonerSpells(pub [SummonerSpell; 2]);
 
 impl SummonerSpells {

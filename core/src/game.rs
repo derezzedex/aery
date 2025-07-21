@@ -6,8 +6,9 @@ pub use player::Player;
 pub mod item;
 pub mod rune;
 pub use item::Item;
+use riven::models::match_v5;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct Id(String);
 
 impl TryFrom<String> for Id {
@@ -41,7 +42,7 @@ pub struct Event(pub riven::models::match_v5::EventsTimeLine);
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Timeline(pub Vec<Event>);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, bitcode::Encode, bitcode::Decode)]
 pub enum Result {
     Defeat,
     Remake,
@@ -68,49 +69,54 @@ impl Result {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct Game(pub riven::models::match_v5::Match);
+#[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
+pub struct Game {
+    pub id: Id,
+    pub queue: Queue,
+    pub created_at: i64,
+    pub duration: i64,
+    pub players: Vec<Player>,
+}
 
 impl Game {
-    pub fn id(&self) -> Id {
-        Id(self.0.metadata.match_id.clone())
+    pub fn created_at_time(&self) -> time::OffsetDateTime {
+        time::OffsetDateTime::from_unix_timestamp_nanos(self.created_at as i128 * 1_000_000)
+            .unwrap()
     }
 
-    pub fn queue(&self) -> Queue {
-        self.0.info.queue_id.into()
+    pub fn duration_time(&self) -> time::Duration {
+        time::Duration::seconds(self.duration)
     }
 
-    pub fn created_at(&self) -> time::OffsetDateTime {
-        time::OffsetDateTime::from_unix_timestamp_nanos(
-            self.0.info.game_creation as i128 * 1_000_000,
-        )
-        .unwrap()
-    }
-
-    pub fn duration(&self) -> time::Duration {
-        use time::ext::NumericalDuration;
-
-        match self.0.info.game_end_timestamp {
-            Some(_) => self.0.info.game_duration.seconds(),
-            None => self.0.info.game_duration.milliseconds(),
-        }
-    }
-
-    pub fn participants(&self) -> Vec<Player> {
-        self.0.info.participants.iter().map(Player::from).collect()
-    }
-
-    pub fn participant(&self, puuid: &str) -> Option<Player> {
-        self.0
-            .info
-            .participants
+    pub fn player(&self, puuid: &str) -> Option<&Player> {
+        self.players
             .iter()
             .find(|participant| participant.puuid == puuid)
-            .map(Player::from)
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+impl From<match_v5::Match> for Game {
+    fn from(game: match_v5::Match) -> Self {
+        let id = Id(game.metadata.match_id.clone());
+        let queue = Queue::from(game.info.queue_id);
+        let duration = if game.info.game_end_timestamp.is_some() {
+            time::Duration::seconds(game.info.game_duration).whole_seconds()
+        } else {
+            time::Duration::milliseconds(game.info.game_duration).whole_seconds()
+        };
+        let players = game.info.participants.iter().map(Player::from).collect();
+
+        Self {
+            id,
+            queue,
+            created_at: game.info.game_creation,
+            duration,
+            players,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, bitcode::Encode, bitcode::Decode)]
 pub enum Role {
     Bottom,
     Jungle,
@@ -134,7 +140,7 @@ impl TryFrom<&String> for Role {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, bitcode::Encode, bitcode::Decode)]
 pub enum Queue {
     /// CUSTOM
     Custom,

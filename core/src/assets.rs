@@ -1,11 +1,37 @@
+use bytes::Bytes;
+
 pub mod champion;
 pub mod emblem;
 pub mod item;
 pub mod rune;
 pub mod spell;
 
-#[derive(bitcode::Encode, bitcode::Decode)]
-pub struct Image(pub Vec<u8>);
+#[derive(Clone, bitcode::Encode, bitcode::Decode)]
+pub struct Image(Vec<u8>);
+
+impl From<Vec<u8>> for Image {
+    fn from(bytes: Vec<u8>) -> Self {
+        Self(bytes)
+    }
+}
+
+impl From<Bytes> for Image {
+    fn from(bytes: Bytes) -> Self {
+        Self(bytes.to_vec())
+    }
+}
+
+impl From<Image> for Bytes {
+    fn from(image: Image) -> Self {
+        Bytes::from(image.0)
+    }
+}
+
+impl std::fmt::Debug for Image {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Image").finish()
+    }
+}
 
 #[derive(bitcode::Encode, bitcode::Decode)]
 pub struct Assets {

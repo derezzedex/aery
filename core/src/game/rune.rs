@@ -1,5 +1,5 @@
 pub mod path {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, bitcode::Encode, bitcode::Decode)]
     pub enum Kind {
         Precision,
         Domination,
@@ -8,7 +8,7 @@ pub mod path {
         Resolve,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, bitcode::Encode, bitcode::Decode)]
     pub struct Rune(pub usize);
 
     impl From<Kind> for Rune {
@@ -47,7 +47,7 @@ pub mod path {
         }
     }
 
-    #[derive(Debug, Clone, Copy)]
+    #[derive(Debug, Clone, Copy, bitcode::Encode, bitcode::Decode)]
     pub struct Keystone {
         pub rune: Rune,
     }
@@ -58,14 +58,14 @@ pub mod path {
         }
     }
 
-    #[derive(Debug, Clone, Copy)]
+    #[derive(Debug, Clone, Copy, bitcode::Encode, bitcode::Decode)]
     pub struct Primary {
         pub path: Kind,
         pub keystone: Keystone,
         pub runes: [Rune; 3],
     }
 
-    #[derive(Debug, Clone, Copy)]
+    #[derive(Debug, Clone, Copy, bitcode::Encode, bitcode::Decode)]
     pub struct Secondary {
         pub path: Kind,
         pub runes: [Rune; 2],
@@ -74,21 +74,21 @@ pub mod path {
 
 pub use path::Rune;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, bitcode::Encode, bitcode::Decode)]
 pub struct Page {
     pub primary: path::Primary,
     pub secondary: path::Secondary,
     pub shards: Shards,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, bitcode::Encode, bitcode::Decode)]
 pub struct Shards {
     pub offense: Shard,
     pub flex: Shard,
     pub defense: Shard,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, bitcode::Encode, bitcode::Decode)]
 pub enum Shard {
     HealthScaling = 5001,
     Armor = 5002,

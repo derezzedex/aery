@@ -1,6 +1,6 @@
 use riven::models::league_v4;
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, bitcode::Encode, bitcode::Decode)]
 pub enum Kind {
     SummonersRift(SummonersRift),
     TeamfightTactics(TeamfightTactics),
@@ -29,21 +29,21 @@ impl From<riven::consts::QueueType> for Kind {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, bitcode::Encode, bitcode::Decode)]
 pub enum SummonersRift {
     Solo,
     Flex,
     TwistedTreeline,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, bitcode::Encode, bitcode::Decode)]
 pub enum TeamfightTactics {
     Ranked,
     Turbo,
     DoubleUp,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct League {
     pub kind: Kind,
     pub tier: Option<Tier>,
@@ -77,7 +77,7 @@ impl From<league_v4::LeagueEntry> for League {
     }
 }
 
-#[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Copy, Clone, bitcode::Encode, bitcode::Decode)]
 pub enum Division {
     One(u8),
     Two(u8),
@@ -85,7 +85,7 @@ pub enum Division {
     Four(u8),
 }
 
-#[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Copy, Clone, bitcode::Encode, bitcode::Decode)]
 pub enum Tier {
     Iron(Division),
     Bronze(Division),

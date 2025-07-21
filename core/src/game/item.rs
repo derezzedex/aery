@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, bitcode::Encode, bitcode::Decode)]
 pub struct Item(pub usize);
 
 impl TryFrom<i32> for Item {
@@ -13,7 +13,7 @@ impl TryFrom<i32> for Item {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, bitcode::Encode, bitcode::Decode)]
 pub struct Trinket(pub usize);
 
 impl From<Trinket> for Item {
@@ -22,7 +22,7 @@ impl From<Trinket> for Item {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, bitcode::Encode, bitcode::Decode)]
 pub struct Inventory {
     pub items: [Option<Item>; 6],
 }

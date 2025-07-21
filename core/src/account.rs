@@ -1,6 +1,6 @@
 use riven::models::account_v1;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct RiotId {
     pub name: Option<String>,    // 3~16 chars
     pub tagline: Option<String>, // 3~5 chars
@@ -15,7 +15,7 @@ impl RiotId {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct Puuid(String);
 
 impl AsRef<str> for Puuid {
@@ -24,7 +24,7 @@ impl AsRef<str> for Puuid {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct Account {
     pub puuid: Puuid,
     pub riot_id: RiotId,

@@ -269,7 +269,8 @@ pub async fn fetch_data(
     reqwest::get(path)
         .map_err(|e| e.to_string())
         .await?
-        .json::<Data>()
+        .bytes()
         .map_err(|e| e.to_string())
         .await
+        .map(|bytes| core::summoner::Data::decode(&bytes))
 }

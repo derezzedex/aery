@@ -1,18 +1,31 @@
 pub mod league;
 pub use league::{Division, League, Tier};
 
+use crate::assets;
 use crate::game;
 use crate::Account;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct Data {
-    pub icon: Vec<u8>,
+    pub icon: assets::Image,
     pub summoner: Summoner,
     pub leagues: Vec<League>,
     pub games: Vec<game::Game>,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+impl Data {
+    pub fn encode(&self) -> Vec<u8> {
+        let bytes = bitcode::encode(self);
+        lz4_flex::compress_prepend_size(&bytes)
+    }
+
+    pub fn decode(bytes: &[u8]) -> Self {
+        let decompressed = lz4_flex::decompress_size_prepended(bytes).unwrap();
+        bitcode::decode(&decompressed).unwrap()
+    }
+}
+
+#[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct Summoner {
     pub account: Account,
     pub level: i64,

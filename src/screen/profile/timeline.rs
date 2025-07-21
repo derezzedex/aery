@@ -28,7 +28,7 @@ impl Timeline {
         let games = profile
             .games
             .iter()
-            .filter(|game| *queue_filter == game.queue())
+            .filter(|game| *queue_filter == game.queue)
             .collect::<Vec<_>>();
 
         let summary = Summary::from_games(assets, &profile.summoner, &games);
@@ -171,7 +171,7 @@ pub mod summary {
         ) -> Summary {
             let games = games
                 .iter()
-                .map(|game| game.participant(player.puuid()).unwrap())
+                .map(|game| game.player(player.puuid()).unwrap())
                 .collect_vec();
 
             let total = games.iter().count();

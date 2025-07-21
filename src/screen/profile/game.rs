@@ -166,18 +166,11 @@ impl Game {
         summoner: &core::Summoner,
         game: &core::Game,
     ) -> Self {
-        let participants = game.participants();
-        let player = participants
-            .iter()
-            .find(|p| p.puuid == summoner.puuid())
-            .cloned()
-            .unwrap();
-
-        let result = player.result;
-
+        let player = game.player(summoner.puuid()).unwrap();
         let player = Player::from_participant(assets, &player);
 
-        let teams = participants
+        let teams = game
+            .players
             .iter()
             .into_grouping_map_by(|p| p.team)
             .fold(Vec::new(), |mut players, _team, participant| {
@@ -196,10 +189,10 @@ impl Game {
             .collect();
 
         Game {
-            result,
-            queue: game.queue(),
-            time: game.created_at(),
-            duration: game.duration(),
+            result: player.info.result,
+            queue: game.queue,
+            time: game.created_at_time(),
+            duration: game.duration_time(),
             player,
             teams,
 
