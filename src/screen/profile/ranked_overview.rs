@@ -1,3 +1,4 @@
+use aery_core::summoner::league;
 use iced::{
     Alignment, Element, Length, padding,
     widget::{button, column, container, horizontal_space, image, progress_bar, row, text},
@@ -158,25 +159,25 @@ impl RankedOverview {
         let solo_duo = profile
             .leagues
             .iter()
-            .find(|league| league.queue_kind() == game::Queue::RankedSolo)
-            .filter(|league| league.tier().is_some())
+            .find(|league| league.kind == league::Kind::SummonersRift(league::SummonersRift::Solo))
+            .filter(|league| league.tier.is_some())
             .map(|league| Stats {
-                tier: league.tier().unwrap(),
-                wins: league.wins() as u16,
-                losses: league.losses() as u16,
-                handle: assets.emblem(&league.tier().unwrap()),
+                tier: league.tier.unwrap(),
+                wins: league.wins as u16,
+                losses: league.losses as u16,
+                handle: assets.emblem(&league.tier.unwrap()),
             });
 
         let flex = profile
             .leagues
             .iter()
-            .find(|league| league.queue_kind() == game::Queue::RankedFlex)
-            .filter(|league| league.tier().is_some())
+            .find(|league| league.kind == league::Kind::SummonersRift(league::SummonersRift::Flex))
+            .filter(|league| league.tier.is_some())
             .map(|league| Stats {
-                tier: league.tier().unwrap(),
-                wins: league.wins() as u16,
-                losses: league.losses() as u16,
-                handle: assets.emblem(&league.tier().unwrap()),
+                tier: league.tier.unwrap(),
+                wins: league.wins as u16,
+                losses: league.losses as u16,
+                handle: assets.emblem(&league.tier.unwrap()),
             });
 
         Self { solo_duo, flex }

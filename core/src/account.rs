@@ -1,3 +1,5 @@
+use riven::models::account_v1;
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RiotId {
     pub name: Option<String>,    // 3~16 chars
@@ -26,4 +28,16 @@ impl AsRef<str> for Puuid {
 pub struct Account {
     pub puuid: Puuid,
     pub riot_id: RiotId,
+}
+
+impl From<account_v1::Account> for Account {
+    fn from(account: account_v1::Account) -> Self {
+        Self {
+            puuid: Puuid(account.puuid),
+            riot_id: RiotId {
+                name: account.game_name,
+                tagline: account.tag_line,
+            },
+        }
+    }
 }

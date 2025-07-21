@@ -134,7 +134,7 @@ impl TryFrom<&String> for Role {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Queue {
     /// CUSTOM
     Custom,

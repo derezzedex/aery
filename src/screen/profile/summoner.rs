@@ -53,9 +53,9 @@ pub struct Summoner {
 
 impl Summoner {
     pub fn from_profile(profile: &profile::Data) -> Self {
-        let riot_id = profile.summoner.riot_id.clone();
+        let riot_id = profile.summoner.account.riot_id.clone();
         let summoner_name = profile.summoner.name().to_string();
-        let level = profile.summoner.level();
+        let level = profile.summoner.level as u32;
         let icon_image = Some(image::Handle::from_bytes(profile.icon.clone()));
 
         Self {

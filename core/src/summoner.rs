@@ -1,8 +1,8 @@
 pub mod league;
 pub use league::{Division, League, Tier};
 
-use crate::account;
 use crate::game;
+use crate::Account;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Data {
@@ -14,26 +14,20 @@ pub struct Data {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Summoner {
-    pub riot_id: account::RiotId,
-    pub raw: riven::models::summoner_v4::Summoner,
+    pub account: Account,
+    pub level: i64,
+    pub icon_id: i32,
+    pub last_modified: i64,
 }
 
 impl Summoner {
     pub fn name(&self) -> String {
-        let name = self.riot_id.name.clone().unwrap_or_default();
-        let tagline = self.riot_id.tagline.clone().unwrap_or_default();
+        let name = self.account.riot_id.name.clone().unwrap_or_default();
+        let tagline = self.account.riot_id.tagline.clone().unwrap_or_default();
         format!("{name}#{tagline}")
     }
 
     pub fn puuid(&self) -> &str {
-        &self.raw.puuid
-    }
-
-    pub fn level(&self) -> u32 {
-        self.raw.summoner_level as u32
-    }
-
-    pub fn icon_id(&self) -> i32 {
-        self.raw.profile_icon_id
+        self.account.puuid.as_ref()
     }
 }
