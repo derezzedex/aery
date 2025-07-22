@@ -11,10 +11,10 @@ pub mod account;
 pub use account::Account;
 
 pub mod game;
-pub use game::player::SummonerSpell;
-pub use game::rune::Rune;
 pub use game::Game;
 pub use game::Item;
+pub use game::player::SummonerSpell;
+pub use game::rune::Rune;
 
 use riven::consts::{PlatformRoute, RegionalRoute};
 use std::str::FromStr;

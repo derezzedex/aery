@@ -1,17 +1,18 @@
 [package]
 name = "aery_core"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
 
 [features]
 dummy = []
 
 [dependencies]
-riven = { version = "2.72", features = ["tracing"] }
-thiserror = "2.0"
-tracing = "0.1"
-time = "0.3"
-serde = "1.0"
-bitcode = "0.6"
-bytes = "1.10"
-lz4_flex = { version = "0.11", default-features = false }
+riven.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+time.workspace = true
+serde.workspace = true
+bitcode.workspace = true
+bytes.workspace = true
+lz4_flex.workspace = true

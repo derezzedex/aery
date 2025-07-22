@@ -37,6 +37,12 @@ dotenv_codegen = "0.15"
 futures = "0.3"
 reqwest = { version = "0.12", features = ["json", "gzip"] }
 thiserror = "2.0"
+riven = { version = "2.72", features = ["tracing"] }
+time = "0.3"
+serde = "1.0"
+bitcode = "0.6"
+bytes = "1.10"
+lz4_flex = { version = "0.11", default-features = false }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 iced = { git = "https://github.com/iced-rs/iced", rev = "89f480bdae951a31944302777b759661ec3c3e83", features = [

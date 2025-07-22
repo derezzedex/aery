@@ -96,7 +96,7 @@ impl Game {
 
     #[cfg(feature = "dummy")]
     pub fn dummy(riot_id: crate::account::RiotId) -> Self {
-        use crate::{account, Champion, Team};
+        use crate::{Champion, Team, account};
 
         let players = vec![
             Player::dummy(

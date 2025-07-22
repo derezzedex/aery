@@ -32,7 +32,7 @@ pub fn main() -> iced::Result {
         tracing_subscriber::fmt().with_env_filter(env_filter).init();
     }
 
-    let aery = iced::application(Aery::new, Aery::update, Aery::view)
+    iced::application(Aery::new, Aery::update, Aery::view)
         .theme(Aery::theme)
         .title("Aery")
         .window_size([1024.0, 768.0])
@@ -41,9 +41,8 @@ pub fn main() -> iced::Result {
         .font(theme::ROBOTO_EXTRABOLD_TTF)
         .font(theme::NOTO_SANS_TTF)
         .default_font(theme::DEFAULT_FONT)
-        .antialiasing(cfg!(not(target_arch = "wasm32")));
-
-    aery.run()
+        .antialiasing(cfg!(not(target_arch = "wasm32")))
+        .run()
 }
 
 enum Screen {
