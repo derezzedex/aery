@@ -483,7 +483,6 @@ pub fn rule(theme: &Theme) -> widget::rule::Style {
     widget::rule::Style {
         color: theme.palette().text.scale_alpha(0.6),
         snap: true,
-        width: 1,
         radius: 0.0.into(),
         fill_mode: widget::rule::FillMode::Full,
     }

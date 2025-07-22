@@ -78,7 +78,7 @@ impl Summoner {
         let name = self.riot_id.name.clone().unwrap_or(String::from("Unknown"));
 
         let name = row![text(name).size(24),]
-            .push_maybe(
+            .push(
                 self.riot_id
                     .tagline
                     .as_ref()
