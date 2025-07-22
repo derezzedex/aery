@@ -99,6 +99,7 @@ impl Assets {
     }
 }
 
+#[cfg(not(feature = "dummy"))]
 pub async fn fetch() -> Result<Vec<u8>, String> {
     use futures::TryFutureExt;
 
@@ -113,4 +114,9 @@ pub async fn fetch() -> Result<Vec<u8>, String> {
         .map_err(|e| e.to_string())
         .await
         .map(|b| b.to_vec())
+}
+
+#[cfg(feature = "dummy")]
+pub async fn fetch() -> Result<Vec<u8>, String> {
+    std::fs::read("assets/dummy/assets.aery").map_err(|error| error.to_string())
 }

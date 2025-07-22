@@ -16,6 +16,9 @@ futures.workspace = true
 reqwest.workspace = true
 thiserror.workspace = true
 
+[features]
+dummy = ["aery_core/dummy"]
+
 [workspace]
 members = ["core"]
 

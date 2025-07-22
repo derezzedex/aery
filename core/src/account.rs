@@ -30,6 +30,23 @@ pub struct Account {
     pub riot_id: RiotId,
 }
 
+impl Account {
+    #[cfg(feature = "dummy")]
+    pub fn dummy(riot_id: RiotId) -> Self {
+        let name = riot_id.name.as_ref().map(String::as_str).unwrap_or("foo");
+        let tagline = riot_id
+            .tagline
+            .as_ref()
+            .map(String::as_str)
+            .unwrap_or("bar");
+
+        Self {
+            puuid: Puuid(format!("{name}-{tagline}")),
+            riot_id,
+        }
+    }
+}
+
 impl From<account_v1::Account> for Account {
     fn from(account: account_v1::Account) -> Self {
         Self {

@@ -131,7 +131,7 @@ impl Aery {
                         search_bar.update(message)
                     {
                         return Task::perform(
-                            profile::fetch_data(riot_id, region),
+                            profile::fetch(riot_id, region),
                             Message::ProfileLoaded,
                         );
                     }

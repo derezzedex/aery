@@ -59,6 +59,16 @@ impl League {
     pub fn points(&self) -> u16 {
         self.tier.as_ref().map(Tier::points).unwrap_or(0)
     }
+
+    #[cfg(feature = "dummy")]
+    pub fn dummy(kind: Kind) -> Self {
+        Self {
+            kind,
+            tier: Some(Tier::Platinum(Division::Two(50))),
+            wins: 125,
+            losses: 109,
+        }
+    }
 }
 
 impl From<league_v4::LeagueEntry> for League {

@@ -20,6 +20,75 @@ pub struct Player {
     pub stats: Stats,
 }
 
+impl Player {
+    #[cfg(feature = "dummy")]
+    pub fn dummy(
+        riot_id: account::RiotId,
+        team: Team,
+        role: game::Role,
+        champion: Champion,
+        result: game::Result,
+    ) -> Self {
+        use account::Account;
+        use item::Item;
+        use rune::Rune;
+
+        let account = Account::dummy(riot_id);
+
+        Player {
+            puuid: account.puuid.as_ref().to_string(),
+            riot_id: account.riot_id,
+            team,
+            result,
+            role: Some(role),
+            inventory: item::Inventory {
+                items: [
+                    Some(Item(3161)),
+                    Some(Item(6692)),
+                    Some(Item(3156)),
+                    Some(Item(6333)),
+                    Some(Item(3174)),
+                    Some(Item(6695)),
+                ],
+            },
+            trinket: item::Trinket(3364),
+            champion,
+            summoner_spells: SummonerSpells([SummonerSpell(11), SummonerSpell(4)]),
+            rune_page: rune::Page {
+                primary: rune::path::Primary {
+                    path: rune::path::Kind::Precision,
+                    keystone: rune::path::Keystone { rune: Rune(8010) },
+                    runes: [Rune(9111), Rune(9105), Rune(8017)],
+                },
+                secondary: rune::path::Secondary {
+                    path: rune::path::Kind::Inspiration,
+                    runes: [Rune(8304), Rune(8347)],
+                },
+                shards: rune::Shards {
+                    offense: rune::Shard::AbilityHaste,
+                    flex: rune::Shard::AdaptiveForce,
+                    defense: rune::Shard::HealthScaling,
+                },
+            },
+            stats: Stats {
+                level: 18,
+                kills: 14,
+                deaths: 4,
+                assists: 6,
+                creep_score: 33,
+                monster_score: 199,
+                vision_score: 36,
+                damage_dealt: 27476,
+                damage_taken: 39444,
+                gold: 17258,
+                control_wards: 4,
+                wards_placed: 11,
+                wards_removed: 2,
+            },
+        }
+    }
+}
+
 impl From<&riven::models::match_v5::Participant> for Player {
     fn from(participant: &riven::models::match_v5::Participant) -> Self {
         let inventory = item::Inventory::from(

@@ -9,6 +9,12 @@ pub mod spell;
 #[derive(Clone, bitcode::Encode, bitcode::Decode)]
 pub struct Image(Vec<u8>);
 
+impl AsRef<[u8]> for Image {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
+    }
+}
+
 impl From<Vec<u8>> for Image {
     fn from(bytes: Vec<u8>) -> Self {
         Self(bytes)

@@ -3,6 +3,9 @@ name = "aery_core"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+dummy = []
+
 [dependencies]
 riven = { version = "2.72", features = ["tracing"] }
 thiserror = "2.0"

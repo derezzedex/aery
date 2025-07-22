@@ -3,7 +3,6 @@ mod ranked_overview;
 mod summoner;
 mod timeline;
 
-use futures::TryFutureExt;
 use iced::Alignment;
 use iced::Theme;
 use iced::border;
@@ -136,7 +135,7 @@ impl Profile {
                         .zip(riot_id.tagline.as_ref())
                         .map(|(name, tag)| {
                             Task::perform(
-                                fetch_data(format!("{name}#{tag}"), self.region),
+                                fetch(format!("{name}#{tag}"), self.region),
                                 Message::FetchedData,
                             )
                         })
@@ -147,10 +146,7 @@ impl Profile {
                 if let Some(event) = self.summoner.update(message) {
                     match event {
                         summoner::Event::UpdateProfile(name) => {
-                            return Task::perform(
-                                fetch_data(name, self.region),
-                                Message::FetchedData,
-                            );
+                            return Task::perform(fetch(name, self.region), Message::FetchedData);
                         }
                     }
                 }
@@ -161,10 +157,7 @@ impl Profile {
                         search_bar::Event::SearchRequested { riot_id, region } => {
                             self.region = region;
 
-                            return Task::perform(
-                                fetch_data(riot_id, region),
-                                Message::FetchedData,
-                            );
+                            return Task::perform(fetch(riot_id, region), Message::FetchedData);
                         }
                     }
                 }
@@ -258,10 +251,10 @@ fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
     .into()
 }
 
-pub async fn fetch_data(
-    name: String,
-    region: core::Region,
-) -> Result<core::summoner::Data, String> {
+#[cfg(not(feature = "dummy"))]
+pub async fn fetch(name: String, region: core::Region) -> Result<core::summoner::Data, String> {
+    use futures::TryFutureExt;
+
     let worker_url = dotenv_codegen::dotenv!("WORKER_URL");
     let path = format!("{worker_url}/summoner/{region}/{}", name.replace("#", "-"));
     tracing::info!("Requesting `{name}` ({region}) to {path}");
@@ -273,4 +266,12 @@ pub async fn fetch_data(
         .map_err(|e| e.to_string())
         .await
         .map(|bytes| core::summoner::Data::decode(&bytes))
+}
+
+#[cfg(feature = "dummy")]
+pub async fn fetch(name: String, _region: core::Region) -> Result<core::summoner::Data, String> {
+    let mut id = name.split("#");
+    let (name, tag) = (id.next().unwrap_or("someone"), id.next().unwrap_or("foo"));
+
+    return Ok(core::summoner::Data::dummy(name, tag));
 }

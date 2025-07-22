@@ -93,6 +93,92 @@ impl Game {
             .iter()
             .find(|participant| participant.puuid == puuid)
     }
+
+    #[cfg(feature = "dummy")]
+    pub fn dummy(riot_id: crate::account::RiotId) -> Self {
+        use crate::{account, Champion, Team};
+
+        let players = vec![
+            Player::dummy(
+                riot_id,
+                Team::RED,
+                Role::Top,
+                Champion(799),
+                Result::Victory,
+            ),
+            Player::dummy(
+                account::RiotId::new("Brambleback", "red"),
+                Team::RED,
+                Role::Jungle,
+                Champion(233),
+                Result::Victory,
+            ),
+            Player::dummy(
+                account::RiotId::new("Gromp", "red"),
+                Team::RED,
+                Role::Mid,
+                Champion(800),
+                Result::Victory,
+            ),
+            Player::dummy(
+                account::RiotId::new("Murk Wolf", "red"),
+                Team::RED,
+                Role::Bottom,
+                Champion(901),
+                Result::Victory,
+            ),
+            Player::dummy(
+                account::RiotId::new("Rift Scuttler", "red"),
+                Team::RED,
+                Role::Support,
+                Champion(902),
+                Result::Victory,
+            ),
+            Player::dummy(
+                account::RiotId::new("Sentinel", "blue"),
+                Team::BLUE,
+                Role::Top,
+                Champion(14),
+                Result::Defeat,
+            ),
+            Player::dummy(
+                account::RiotId::new("Krug", "blue"),
+                Team::BLUE,
+                Role::Jungle,
+                Champion(9),
+                Result::Defeat,
+            ),
+            Player::dummy(
+                account::RiotId::new("Raptor", "blue"),
+                Team::BLUE,
+                Role::Mid,
+                Champion(1),
+                Result::Defeat,
+            ),
+            Player::dummy(
+                account::RiotId::new("Voidmite", "blue"),
+                Team::BLUE,
+                Role::Bottom,
+                Champion(22),
+                Result::Defeat,
+            ),
+            Player::dummy(
+                account::RiotId::new("Rift Herald", "blue"),
+                Team::BLUE,
+                Role::Support,
+                Champion(12),
+                Result::Defeat,
+            ),
+        ];
+
+        Game {
+            id: Id(String::from("foo")),
+            queue: Queue::RankedSolo,
+            created_at: 1751830754821,
+            duration: 2205,
+            players,
+        }
+    }
 }
 
 impl From<match_v5::Match> for Game {
