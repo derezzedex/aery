@@ -50,7 +50,7 @@ impl SearchBar {
         }
     }
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self) -> Element<'_, Message> {
         let search = container(icon::search().width(16.0).height(16.0));
 
         row![

@@ -49,7 +49,7 @@ impl Timeline {
         }
     }
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self) -> Element<'_, Message> {
         let games = self
             .games
             .iter()
@@ -174,7 +174,7 @@ pub mod summary {
                 .map(|game| game.player(player.puuid()).unwrap())
                 .collect_vec();
 
-            let total = games.iter().count();
+            let total = games.len();
             let wins = games.iter().filter(|game| game.result.won()).count();
             let losses = games.iter().filter(|game| game.result.lost()).count();
 
@@ -230,7 +230,7 @@ pub mod summary {
             }
         }
 
-        pub fn view(&self) -> Element<Message> {
+        pub fn view(&self) -> Element<'_, Message> {
             let played = self.wins + self.losses;
             let ratio = (self.wins as f32 / played as f32) * 100.0;
             let is_positive_ratio = self.wins > self.losses;

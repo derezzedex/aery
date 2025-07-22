@@ -53,7 +53,7 @@ fn summoner_rune2_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
 }
 
 fn item_icon<'a>(handle: Option<image::Handle>) -> Element<'a, Message> {
-    let icon: Element<_> = if let Some(handle) = handle {
+    let icon: Element<'_, _> = if let Some(handle) = handle {
         iced::widget::image(handle)
             .width(28.0)
             .height(28.0)
@@ -167,7 +167,7 @@ impl Game {
         game: &core::Game,
     ) -> Self {
         let player = game.player(summoner.puuid()).unwrap();
-        let player = Player::from_participant(assets, &player);
+        let player = Player::from_participant(assets, player);
 
         let teams = game
             .players
@@ -209,7 +209,7 @@ impl Game {
         None
     }
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self) -> Element<'_, Message> {
         let now = time::OffsetDateTime::now_utc();
 
         let match_stats = {
@@ -219,7 +219,7 @@ impl Game {
             //     .spacing(2)
             //     .align_items(Alignment::Center);
 
-            let role: Element<_> = if let Some(role) = self.player.info.role {
+            let role: Element<'_, _> = if let Some(role) = self.player.info.role {
                 row![
                     icon::role(role).width(12.0).height(12.0),
                     text(formatting::role(role)).style(theme::text).size(10),
@@ -566,7 +566,7 @@ fn team<'a>(
         .fold(columns, |columns, player| {
             columns
                 .into_iter()
-                .zip(player.into_iter())
+                .zip(player)
                 .map(|(col, item)| col.push(item))
                 .collect()
         });
@@ -802,7 +802,7 @@ fn player<'a>(
         styled(wards.into()),
         styled(cs.into()),
         styled(items.into()),
-        styled(ward.into()),
+        styled(ward),
     ]
     .map(Element::from)
 }

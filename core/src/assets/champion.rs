@@ -5,7 +5,7 @@ use std::collections::HashMap;
 pub struct Id(pub u16);
 
 impl Id {
-    pub fn from_key(key: &String) -> Self {
+    pub fn from_key(key: &str) -> Self {
         Self(key.parse().unwrap())
     }
 }

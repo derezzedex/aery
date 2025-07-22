@@ -35,8 +35,8 @@ impl Id {
         Self(id)
     }
 
-    pub fn from_key(key: &String) -> Self {
-        let id = match key.as_str() {
+    pub fn from_key(key: &str) -> Self {
+        let id = match key {
             "iron" => 0,
             "bronze" => 1,
             "silver" => 2,

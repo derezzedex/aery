@@ -53,7 +53,7 @@ pub struct League {
 
 impl League {
     pub fn division(&self) -> Option<Division> {
-        self.tier.as_ref().map(Tier::division).flatten()
+        self.tier.as_ref().and_then(Tier::division)
     }
 
     pub fn points(&self) -> u16 {
@@ -162,7 +162,7 @@ impl TryFrom<league_v4::LeagueEntry> for Tier {
 
         league
             .tier
-            .map(|tier| match tier {
+            .and_then(|tier| match tier {
                 riven::consts::Tier::UNRANKED => None,
                 riven::consts::Tier::IRON => Some(Tier::Iron(division.unwrap())),
                 riven::consts::Tier::BRONZE => Some(Tier::Bronze(division.unwrap())),
@@ -175,7 +175,6 @@ impl TryFrom<league_v4::LeagueEntry> for Tier {
                 riven::consts::Tier::GRANDMASTER => Some(Tier::Grandmaster(points)),
                 riven::consts::Tier::CHALLENGER => Some(Tier::Challenger(points)),
             })
-            .flatten()
             .ok_or(())
     }
 }

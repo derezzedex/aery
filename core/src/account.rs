@@ -33,12 +33,8 @@ pub struct Account {
 impl Account {
     #[cfg(feature = "dummy")]
     pub fn dummy(riot_id: RiotId) -> Self {
-        let name = riot_id.name.as_ref().map(String::as_str).unwrap_or("foo");
-        let tagline = riot_id
-            .tagline
-            .as_ref()
-            .map(String::as_str)
-            .unwrap_or("bar");
+        let name = riot_id.name.as_deref().unwrap_or("foo");
+        let tagline = riot_id.tagline.as_deref().unwrap_or("bar");
 
         Self {
             puuid: Puuid(format!("{name}-{tagline}")),

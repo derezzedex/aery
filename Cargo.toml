@@ -66,3 +66,12 @@ iced = { git = "https://github.com/iced-rs/iced", rev = "89f480bdae951a319443027
 console_error_panic_hook = "0.1"
 console_log = "1.0"
 time = { version = "0.3", features = ["wasm-bindgen"] }
+
+[lints]
+workspace = true
+
+[workspace.lints.rust]
+rust_2018_idioms = "deny"
+
+[workspace.lints.clippy]
+large-enum-variant = "allow"

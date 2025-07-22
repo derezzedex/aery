@@ -50,7 +50,6 @@ enum Screen {
     Profile(screen::Profile),
 }
 
-#[allow(clippy::large_enum_variant)]
 enum Aery {
     Loading,
     Loaded { screen: Screen, assets: Assets },
@@ -141,7 +140,7 @@ impl Aery {
         }
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<'_, Message> {
         match self {
             Self::Loading => loading(),
             Self::Loaded { screen, .. } => match screen {

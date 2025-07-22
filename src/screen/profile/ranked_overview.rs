@@ -185,7 +185,7 @@ impl RankedOverview {
 
     pub fn update(&mut self, _message: Message) {}
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self) -> Element<'_, Message> {
         let solo_duo = match &self.solo_duo {
             Some(stats) => ranked_container(
                 game::Queue::RankedSolo,

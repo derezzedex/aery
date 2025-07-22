@@ -15,7 +15,7 @@ pub enum Message {
 }
 
 fn summoner_icon<'a>(icon: Option<image::Handle>, level: u32) -> Element<'a, Message> {
-    let image: Element<Message> = if let Some(handle) = icon {
+    let image: Element<'_, Message> = if let Some(handle) = icon {
         image(handle).into()
     } else {
         vertical_space().height(96).into()
@@ -72,7 +72,7 @@ impl Summoner {
         }
     }
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self) -> Element<'_, Message> {
         let icon = summoner_icon(self.icon_image.clone(), self.level);
 
         let name = self.riot_id.name.clone().unwrap_or(String::from("Unknown"));
@@ -82,7 +82,7 @@ impl Summoner {
                 self.riot_id
                     .tagline
                     .as_ref()
-                    .map(|tagline| text(format!("#{}", tagline)).size(24).style(theme::text)),
+                    .map(|tagline| text!("#{tagline}").size(24).style(theme::text)),
             )
             .spacing(8)
             .align_y(iced::Alignment::Center);

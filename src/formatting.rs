@@ -75,24 +75,24 @@ pub fn time_since(now: time::OffsetDateTime, since: time::OffsetDateTime) -> Str
         if days == 1 {
             String::from("yesterday")
         } else {
-            format!("{} days ago", days)
+            format!("{days} days ago")
         }
     } else if weeks < 4 {
         if weeks == 1 {
             String::from("last week")
         } else {
-            format!("{} weeks ago", weeks)
+            format!("{weeks} weeks ago")
         }
     } else if months < 12 {
         if months <= 1 {
             String::from("last month")
         } else {
-            format!("{} months ago", months)
+            format!("{months} months ago")
         }
     } else if years <= 1 {
         return String::from("last year");
     } else {
-        format!("{} years ago", years)
+        format!("{years} years ago")
     }
 }
 

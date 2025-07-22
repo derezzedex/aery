@@ -168,7 +168,7 @@ impl Profile {
         Task::none()
     }
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self) -> Element<'_, Message> {
         let top_bar = container(
             row![
                 theme::logo(),
@@ -218,7 +218,7 @@ impl Profile {
 }
 
 fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
-    let queue_button = |queue: QueueFilter| -> Element<Message> {
+    let queue_button = |queue: QueueFilter| -> Element<'_, Message> {
         button(text!("{queue}").size(12))
             .style(move |theme, status| theme::queue_filter(theme, status, selected == queue))
             .on_press(Message::QueueFilterChanged(queue))
@@ -273,5 +273,5 @@ pub async fn fetch(name: String, _region: core::Region) -> Result<core::summoner
     let mut id = name.split("#");
     let (name, tag) = (id.next().unwrap_or("someone"), id.next().unwrap_or("foo"));
 
-    return Ok(core::summoner::Data::dummy(name, tag));
+    Ok(core::summoner::Data::dummy(name, tag))
 }
