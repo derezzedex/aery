@@ -1,31 +1,28 @@
 mod game;
-mod ranked_overview;
-mod summoner;
-mod timeline;
+use game::Game;
 
-use iced::Alignment;
-use iced::Theme;
-use iced::border;
-use iced::widget::button;
-use iced::widget::horizontal_space;
-use iced::widget::pick_list;
-use iced::widget::text;
-use iced::widget::vertical_space;
+mod ranked_overview;
 use ranked_overview::RankedOverview;
+
+mod summary;
+use summary::Summary;
+
+mod summoner;
 use summoner::Summoner;
-use timeline::Timeline;
 
 use crate::core;
+use crate::core::game::Queue;
 use crate::screen::search_bar::{self, SearchBar};
 use crate::theme;
-
-use core::game::Queue;
-use std::sync::Arc;
-
-use iced::widget::{column, container, row};
-use iced::{Element, Length, Task};
-
 pub use core::summoner::Data;
+
+use iced::widget::{
+    button, column, container, horizontal_space, pick_list, row, scrollable, text, vertical_space,
+};
+use iced::{Alignment, Element, Length, Task, Theme};
+use iced::{border, padding};
+
+use itertools::Itertools;
 
 pub type Error = String;
 
@@ -70,7 +67,7 @@ impl std::fmt::Display for QueueFilter {
 pub enum Message {
     FetchedData(Result<Data, String>),
 
-    Timeline(timeline::Message),
+    Game(usize, game::Message),
     Summoner(summoner::Message),
     SearchBar(search_bar::Message),
     RankedOverview(ranked_overview::Message),
@@ -84,30 +81,29 @@ pub struct Profile {
     region: core::Region,
     queue_filter: QueueFilter,
 
-    timeline: Timeline,
+    summary: Summary,
+    games: Vec<Game>,
     summoner: Summoner,
     search_bar: SearchBar,
     ranked_overview: RankedOverview,
-    data: Arc<Data>,
     theme: Theme,
 }
 
 impl Profile {
     pub fn from_profile(assets: &mut crate::Assets, profile: Data) -> Self {
-        let queue_filter = QueueFilter::default();
-        let timeline = Timeline::from_profile(assets, &profile, &queue_filter);
-        let theme = Theme::Moonfly;
-
         Self {
             region: core::Region::default(),
-            queue_filter,
-
+            queue_filter: QueueFilter::default(),
+            summary: Summary::from_games(assets, &profile.summoner, &profile.games),
+            games: profile
+                .games
+                .iter()
+                .map(|game| Game::from_summoner_game(assets, &profile.summoner, game))
+                .collect(),
             search_bar: SearchBar::new(),
             summoner: Summoner::from_profile(&profile),
-            timeline,
             ranked_overview: RankedOverview::from_profile(assets, &profile),
-            data: Arc::new(profile),
-            theme,
+            theme: Theme::Moonfly,
         }
     }
 
@@ -117,18 +113,24 @@ impl Profile {
                 self.theme = theme;
             }
             Message::QueueFilterChanged(new_filter) => {
-                self.timeline = Timeline::from_profile(assets, &self.data, &new_filter);
                 self.queue_filter = new_filter;
             }
-            Message::FetchedData(Ok(data)) => {
-                self.summoner = Summoner::from_profile(&data);
-                self.timeline = Timeline::from_profile(assets, &data, &self.queue_filter);
-                self.ranked_overview = RankedOverview::from_profile(assets, &data);
-                self.data = Arc::new(data);
+            Message::FetchedData(Ok(profile)) => {
+                self.summoner = Summoner::from_profile(&profile);
+                self.games = profile
+                    .games
+                    .iter()
+                    .map(|game| Game::from_summoner_game(assets, &profile.summoner, game))
+                    .collect();
+                self.ranked_overview = RankedOverview::from_profile(assets, &profile);
             }
             Message::FetchedData(Err(error)) => panic!("failed: {error}"),
-            Message::Timeline(message) => {
-                if let Some(game::Event::NamePressed(riot_id)) = self.timeline.update(message) {
+            Message::Game(index, message) => {
+                if let Some(game::Event::NamePressed(riot_id)) = self
+                    .games
+                    .get_mut(index)
+                    .and_then(|game| game.update(message))
+                {
                     return riot_id
                         .name
                         .as_ref()
@@ -188,16 +190,27 @@ impl Profile {
             ..theme::dark(theme)
         });
 
-        let timeline = row![
-            self.ranked_overview.view().map(Message::RankedOverview),
-            self.timeline.view().map(Message::Timeline),
+        let timeline = column![
+            container(self.summary.view()),
+            scrollable(timeline(&self.games, self.queue_filter))
+                .style(theme::scrollable)
+                .width(Length::Fill)
+                .height(Length::FillPortion(10))
         ]
-        .spacing(8);
+        .max_width(680)
+        .align_x(Alignment::Center)
+        .spacing(4);
 
         let content = column![
             self.summoner.view().map(Message::Summoner),
             filter_bar(self.queue_filter),
-            timeline,
+            row![
+                self.ranked_overview.view().map(Message::RankedOverview),
+                container(timeline)
+                    .width(Length::Shrink)
+                    .style(theme::timeline),
+            ]
+            .spacing(8),
         ]
         .width(968)
         .spacing(8)
@@ -249,6 +262,31 @@ fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
     .padding(8)
     .style(theme::dark)
     .into()
+}
+
+pub fn timeline(games: &[Game], filter: QueueFilter) -> Element<'_, Message> {
+    let games = games
+        .iter()
+        .enumerate()
+        .filter(|(_, game)| filter == game.queue())
+        .map(|(i, game)| game.view().map(move |message| Message::Game(i, message)))
+        .collect_vec();
+
+    if games.is_empty() {
+        return container(text("No games found...").size(20))
+            .padding(8)
+            .height(Length::Fill)
+            .center_x(682)
+            .into();
+    }
+
+    column(games)
+        .width(Length::Fill)
+        .clip(true)
+        .padding(padding::right(12))
+        .spacing(4)
+        .align_x(Alignment::Center)
+        .into()
 }
 
 #[cfg(not(feature = "dummy"))]

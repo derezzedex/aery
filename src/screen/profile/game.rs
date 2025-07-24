@@ -200,6 +200,10 @@ impl Game {
         }
     }
 
+    pub fn queue(&self) -> game::Queue {
+        self.queue
+    }
+
     pub fn update(&mut self, message: Message) -> Option<Event> {
         match message {
             Message::ExpandPressed => self.is_expanded = !self.is_expanded,
