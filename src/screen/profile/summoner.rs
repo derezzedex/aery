@@ -7,22 +7,16 @@ use iced::Length;
 use iced::alignment;
 use iced::widget::column;
 use iced::widget::stack;
-use iced::widget::{button, container, image, row, text, vertical_space};
+use iced::widget::{button, container, image, row, text};
 
 #[derive(Debug, Clone)]
 pub enum Message {
     Update,
 }
 
-fn summoner_icon<'a>(icon: Option<image::Handle>, level: u32) -> Element<'a, Message> {
-    let image: Element<'_, Message> = if let Some(handle) = icon {
-        image(handle).into()
-    } else {
-        vertical_space().height(96).into()
-    };
-
+fn icon<'a>(icon: image::Handle, level: u32) -> Element<'a, Message> {
     stack![
-        container(image)
+        container(image(icon))
             .center_x(96.0)
             .center_y(96.0)
             .padding(2.0)
@@ -45,61 +39,55 @@ pub enum Event {
 
 #[derive(Debug, Clone)]
 pub struct Summoner {
-    summoner_name: String,
     riot_id: account::RiotId,
     level: u32,
-    icon_image: Option<image::Handle>,
+    icon: image::Handle,
 }
 
 impl Summoner {
     pub fn from_profile(profile: &profile::Data) -> Self {
         let riot_id = profile.summoner.account.riot_id.clone();
-        let summoner_name = profile.summoner.name().to_string();
         let level = profile.summoner.level as u32;
-        let icon_image = Some(image::Handle::from_bytes(profile.icon.clone()));
+        let icon = image::Handle::from_bytes(profile.icon.clone());
 
         Self {
-            summoner_name,
             riot_id,
             level,
-            icon_image,
+            icon,
         }
     }
 
     pub fn update(&mut self, message: Message) -> Option<Event> {
         match message {
-            Message::Update => Some(Event::UpdateProfile(self.summoner_name.clone())),
+            Message::Update => Some(Event::UpdateProfile(self.riot_id.to_string())),
         }
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        let icon = summoner_icon(self.icon_image.clone(), self.level);
+        let icon = icon(self.icon.clone(), self.level);
 
-        let name = self.riot_id.name.clone().unwrap_or(String::from("Unknown"));
+        let name = self.riot_id.name.as_deref().unwrap_or("missing");
+        let tagline = self.riot_id.tagline.as_deref().unwrap_or("name");
 
-        let name = row![text(name).size(24),]
-            .push(
-                self.riot_id
-                    .tagline
-                    .as_ref()
-                    .map(|tagline| text!("#{tagline}").size(24).style(theme::text)),
-            )
-            .spacing(8)
-            .align_y(iced::Alignment::Center);
+        let name = row![
+            text(name).size(24),
+            text!("#{tagline}").size(24).style(theme::text)
+        ]
+        .spacing(8)
+        .align_y(iced::Alignment::Center);
 
-        let update_button = button("Update")
+        let update = button("Update")
             .style(theme::update)
             .on_press(Message::Update);
 
         let inner = column![
             name,
-            container(update_button)
+            container(update)
                 .height(48)
                 .align_y(alignment::Vertical::Bottom)
         ];
 
         // TODO: display ladder rank and past season ranks
-
         container(
             column![row![icon, inner.spacing(1)].spacing(16)]
                 .spacing(8)

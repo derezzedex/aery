@@ -1,4 +1,5 @@
 use riven::models::account_v1;
+use std::fmt;
 
 #[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct RiotId {
@@ -12,6 +13,14 @@ impl RiotId {
             name: Some(name.to_string()),
             tagline: Some(tagline.to_string()),
         }
+    }
+}
+
+impl fmt::Display for RiotId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = self.name.as_deref().unwrap_or("missing");
+        let tagline = self.tagline.as_deref().unwrap_or("404");
+        write!(f, "{name}#{tagline}")
     }
 }
 

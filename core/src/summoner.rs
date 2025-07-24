@@ -57,12 +57,6 @@ pub struct Summoner {
 }
 
 impl Summoner {
-    pub fn name(&self) -> String {
-        let name = self.account.riot_id.name.clone().unwrap_or_default();
-        let tagline = self.account.riot_id.tagline.clone().unwrap_or_default();
-        format!("{name}#{tagline}")
-    }
-
     pub fn puuid(&self) -> &str {
         self.account.puuid.as_ref()
     }
