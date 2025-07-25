@@ -170,6 +170,41 @@ impl Profile {
         Task::none()
     }
 
+    pub fn timeline(&self) -> Element<'_, Message> {
+        let games = self
+            .games
+            .iter()
+            .enumerate()
+            .filter(|(_, game)| self.queue_filter == game.queue())
+            .map(|(i, game)| game.view().map(move |message| Message::Game(i, message)))
+            .collect_vec();
+
+        if games.is_empty() {
+            return container(text("No games found...").size(20))
+                .padding(8)
+                .center_x(682)
+                .into();
+        }
+
+        let games = column(games)
+            .width(Length::Fill)
+            .clip(true)
+            .padding(padding::right(12))
+            .spacing(4)
+            .align_x(Alignment::Center);
+
+        column![
+            container(self.summary.view()),
+            scrollable(games)
+                .style(theme::scrollable)
+                .width(Length::Fill)
+        ]
+        .max_width(680)
+        .align_x(Alignment::Center)
+        .spacing(4)
+        .into()
+    }
+
     pub fn view(&self) -> Element<'_, Message> {
         let top_bar = container(
             row![
@@ -190,23 +225,12 @@ impl Profile {
             ..theme::dark(theme)
         });
 
-        let timeline = column![
-            container(self.summary.view()),
-            scrollable(timeline(&self.games, self.queue_filter))
-                .style(theme::scrollable)
-                .width(Length::Fill)
-                .height(Length::FillPortion(10))
-        ]
-        .max_width(680)
-        .align_x(Alignment::Center)
-        .spacing(4);
-
         let content = column![
             self.summoner.view().map(Message::Summoner),
             filter_bar(self.queue_filter),
             row![
                 self.ranked_overview.view().map(Message::RankedOverview),
-                container(timeline)
+                container(self.timeline())
                     .width(Length::Shrink)
                     .style(theme::timeline),
             ]
@@ -221,6 +245,7 @@ impl Profile {
             vertical_space().height(16),
             container(content).center_x(Length::Fill),
         ])
+        .height(Length::Fill)
         .style(theme::timeline)
         .into()
     }
@@ -262,31 +287,6 @@ fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
     .padding(8)
     .style(theme::dark)
     .into()
-}
-
-pub fn timeline(games: &[Game], filter: QueueFilter) -> Element<'_, Message> {
-    let games = games
-        .iter()
-        .enumerate()
-        .filter(|(_, game)| filter == game.queue())
-        .map(|(i, game)| game.view().map(move |message| Message::Game(i, message)))
-        .collect_vec();
-
-    if games.is_empty() {
-        return container(text("No games found...").size(20))
-            .padding(8)
-            .height(Length::Fill)
-            .center_x(682)
-            .into();
-    }
-
-    column(games)
-        .width(Length::Fill)
-        .clip(true)
-        .padding(padding::right(12))
-        .spacing(4)
-        .align_x(Alignment::Center)
-        .into()
 }
 
 #[cfg(not(feature = "dummy"))]
