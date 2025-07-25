@@ -37,7 +37,7 @@ dotenv_codegen = "0.15"
 futures = "0.3"
 reqwest = "0.12"
 thiserror = "2.0"
-riven = { version = "2.72", features = ["tracing"] }
+riven = { version = "2.73", features = ["tracing"] }
 time = "0.3"
 serde = "1.0"
 bitcode = "0.6"
