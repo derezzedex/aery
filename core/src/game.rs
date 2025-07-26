@@ -1,14 +1,15 @@
 pub mod player;
-use std::fmt;
-
 pub use player::Player;
 
 pub mod item;
 pub mod rune;
 pub use item::Item;
-use riven::models::match_v5;
 
-#[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
+use riven::models::match_v5;
+use std::collections::HashMap;
+use std::fmt;
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, bitcode::Encode, bitcode::Decode)]
 pub struct Id(String);
 
 impl TryFrom<String> for Id {
@@ -66,6 +67,43 @@ impl Result {
 
     pub fn lost(&self) -> bool {
         *self == Self::Defeat || *self == Self::Surrender
+    }
+}
+
+#[derive(Debug, Default, Clone, bitcode::Encode, bitcode::Decode)]
+pub struct Map(HashMap<Id, Game>);
+
+impl Map {
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn encode(&self) -> Vec<u8> {
+        let bytes = bitcode::encode(self);
+        lz4_flex::compress_prepend_size(&bytes)
+    }
+
+    pub fn decode(bytes: &[u8]) -> Self {
+        let decompressed = lz4_flex::decompress_size_prepended(bytes).unwrap();
+        bitcode::decode(&decompressed).unwrap()
+    }
+}
+
+impl From<HashMap<Id, Game>> for Map {
+    fn from(games: HashMap<Id, Game>) -> Self {
+        Self(games)
+    }
+}
+
+impl FromIterator<(Id, Game)> for Map {
+    fn from_iter<T: IntoIterator<Item = (Id, Game)>>(iter: T) -> Self {
+        Self(HashMap::from_iter(iter))
+    }
+}
+
+impl Extend<(Id, Game)> for Map {
+    fn extend<T: IntoIterator<Item = (Id, Game)>>(&mut self, iter: T) {
+        self.0.extend(iter);
     }
 }
 
