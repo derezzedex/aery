@@ -6,7 +6,7 @@ pub mod rune;
 pub use item::Item;
 
 use riven::models::match_v5;
-use std::collections::HashMap;
+use std::collections::{HashMap, hash_map};
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, bitcode::Encode, bitcode::Decode)]
@@ -86,6 +86,10 @@ impl Map {
     pub fn decode(bytes: &[u8]) -> Self {
         let decompressed = lz4_flex::decompress_size_prepended(bytes).unwrap();
         bitcode::decode(&decompressed).unwrap()
+    }
+
+    pub fn iter(&self) -> hash_map::Iter<'_, Id, Game> {
+        self.0.iter()
     }
 }
 
