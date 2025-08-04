@@ -42,7 +42,11 @@ pub mod path {
 
                 9923 => Kind::Domination, // HailfOfBlades,
                 9101 | 9103 | 9104 | 9105 | 9111 => Kind::Precision, // Overheal | Triumph | LegendAlacrity | LegendTenacity | LegendBloodline,
-                _ => unreachable!(),
+                0 => {
+                    tracing::warn!("found `rune` id 0");
+                    Kind::Precision
+                }
+                unknown => unreachable!("unknown rune found: {unknown}"),
             }
         }
     }
@@ -100,6 +104,7 @@ pub enum Shard {
     Health = 5011,
     ResistScaling = 5012,
     Tenacity = 5013,
+    Unknown = 0,
 }
 
 impl From<riven::models::match_v5::Perks> for Page {
@@ -135,7 +140,7 @@ impl From<riven::models::match_v5::Perks> for Page {
 }
 
 impl TryFrom<usize> for Shard {
-    type Error = ();
+    type Error = usize;
 
     fn try_from(value: usize) -> Result<Self, Self::Error> {
         match value {
@@ -149,7 +154,8 @@ impl TryFrom<usize> for Shard {
             x if x == Shard::Health as usize => Ok(Shard::Health),
             x if x == Shard::ResistScaling as usize => Ok(Shard::ResistScaling),
             x if x == Shard::Tenacity as usize => Ok(Shard::Tenacity),
-            _ => Err(()),
+            0 => Ok(Shard::Unknown),
+            unknown => Err(unknown),
         }
     }
 }

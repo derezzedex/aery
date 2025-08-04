@@ -3,6 +3,7 @@ use iced::Task;
 use iced::widget::image::Handle;
 
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 use crate::core::assets::emblem;
 use crate::{Message, core};
@@ -82,7 +83,7 @@ impl Assets {
     }
 
     pub fn rune(&self, id: &core::Rune) -> Handle {
-        self.rune.get(id).cloned().unwrap()
+        self.rune.get(id).cloned().unwrap_or_else(|| missing())
     }
 
     pub fn spell(&self, id: &core::SummonerSpell) -> Handle {
@@ -97,6 +98,17 @@ impl Assets {
         let id = emblem::Id::from_tier(tier);
         self.emblem.get(&id).cloned().unwrap()
     }
+}
+
+pub fn missing() -> Handle {
+    static HANDLE: LazyLock<Handle> = LazyLock::new(|| {
+        Handle::from_path(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/img/missing.png"
+        ))
+    });
+
+    HANDLE.clone()
 }
 
 #[cfg(not(feature = "dummy"))]
