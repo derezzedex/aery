@@ -66,18 +66,21 @@ impl std::fmt::Display for QueueFilter {
 #[derive(Debug, Clone)]
 pub enum Message {
     FetchedData(Result<Data, String>),
+    FetchedGames(Result<core::game::Map, String>),
 
     Game(usize, game::Message),
     Summoner(summoner::Message),
     SearchBar(search_bar::Message),
     RankedOverview(ranked_overview::Message),
 
+    FetchGames(i64),
     QueueFilterChanged(QueueFilter),
     ThemeChanged(Theme),
 }
 
 #[derive(Debug, Clone)]
 pub struct Profile {
+    puuid: String,
     region: core::Region,
     queue_filter: QueueFilter,
 
@@ -91,6 +94,8 @@ pub struct Profile {
 
 impl Profile {
     pub fn from_profile(assets: &mut crate::Assets, profile: Data) -> Self {
+        let puuid = profile.summoner.puuid().to_owned();
+
         Self {
             region: core::Region::default(),
             queue_filter: QueueFilter::default(),
@@ -98,12 +103,13 @@ impl Profile {
             games: profile
                 .games
                 .iter()
-                .map(|game| Game::from_summoner_game(assets, &profile.summoner, game))
+                .map(|game| Game::from_summoner_game(assets, &puuid, game))
                 .collect(),
             search_bar: SearchBar::new(),
             summoner: Summoner::from_profile(&profile),
             ranked_overview: RankedOverview::from_profile(assets, &profile),
             theme: Theme::Moonfly,
+            puuid,
         }
     }
 
@@ -115,16 +121,31 @@ impl Profile {
             Message::QueueFilterChanged(new_filter) => {
                 self.queue_filter = new_filter;
             }
+            Message::FetchGames(start_time) => {
+                return Task::perform(
+                    fetch_games(self.puuid.clone(), self.region, Some(start_time)),
+                    Message::FetchedGames,
+                );
+            }
+            Message::FetchedGames(Ok(games)) => {
+                self.games.extend(
+                    games
+                        .iter()
+                        .map(|(_, game)| Game::from_summoner_game(assets, &self.puuid, game)),
+                );
+            }
             Message::FetchedData(Ok(profile)) => {
                 self.summoner = Summoner::from_profile(&profile);
+                self.puuid = profile.summoner.puuid().to_owned();
                 self.games = profile
                     .games
                     .iter()
-                    .map(|game| Game::from_summoner_game(assets, &profile.summoner, game))
+                    .map(|game| Game::from_summoner_game(assets, profile.summoner.puuid(), game))
                     .collect();
                 self.ranked_overview = RankedOverview::from_profile(assets, &profile);
             }
             Message::FetchedData(Err(error)) => panic!("failed: {error}"),
+            Message::FetchedGames(Err(error)) => panic!("failed: {error}"),
             Message::Game(index, message) => {
                 if let Some(game::Event::NamePressed(riot_id)) = self
                     .games
@@ -148,6 +169,13 @@ impl Profile {
                 if let Some(event) = self.summoner.update(message) {
                     match event {
                         summoner::Event::UpdateProfile(name) => {
+                            if self.games.is_empty() {
+                                return Task::perform(
+                                    fetch_games(self.puuid.clone(), self.region, None),
+                                    Message::FetchedGames,
+                                );
+                            }
+
                             return Task::perform(fetch(name, self.region), Message::FetchedData);
                         }
                     }
@@ -186,7 +214,14 @@ impl Profile {
                 .into();
         }
 
+        let load_more = button("Load more...").width(Length::Fill).on_press_maybe(
+            self.games
+                .last()
+                .map(|g| Message::FetchGames(g.started_at().unix_timestamp())),
+        );
+
         let games = column(games)
+            .push(load_more)
             .width(Length::Fill)
             .clip(true)
             .padding(padding::right(12))
@@ -287,6 +322,30 @@ fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
     .padding(8)
     .style(theme::dark)
     .into()
+}
+
+pub async fn fetch_games(
+    puuid: String,
+    region: core::Region,
+    start_time: Option<i64>,
+) -> Result<game::Map, String> {
+    use futures::TryFutureExt;
+
+    let worker_url = dotenv_codegen::dotenv!("WORKER_URL");
+    let mut path = format!("{worker_url}/matches/{puuid}");
+    if let Some(time) = start_time {
+        path.push_str(&format!("?end_time={time}"));
+    }
+
+    tracing::info!("Requesting `{puuid}` ({region}) to {path}");
+
+    reqwest::get(path)
+        .map_err(|e| e.to_string())
+        .await?
+        .bytes()
+        .map_err(|e| e.to_string())
+        .await
+        .map(|bytes| game::Map::decode(&bytes))
 }
 
 #[cfg(not(feature = "dummy"))]

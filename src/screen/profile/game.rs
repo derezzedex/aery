@@ -16,6 +16,8 @@ use iced::widget::{Space, button, column, container, row, text};
 use iced::{Alignment, Element, Length, alignment};
 use itertools::Itertools;
 
+pub use crate::core::game::Map;
+
 fn champion_icon<'a>(handle: image::Handle) -> Element<'a, Message> {
     let icon = iced::widget::image(handle)
         .width(48.0)
@@ -163,10 +165,10 @@ pub enum Event {
 impl Game {
     pub fn from_summoner_game(
         assets: &crate::assets::Assets,
-        summoner: &core::Summoner,
+        puuid: &str,
         game: &core::Game,
     ) -> Self {
-        let player = game.player(summoner.puuid()).unwrap();
+        let player = game.player(puuid).unwrap();
         let player = Player::from_participant(assets, player);
 
         let teams = game
@@ -198,6 +200,10 @@ impl Game {
 
             is_expanded: false,
         }
+    }
+
+    pub fn started_at(&self) -> time::OffsetDateTime {
+        self.time
     }
 
     pub fn queue(&self) -> game::Queue {
