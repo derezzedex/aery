@@ -6,7 +6,7 @@ pub mod rune;
 pub use item::Item;
 
 use riven::models::match_v5;
-use std::collections::{HashMap, hash_map};
+use std::collections::BTreeMap;
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, bitcode::Encode, bitcode::Decode)]
@@ -70,8 +70,41 @@ impl Result {
     }
 }
 
+#[derive(Debug, Clone, Eq, bitcode::Encode, bitcode::Decode)]
+struct TimeId {
+    id: Id,
+    time: i64,
+}
+
+impl TimeId {
+    fn from_game(game: &Game) -> Self {
+        Self {
+            id: game.id.clone(),
+            time: game.created_at,
+        }
+    }
+}
+
+impl PartialEq for TimeId {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl PartialOrd for TimeId {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(other.time.cmp(&self.time))
+    }
+}
+
+impl Ord for TimeId {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        other.time.cmp(&self.time)
+    }
+}
+
 #[derive(Debug, Default, Clone, bitcode::Encode, bitcode::Decode)]
-pub struct Map(HashMap<Id, Game>);
+pub struct Map(BTreeMap<TimeId, Game>);
 
 impl Map {
     pub fn len(&self) -> usize {
@@ -88,26 +121,23 @@ impl Map {
         bitcode::decode(&decompressed).unwrap()
     }
 
-    pub fn iter(&self) -> hash_map::Iter<'_, Id, Game> {
-        self.0.iter()
-    }
-}
-
-impl From<HashMap<Id, Game>> for Map {
-    fn from(games: HashMap<Id, Game>) -> Self {
-        Self(games)
+    pub fn iter(&self) -> impl Iterator<Item = (&Id, &Game)> {
+        self.0.iter().map(|(id, g)| (&id.id, g))
     }
 }
 
 impl FromIterator<(Id, Game)> for Map {
     fn from_iter<T: IntoIterator<Item = (Id, Game)>>(iter: T) -> Self {
-        Self(HashMap::from_iter(iter))
+        Self(BTreeMap::from_iter(
+            iter.into_iter().map(|(_, g)| (TimeId::from_game(&g), g)),
+        ))
     }
 }
 
 impl Extend<(Id, Game)> for Map {
     fn extend<T: IntoIterator<Item = (Id, Game)>>(&mut self, iter: T) {
-        self.0.extend(iter);
+        self.0
+            .extend(iter.into_iter().map(|(_, g)| (TimeId::from_game(&g), g)));
     }
 }
 
