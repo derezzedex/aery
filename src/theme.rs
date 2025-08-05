@@ -363,6 +363,13 @@ pub fn update(theme: &Theme, status: button::Status) -> button::Style {
     }
 }
 
+pub fn show_more(theme: &Theme, status: button::Status) -> button::Style {
+    button::Style {
+        border: border::rounded(4),
+        ..button::secondary(theme, status)
+    }
+}
+
 pub fn region(theme: &Theme, status: pick_list::Status) -> pick_list::Style {
     let palette = theme.extended_palette();
     let background = if matches!(status, pick_list::Status::Hovered) {

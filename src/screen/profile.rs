@@ -214,11 +214,14 @@ impl Profile {
                 .into();
         }
 
-        let load_more = button("Load more...").width(Length::Fill).on_press_maybe(
-            self.games
-                .last()
-                .map(|g| Message::FetchGames(g.started_at().unix_timestamp())),
-        );
+        let load_more = button(container("Show more").center_x(Length::Fill))
+            .style(theme::show_more)
+            .width(Length::Fill)
+            .on_press_maybe(
+                self.games
+                    .last()
+                    .map(|g| Message::FetchGames(g.started_at().unix_timestamp())),
+            );
 
         let games = column(games)
             .push(load_more)
