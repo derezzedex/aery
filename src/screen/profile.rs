@@ -95,16 +95,18 @@ pub struct Profile {
 impl Profile {
     pub fn from_profile(assets: &mut crate::Assets, profile: Data) -> Self {
         let puuid = profile.summoner.puuid().to_owned();
+        let games = profile
+            .games
+            .iter()
+            .map(|game| Game::from_summoner_game(assets, &puuid, game))
+            .collect_vec();
+        let summary = Summary::from_games(assets, &games);
 
         Self {
             region: core::Region::default(),
             queue_filter: QueueFilter::default(),
-            summary: Summary::from_games(assets, &profile.summoner, &profile.games),
-            games: profile
-                .games
-                .iter()
-                .map(|game| Game::from_summoner_game(assets, &puuid, game))
-                .collect(),
+            summary,
+            games,
             search_bar: SearchBar::new(),
             summoner: Summoner::from_profile(&profile),
             ranked_overview: RankedOverview::from_profile(assets, &profile),
@@ -133,15 +135,17 @@ impl Profile {
                         .iter()
                         .map(|(_, game)| Game::from_summoner_game(assets, &self.puuid, game)),
                 );
+                self.summary = Summary::from_games(assets, &self.games);
             }
             Message::FetchedData(Ok(profile)) => {
-                self.summoner = Summoner::from_profile(&profile);
                 self.puuid = profile.summoner.puuid().to_owned();
+                self.summoner = Summoner::from_profile(&profile);
                 self.games = profile
                     .games
                     .iter()
                     .map(|game| Game::from_summoner_game(assets, profile.summoner.puuid(), game))
                     .collect();
+                self.summary = Summary::from_games(assets, &self.games);
                 self.ranked_overview = RankedOverview::from_profile(assets, &profile);
             }
             Message::FetchedData(Err(error)) => panic!("failed: {error}"),

@@ -210,6 +210,10 @@ impl Game {
         self.queue
     }
 
+    pub fn player(&self) -> &game::Player {
+        &self.player.info
+    }
+
     pub fn update(&mut self, message: Message) -> Option<Event> {
         match message {
             Message::ExpandPressed => self.is_expanded = !self.is_expanded,

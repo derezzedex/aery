@@ -1,5 +1,5 @@
-use crate::core;
 use crate::core::game::Role;
+use crate::screen::profile;
 use crate::theme;
 use crate::theme::icon;
 
@@ -68,16 +68,8 @@ pub struct Summary {
 }
 
 impl Summary {
-    pub fn from_games(
-        assets: &crate::Assets,
-        player: &core::Summoner,
-        games: &[core::Game],
-    ) -> Summary {
-        let games = games
-            .iter()
-            .map(|game| game.player(player.puuid()).unwrap())
-            .collect_vec();
-
+    pub fn from_games(assets: &crate::Assets, games: &[profile::Game]) -> Summary {
+        let games = games.iter().map(profile::Game::player).collect_vec();
         let total = games.len();
         let wins = games.iter().filter(|game| game.result.won()).count();
         let losses = games.iter().filter(|game| game.result.lost()).count();
