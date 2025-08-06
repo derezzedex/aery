@@ -1,23 +1,21 @@
 use crate::widget::menu::{self, Menu};
 use iced::advanced::layout;
 use iced::advanced::renderer;
-use iced::advanced::text::paragraph;
-use iced::advanced::text::{self, Text};
+use iced::advanced::text;
 use iced::advanced::widget::tree::{self, Tree};
 use iced::advanced::{Clipboard, Layout, Shell, Widget};
-use iced::alignment;
 use iced::keyboard;
 use iced::mouse;
 use iced::overlay;
 use iced::touch;
+use iced::widget::container;
 use iced::window;
 use iced::{
-    Background, Border, Color, Element, Event, Length, Padding, Pixels, Point, Rectangle, Size,
-    Theme, Vector,
+    Background, Border, Color, Element, Event, Length, Padding, Pixels, Rectangle, Size, Theme,
+    Vector,
 };
 
 use std::borrow::Borrow;
-use std::f32;
 
 const DEFAULT_PADDING: Padding = Padding {
     top: 5.0,
@@ -27,20 +25,19 @@ const DEFAULT_PADDING: Padding = Padding {
 };
 
 #[allow(missing_debug_implementations)]
-pub struct PickList<'a, T, L, V, Message, Theme = iced::Theme, Renderer = iced::Renderer>
+pub struct PickList<'a, T, Message, Theme = iced::Theme, Renderer = iced::Renderer>
 where
-    T: ToString + PartialEq + Clone,
-    L: Borrow<[T]> + 'a,
-    V: Borrow<T> + 'a,
+    T: PartialEq + Clone,
     Theme: Catalog,
     Renderer: text::Renderer,
 {
     on_select: Option<Box<dyn Fn(T) -> Message + 'a>>,
     on_open: Option<Message>,
     on_close: Option<Message>,
-    options: L,
-    placeholder: Option<V>,
-    selected: Option<V>,
+    options: &'a [T],
+    placeholder: Option<&'a T>,
+    selected: Option<&'a T>,
+    contents: Vec<Element<'a, Message, Theme, Renderer>>,
     width: Length,
     padding: Padding,
     text_size: Option<Pixels>,
@@ -53,18 +50,22 @@ where
     last_status: Option<Status>,
 }
 
-impl<'a, T, L, V, Message, Theme, Renderer> PickList<'a, T, L, V, Message, Theme, Renderer>
+impl<'a, T, Message, Theme, Renderer> PickList<'a, T, Message, Theme, Renderer>
 where
-    T: ToString + PartialEq + Clone,
-    L: Borrow<[T]> + 'a,
-    V: Borrow<T> + 'a,
-    Message: Clone,
-    Theme: Catalog,
-    Renderer: text::Renderer,
+    T: PartialEq + Clone,
+    Message: Clone + 'a,
+    Theme: Catalog + 'a,
+    Renderer: text::Renderer + 'a,
 {
     /// Creates a new [`PickList`] with the given list of options, the current
     /// selected value, and the message to produce when an option is selected.
-    pub fn new(options: L, selected: Option<V>) -> Self {
+    pub fn new(
+        options: &'a [T],
+        selected: Option<&'a T>,
+        view: impl Fn(&'a T) -> Element<'a, Message, Theme, Renderer>,
+    ) -> Self {
+        let contents = options.iter().map(view).collect();
+
         Self {
             on_select: None,
             on_open: None,
@@ -72,6 +73,7 @@ where
             options,
             placeholder: None,
             selected,
+            contents,
             width: Length::Shrink,
             padding: DEFAULT_PADDING,
             text_size: None,
@@ -91,7 +93,7 @@ where
     }
 
     /// Sets the placeholder of the [`PickList`].
-    pub fn placeholder(mut self, placeholder: V) -> Self {
+    pub fn placeholder(mut self, placeholder: &'a T) -> Self {
         self.placeholder = Some(placeholder);
         self
     }
@@ -183,24 +185,34 @@ where
         self.menu_class = class.into();
         self
     }
+
+    fn current(&self) -> Option<&Element<'a, Message, Theme, Renderer>> {
+        self.options
+            .iter()
+            .position(|option| {
+                self.selected
+                    .or(self.placeholder)
+                    .map(|visible| option == visible)
+                    .unwrap_or(false)
+            })
+            .and_then(|i| self.contents.get(i))
+    }
 }
 
-impl<'a, T, L, V, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
-    for PickList<'a, T, L, V, Message, Theme, Renderer>
+impl<'a, T, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
+    for PickList<'a, T, Message, Theme, Renderer>
 where
-    T: Clone + ToString + PartialEq + 'a,
-    L: Borrow<[T]>,
-    V: Borrow<T>,
+    T: Clone + PartialEq,
     Message: Clone + 'a,
     Theme: Catalog + 'a,
     Renderer: text::Renderer + 'a,
 {
     fn tag(&self) -> tree::Tag {
-        tree::Tag::of::<State<Renderer::Paragraph>>()
+        tree::Tag::of::<State>()
     }
 
     fn state(&self) -> tree::State {
-        tree::State::new(State::<Renderer::Paragraph>::new())
+        tree::State::new(State::new())
     }
 
     fn size(&self) -> Size<Length> {
@@ -216,73 +228,16 @@ where
         renderer: &Renderer,
         limits: &layout::Limits,
     ) -> layout::Node {
-        let state = tree.state.downcast_mut::<State<Renderer::Paragraph>>();
+        let intrinsic = self
+            .current()
+            .map(Element::as_widget)
+            .map(|widget| widget.layout(tree, renderer, limits).size());
 
-        let font = self.font.unwrap_or_else(|| renderer.default_font());
-        let text_size = self.text_size.unwrap_or_else(|| renderer.default_size());
-        let options = self.options.borrow();
-
-        state.options.resize_with(options.len(), Default::default);
-
-        let option_text = Text {
-            content: "",
-            bounds: Size::new(
-                f32::INFINITY,
-                self.text_line_height.to_absolute(text_size).into(),
-            ),
-            size: text_size,
-            line_height: self.text_line_height,
-            font,
-            align_x: text::Alignment::Default,
-            align_y: alignment::Vertical::Center,
-            shaping: self.text_shaping,
-            wrapping: text::Wrapping::default(),
-        };
-
-        for (option, paragraph) in options.iter().zip(state.options.iter_mut()) {
-            let label = option.to_string();
-
-            let _ = paragraph.update(Text {
-                content: &label,
-                ..option_text
-            });
-        }
-
-        if let Some(placeholder) = &self.placeholder {
-            let _ = state.placeholder.update(Text {
-                content: placeholder.borrow().to_string().as_str(),
-                ..option_text
-            });
-        }
-
-        let max_width = match self.width {
-            Length::Shrink => {
-                let labels_width = state.options.iter().fold(0.0, |width, paragraph| {
-                    f32::max(width, paragraph.min_width())
-                });
-
-                labels_width.max(
-                    self.placeholder
-                        .as_ref()
-                        .map(|_| state.placeholder.min_width())
-                        .unwrap_or(0.0),
-                )
-            }
-            _ => 0.0,
-        };
-
-        let size = {
-            let intrinsic = Size::new(
-                max_width + text_size.0 + self.padding.left,
-                f32::from(self.text_line_height.to_absolute(text_size)),
-            );
-
-            limits
-                .width(self.width)
-                .shrink(self.padding)
-                .resolve(self.width, Length::Shrink, intrinsic)
-                .expand(self.padding)
-        };
+        let size = limits
+            .width(self.width)
+            .shrink(self.padding)
+            .resolve(self.width, Length::Shrink, intrinsic.unwrap_or(Size::ZERO))
+            .expand(self.padding);
 
         layout::Node::new(size)
     }
@@ -298,7 +253,7 @@ where
         shell: &mut Shell<'_, Message>,
         _viewport: &Rectangle,
     ) {
-        let state = tree.state.downcast_mut::<State<Renderer::Paragraph>>();
+        let state = tree.state.downcast_mut::<State>();
 
         match event {
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
@@ -319,7 +274,6 @@ where
                     state.is_open = true;
                     state.hovered_option = self
                         .options
-                        .borrow()
                         .iter()
                         .position(|option| Some(option) == selected);
 
@@ -347,20 +301,19 @@ where
                         options.next()
                     }
 
-                    let options = self.options.borrow();
                     let selected = self.selected.as_ref().map(Borrow::borrow);
 
                     let next_option = if *y < 0.0 {
                         if let Some(selected) = selected {
-                            find_next(selected, options.iter())
+                            find_next(selected, self.options.iter())
                         } else {
-                            options.first()
+                            self.options.first()
                         }
                     } else if *y > 0.0 {
                         if let Some(selected) = selected {
-                            find_next(selected, options.iter().rev())
+                            find_next(selected, self.options.iter().rev())
                         } else {
-                            options.last()
+                            self.options.last()
                         }
                     } else {
                         None
@@ -426,127 +379,32 @@ where
         tree: &Tree,
         renderer: &mut Renderer,
         theme: &Theme,
-        _style: &renderer::Style,
+        style: &renderer::Style,
         layout: Layout<'_>,
-        _cursor: mouse::Cursor,
+        cursor: mouse::Cursor,
         viewport: &Rectangle,
     ) {
-        let font = self.font.unwrap_or_else(|| renderer.default_font());
-        let selected = self.selected.as_ref().map(Borrow::borrow);
-        let state = tree.state.downcast_ref::<State<Renderer::Paragraph>>();
-
         let bounds = layout.bounds();
 
-        let style = Catalog::style(
-            theme,
-            &self.class,
-            self.last_status.unwrap_or(Status::Disabled),
-        );
-
-        renderer.fill_quad(
-            renderer::Quad {
-                bounds,
-                border: style.border,
-                ..renderer::Quad::default()
-            },
-            style.background,
-        );
-
-        let handle = match &self.handle {
-            Handle::Arrow { size } => Some((
-                Renderer::ICON_FONT,
-                Renderer::ARROW_DOWN_ICON,
-                *size,
-                text::LineHeight::default(),
-                text::Shaping::Basic,
-            )),
-            Handle::Static(Icon {
-                font,
-                code_point,
-                size,
-                line_height,
-                shaping,
-            }) => Some((*font, *code_point, *size, *line_height, *shaping)),
-            Handle::Dynamic { open, closed } => {
-                if state.is_open {
-                    Some((
-                        open.font,
-                        open.code_point,
-                        open.size,
-                        open.line_height,
-                        open.shaping,
-                    ))
-                } else {
-                    Some((
-                        closed.font,
-                        closed.code_point,
-                        closed.size,
-                        closed.line_height,
-                        closed.shaping,
-                    ))
-                }
-            }
-            Handle::None => None,
-        };
-
-        if let Some((font, code_point, size, line_height, shaping)) = handle {
-            let size = size.unwrap_or_else(|| renderer.default_size());
-
-            renderer.fill_text(
-                Text {
-                    content: code_point.to_string(),
-                    size,
-                    line_height,
-                    font,
-                    bounds: Size::new(bounds.width, f32::from(line_height.to_absolute(size))),
-                    align_x: text::Alignment::Right,
-                    align_y: alignment::Vertical::Center,
-                    shaping,
-                    wrapping: text::Wrapping::default(),
-                },
-                Point::new(
-                    bounds.x + bounds.width - self.padding.right,
-                    bounds.center_y(),
-                ),
-                style.handle_color,
-                *viewport,
+        {
+            let style = Catalog::style(
+                theme,
+                &self.class,
+                self.last_status.unwrap_or(Status::Disabled),
             );
+
+            let container = container::Style {
+                text_color: Some(style.text_color),
+                background: Some(style.background),
+                border: style.border,
+                ..Default::default()
+            };
+
+            container::draw_background(renderer, &container, bounds);
         }
 
-        let label = selected.map(ToString::to_string);
-
-        if let Some(label) = label.or_else(|| {
-            self.placeholder
-                .as_ref()
-                .map(Borrow::borrow)
-                .map(ToString::to_string)
-                .clone()
-        }) {
-            let text_size = self.text_size.unwrap_or_else(|| renderer.default_size());
-
-            renderer.fill_text(
-                Text {
-                    content: label,
-                    size: text_size,
-                    line_height: self.text_line_height,
-                    font,
-                    bounds: Size::new(
-                        bounds.width - self.padding.horizontal(),
-                        f32::from(self.text_line_height.to_absolute(text_size)),
-                    ),
-                    align_x: text::Alignment::Default,
-                    align_y: alignment::Vertical::Center,
-                    shaping: self.text_shaping,
-                    wrapping: text::Wrapping::default(),
-                },
-                Point::new(bounds.x + self.padding.left, bounds.center_y()),
-                if selected.is_some() {
-                    style.text_color
-                } else {
-                    style.placeholder_color
-                },
-                *viewport,
-            );
+        if let Some(element) = self.current().map(Element::as_widget) {
+            element.draw(tree, renderer, theme, style, layout, cursor, viewport);
         }
     }
 
@@ -558,7 +416,7 @@ where
         viewport: &Rectangle,
         translation: Vector,
     ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
-        let state = tree.state.downcast_mut::<State<Renderer::Paragraph>>();
+        let state = tree.state.downcast_mut::<State>();
         let font = self.font.unwrap_or_else(|| renderer.default_font());
 
         if let Some(on_select) = &self.on_select
@@ -568,7 +426,7 @@ where
 
             let mut menu = Menu::new(
                 &mut state.menu,
-                self.options.borrow(),
+                self.options,
                 &mut state.hovered_option,
                 |option| {
                     state.is_open = false;
@@ -594,32 +452,28 @@ where
     }
 }
 
-impl<'a, T, L, V, Message, Theme, Renderer> From<PickList<'a, T, L, V, Message, Theme, Renderer>>
+impl<'a, T, Message, Theme, Renderer> From<PickList<'a, T, Message, Theme, Renderer>>
     for Element<'a, Message, Theme, Renderer>
 where
-    T: Clone + ToString + PartialEq + 'a,
-    L: Borrow<[T]> + 'a,
-    V: Borrow<T> + 'a,
+    T: Clone + PartialEq,
     Message: Clone + 'a,
     Theme: Catalog + 'a,
     Renderer: text::Renderer + 'a,
 {
-    fn from(pick_list: PickList<'a, T, L, V, Message, Theme, Renderer>) -> Self {
+    fn from(pick_list: PickList<'a, T, Message, Theme, Renderer>) -> Self {
         Self::new(pick_list)
     }
 }
 
 #[derive(Debug)]
-struct State<P: text::Paragraph> {
+struct State {
     menu: menu::State,
     keyboard_modifiers: keyboard::Modifiers,
     is_open: bool,
     hovered_option: Option<usize>,
-    options: Vec<paragraph::Plain<P>>,
-    placeholder: paragraph::Plain<P>,
 }
 
-impl<P: text::Paragraph> State<P> {
+impl State {
     /// Creates a new [`State`] for a [`PickList`].
     fn new() -> Self {
         Self {
@@ -627,13 +481,11 @@ impl<P: text::Paragraph> State<P> {
             keyboard_modifiers: keyboard::Modifiers::default(),
             is_open: bool::default(),
             hovered_option: Option::default(),
-            options: Vec::new(),
-            placeholder: paragraph::Plain::default(),
         }
     }
 }
 
-impl<P: text::Paragraph> Default for State<P> {
+impl Default for State {
     fn default() -> Self {
         Self::new()
     }

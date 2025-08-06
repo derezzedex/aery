@@ -254,7 +254,7 @@ impl Profile {
                 horizontal_space().width(Length::FillPortion(2)),
                 self.search_bar.view().map(Message::SearchBar),
                 horizontal_space().width(Length::FillPortion(2)),
-                pick_list(Theme::ALL, Some(self.theme.clone()), Message::ThemeChanged)
+                pick_list(Theme::ALL, Some(&self.theme), Message::ThemeChanged)
                     .style(|theme, status| theme::queue_picklist(false, theme, status))
                     .menu_style(theme::region_menu)
                     .text_size(12),

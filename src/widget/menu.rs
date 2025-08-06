@@ -1,10 +1,9 @@
 //! Build and show dropdown menus.
 use iced::advanced::layout::{self, Layout};
 use iced::advanced::renderer;
-use iced::advanced::text::{self, Text};
+use iced::advanced::text;
 use iced::advanced::widget::tree::{self, Tree};
 use iced::advanced::{Clipboard, Shell, Widget};
-use iced::alignment;
 use iced::border::{self, Border};
 use iced::mouse;
 use iced::overlay;
@@ -40,7 +39,7 @@ where
 
 impl<'a, 'b, T, Message, Theme, Renderer> Menu<'a, 'b, T, Message, Theme, Renderer>
 where
-    T: ToString + Clone,
+    T: Clone,
     Message: 'a,
     Theme: Catalog + 'a,
     Renderer: text::Renderer + 'a,
@@ -172,7 +171,7 @@ where
         target_height: f32,
     ) -> Self
     where
-        T: Clone + ToString,
+        T: Clone,
     {
         let Menu {
             state,
@@ -326,7 +325,7 @@ struct ListState {
 impl<T, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
     for List<'_, '_, T, Message, Theme, Renderer>
 where
-    T: Clone + ToString,
+    T: Clone,
     Theme: Catalog,
     Renderer: text::Renderer,
 {
@@ -510,27 +509,6 @@ where
                     style.selected_background,
                 );
             }
-
-            renderer.fill_text(
-                Text {
-                    content: option.to_string(),
-                    bounds: Size::new(f32::INFINITY, bounds.height),
-                    size: text_size,
-                    line_height: self.text_line_height,
-                    font: self.font.unwrap_or_else(|| renderer.default_font()),
-                    align_x: text::Alignment::Default,
-                    align_y: alignment::Vertical::Center,
-                    shaping: self.text_shaping,
-                    wrapping: text::Wrapping::default(),
-                },
-                Point::new(bounds.x + self.padding.left, bounds.center_y()),
-                if is_selected {
-                    style.selected_text_color
-                } else {
-                    style.text_color
-                },
-                *viewport,
-            );
         }
     }
 }
@@ -538,7 +516,7 @@ where
 impl<'a, 'b, T, Message, Theme, Renderer> From<List<'a, 'b, T, Message, Theme, Renderer>>
     for Element<'a, Message, Theme, Renderer>
 where
-    T: ToString + Clone,
+    T: Clone,
     Message: 'a,
     Theme: 'a + Catalog,
     Renderer: 'a + text::Renderer,
