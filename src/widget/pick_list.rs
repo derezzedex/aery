@@ -35,7 +35,7 @@ where
     Theme: Catalog,
     Renderer: text::Renderer,
 {
-    on_select: Box<dyn Fn(T) -> Message + 'a>,
+    on_select: Option<Box<dyn Fn(T) -> Message + 'a>>,
     on_open: Option<Message>,
     on_close: Option<Message>,
     options: L,
@@ -64,9 +64,9 @@ where
 {
     /// Creates a new [`PickList`] with the given list of options, the current
     /// selected value, and the message to produce when an option is selected.
-    pub fn new(options: L, selected: Option<V>, on_select: impl Fn(T) -> Message + 'a) -> Self {
+    pub fn new(options: L, selected: Option<V>) -> Self {
         Self {
-            on_select: Box::new(on_select),
+            on_select: None,
             on_open: None,
             on_close: None,
             options,
@@ -83,6 +83,11 @@ where
             menu_class: <Theme as Catalog>::default_menu(),
             last_status: None,
         }
+    }
+
+    pub fn on_select(mut self, on_select: impl Fn(T) -> Message + 'a) -> Self {
+        self.on_select = Some(Box::new(on_select));
+        self
     }
 
     /// Sets the placeholder of the [`PickList`].
@@ -328,7 +333,8 @@ where
             Event::Mouse(mouse::Event::WheelScrolled {
                 delta: mouse::ScrollDelta::Lines { y, .. },
             }) => {
-                if state.keyboard_modifiers.command()
+                if let Some(on_select) = &self.on_select
+                    && state.keyboard_modifiers.command()
                     && cursor.is_over(layout.bounds())
                     && !state.is_open
                 {
@@ -361,7 +367,7 @@ where
                     };
 
                     if let Some(next_option) = next_option {
-                        shell.publish((self.on_select)(next_option.clone()));
+                        shell.publish((on_select)(next_option.clone()));
                     }
 
                     shell.capture_event();
@@ -376,7 +382,9 @@ where
         let status = {
             let is_hovered = cursor.is_over(layout.bounds());
 
-            if state.is_open {
+            if self.on_select.is_none() {
+                Status::Disabled
+            } else if state.is_open {
                 Status::Opened { is_hovered }
             } else if is_hovered {
                 Status::Hovered
@@ -432,7 +440,7 @@ where
         let style = Catalog::style(
             theme,
             &self.class,
-            self.last_status.unwrap_or(Status::Active),
+            self.last_status.unwrap_or(Status::Disabled),
         );
 
         renderer.fill_quad(
@@ -553,10 +561,10 @@ where
         let state = tree.state.downcast_mut::<State<Renderer::Paragraph>>();
         let font = self.font.unwrap_or_else(|| renderer.default_font());
 
-        if state.is_open {
+        if let Some(on_select) = &self.on_select
+            && state.is_open
+        {
             let bounds = layout.bounds();
-
-            let on_select = &self.on_select;
 
             let mut menu = Menu::new(
                 &mut state.menu,
@@ -687,6 +695,8 @@ pub enum Status {
         /// Whether the [`PickList`] is hovered, while open.
         is_hovered: bool,
     },
+    /// The [`PickList`] is disabled.
+    Disabled,
 }
 
 /// The appearance of a pick list.
@@ -762,6 +772,16 @@ pub fn default(theme: &Theme, status: Status) -> Style {
                 ..active.border
             },
             ..active
+        },
+        Status::Disabled => Style {
+            text_color: active.text_color.scale_alpha(0.5),
+            background: active.background.scale_alpha(0.5),
+            placeholder_color: active.placeholder_color.scale_alpha(0.5),
+            handle_color: active.handle_color.scale_alpha(0.5),
+            border: Border {
+                color: active.border.color.scale_alpha(0.5),
+                ..active.border
+            },
         },
     }
 }
