@@ -39,7 +39,7 @@ where
     on_open: Option<Message>,
     on_close: Option<Message>,
     options: L,
-    placeholder: Option<String>,
+    placeholder: Option<V>,
     selected: Option<V>,
     width: Length,
     padding: Padding,
@@ -86,8 +86,8 @@ where
     }
 
     /// Sets the placeholder of the [`PickList`].
-    pub fn placeholder(mut self, placeholder: impl Into<String>) -> Self {
-        self.placeholder = Some(placeholder.into());
+    pub fn placeholder(mut self, placeholder: V) -> Self {
+        self.placeholder = Some(placeholder);
         self
     }
 
@@ -245,7 +245,7 @@ where
 
         if let Some(placeholder) = &self.placeholder {
             let _ = state.placeholder.update(Text {
-                content: placeholder,
+                content: placeholder.borrow().to_string().as_str(),
                 ..option_text
             });
         }
@@ -507,7 +507,13 @@ where
 
         let label = selected.map(ToString::to_string);
 
-        if let Some(label) = label.or_else(|| self.placeholder.clone()) {
+        if let Some(label) = label.or_else(|| {
+            self.placeholder
+                .as_ref()
+                .map(Borrow::borrow)
+                .map(ToString::to_string)
+                .clone()
+        }) {
             let text_size = self.text_size.unwrap_or_else(|| renderer.default_size());
 
             renderer.fill_text(
