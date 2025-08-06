@@ -1,3 +1,6 @@
+mod menu;
+mod pick_list;
+
 use crate::core;
 use crate::theme;
 use iced::Length;
