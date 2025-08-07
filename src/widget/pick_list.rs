@@ -1,7 +1,6 @@
 use crate::widget::menu::{self, Menu};
 use iced::advanced::layout;
 use iced::advanced::renderer;
-use iced::advanced::text;
 use iced::advanced::widget::tree::{self, Tree};
 use iced::advanced::{Clipboard, Layout, Shell, Widget};
 use iced::keyboard;
@@ -11,8 +10,7 @@ use iced::touch;
 use iced::widget::container;
 use iced::window;
 use iced::{
-    Background, Border, Color, Element, Event, Length, Padding, Pixels, Rectangle, Size, Theme,
-    Vector,
+    Background, Border, Color, Element, Event, Length, Padding, Rectangle, Size, Theme, Vector,
 };
 
 use std::borrow::Borrow;
@@ -29,7 +27,7 @@ pub struct PickList<'a, T, Message, Theme = iced::Theme, Renderer = iced::Render
 where
     T: PartialEq + Clone,
     Theme: Catalog,
-    Renderer: text::Renderer,
+    Renderer: iced::advanced::Renderer,
 {
     on_select: Option<Box<dyn Fn(T) -> Message + 'a>>,
     on_open: Option<Message>,
@@ -40,11 +38,6 @@ where
     contents: Vec<Element<'a, Message, Theme, Renderer>>,
     width: Length,
     padding: Padding,
-    text_size: Option<Pixels>,
-    text_line_height: text::LineHeight,
-    text_shaping: text::Shaping,
-    font: Option<Renderer::Font>,
-    handle: Handle<Renderer::Font>,
     class: <Theme as Catalog>::Class<'a>,
     menu_class: <Theme as menu::Catalog>::Class<'a>,
     last_status: Option<Status>,
@@ -55,7 +48,7 @@ where
     T: PartialEq + Clone,
     Message: Clone + 'a,
     Theme: Catalog + 'a,
-    Renderer: text::Renderer + 'a,
+    Renderer: iced::advanced::Renderer + 'a,
 {
     /// Creates a new [`PickList`] with the given list of options, the current
     /// selected value, and the message to produce when an option is selected.
@@ -76,11 +69,6 @@ where
             contents,
             width: Length::Shrink,
             padding: DEFAULT_PADDING,
-            text_size: None,
-            text_line_height: text::LineHeight::default(),
-            text_shaping: text::Shaping::default(),
-            font: None,
-            handle: Handle::default(),
             class: <Theme as Catalog>::default(),
             menu_class: <Theme as Catalog>::default_menu(),
             last_status: None,
@@ -107,36 +95,6 @@ where
     /// Sets the [`Padding`] of the [`PickList`].
     pub fn padding<P: Into<Padding>>(mut self, padding: P) -> Self {
         self.padding = padding.into();
-        self
-    }
-
-    /// Sets the text size of the [`PickList`].
-    pub fn text_size(mut self, size: impl Into<Pixels>) -> Self {
-        self.text_size = Some(size.into());
-        self
-    }
-
-    /// Sets the text [`text::LineHeight`] of the [`PickList`].
-    pub fn text_line_height(mut self, line_height: impl Into<text::LineHeight>) -> Self {
-        self.text_line_height = line_height.into();
-        self
-    }
-
-    /// Sets the [`text::Shaping`] strategy of the [`PickList`].
-    pub fn text_shaping(mut self, shaping: text::Shaping) -> Self {
-        self.text_shaping = shaping;
-        self
-    }
-
-    /// Sets the font of the [`PickList`].
-    pub fn font(mut self, font: impl Into<Renderer::Font>) -> Self {
-        self.font = Some(font.into());
-        self
-    }
-
-    /// Sets the [`Handle`] of the [`PickList`].
-    pub fn handle(mut self, handle: Handle<Renderer::Font>) -> Self {
-        self.handle = handle;
         self
     }
 
@@ -186,16 +144,13 @@ where
         self
     }
 
-    fn current(&self) -> Option<&Element<'a, Message, Theme, Renderer>> {
-        self.options
-            .iter()
-            .position(|option| {
-                self.selected
-                    .or(self.placeholder)
-                    .map(|visible| option == visible)
-                    .unwrap_or(false)
-            })
-            .and_then(|i| self.contents.get(i))
+    fn current(&self) -> Option<usize> {
+        self.options.iter().position(|option| {
+            self.selected
+                .or(self.placeholder)
+                .map(|visible| option == visible)
+                .unwrap_or(false)
+        })
     }
 }
 
@@ -205,7 +160,7 @@ where
     T: Clone + PartialEq,
     Message: Clone + 'a,
     Theme: Catalog + 'a,
-    Renderer: text::Renderer + 'a,
+    Renderer: iced::advanced::Renderer + 'a,
 {
     fn tag(&self) -> tree::Tag {
         tree::Tag::of::<State>()
@@ -213,6 +168,14 @@ where
 
     fn state(&self) -> tree::State {
         tree::State::new(State::new())
+    }
+
+    fn children(&self) -> Vec<Tree> {
+        self.contents.iter().map(Tree::new).collect()
+    }
+
+    fn diff(&self, tree: &mut Tree) {
+        tree.diff_children(&self.contents);
     }
 
     fn size(&self) -> Size<Length> {
@@ -228,18 +191,24 @@ where
         renderer: &Renderer,
         limits: &layout::Limits,
     ) -> layout::Node {
-        let intrinsic = self
-            .current()
-            .map(Element::as_widget)
-            .map(|widget| widget.layout(tree, renderer, limits).size());
+        let base = self
+            .contents
+            .iter()
+            .zip(tree.children.iter_mut())
+            .map(|(el, t)| el.as_widget().layout(t, renderer, &limits).size())
+            .max_by(|a, b| a.width.total_cmp(&b.width))
+            .unwrap();
 
-        let size = limits
-            .width(self.width)
-            .shrink(self.padding)
-            .resolve(self.width, Length::Shrink, intrinsic.unwrap_or(Size::ZERO))
-            .expand(self.padding);
+        let size = limits.resolve(self.width, Length::Shrink, base);
 
-        layout::Node::new(size)
+        layout::Node::with_children(
+            size,
+            self.current()
+                .and_then(|i| self.contents.get(i).zip(tree.children.get_mut(i)))
+                .map(|(el, tree)| el.as_widget().layout(tree, renderer, &limits))
+                .into_iter()
+                .collect(),
+        )
     }
 
     fn update(
@@ -403,8 +372,16 @@ where
             container::draw_background(renderer, &container, bounds);
         }
 
-        if let Some(element) = self.current().map(Element::as_widget) {
-            element.draw(tree, renderer, theme, style, layout, cursor, viewport);
+        if let Some(i) = self.current() {
+            self.contents[i].as_widget().draw(
+                &tree.children[i],
+                renderer,
+                theme,
+                style,
+                layout.children().next().unwrap(),
+                cursor,
+                viewport,
+            );
         }
     }
 
@@ -412,21 +389,21 @@ where
         &'b mut self,
         tree: &'b mut Tree,
         layout: Layout<'_>,
-        renderer: &Renderer,
+        _renderer: &Renderer,
         viewport: &Rectangle,
         translation: Vector,
     ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
         let state = tree.state.downcast_mut::<State>();
-        let font = self.font.unwrap_or_else(|| renderer.default_font());
 
         if let Some(on_select) = &self.on_select
             && state.is_open
         {
             let bounds = layout.bounds();
 
-            let mut menu = Menu::new(
+            let menu = Menu::new(
                 &mut state.menu,
                 self.options,
+                &self.contents,
                 &mut state.hovered_option,
                 |option| {
                     state.is_open = false;
@@ -436,14 +413,7 @@ where
                 None,
                 &self.menu_class,
             )
-            .width(bounds.width)
-            .padding(self.padding)
-            .font(font)
-            .text_shaping(self.text_shaping);
-
-            if let Some(text_size) = self.text_size {
-                menu = menu.text_size(text_size);
-            }
+            .width(bounds.width);
 
             Some(menu.overlay(layout.position() + translation, *viewport, bounds.height))
         } else {
@@ -458,7 +428,7 @@ where
     T: Clone + PartialEq,
     Message: Clone + 'a,
     Theme: Catalog + 'a,
-    Renderer: text::Renderer + 'a,
+    Renderer: iced::advanced::Renderer + 'a,
 {
     fn from(pick_list: PickList<'a, T, Message, Theme, Renderer>) -> Self {
         Self::new(pick_list)
@@ -489,50 +459,6 @@ impl Default for State {
     fn default() -> Self {
         Self::new()
     }
-}
-
-/// The handle to the right side of the [`PickList`].
-#[derive(Debug, Clone, PartialEq)]
-pub enum Handle<Font> {
-    /// Displays an arrow icon (▼).
-    ///
-    /// This is the default.
-    Arrow {
-        /// Font size of the content.
-        size: Option<Pixels>,
-    },
-    /// A custom static handle.
-    Static(Icon<Font>),
-    /// A custom dynamic handle.
-    Dynamic {
-        /// The [`Icon`] used when [`PickList`] is closed.
-        closed: Icon<Font>,
-        /// The [`Icon`] used when [`PickList`] is open.
-        open: Icon<Font>,
-    },
-    /// No handle will be shown.
-    None,
-}
-
-impl<Font> Default for Handle<Font> {
-    fn default() -> Self {
-        Self::Arrow { size: None }
-    }
-}
-
-/// The icon of a [`Handle`].
-#[derive(Debug, Clone, PartialEq)]
-pub struct Icon<Font> {
-    /// Font that will be used to display the `code_point`,
-    pub font: Font,
-    /// The unicode code point that will be used as the icon.
-    pub code_point: char,
-    /// Font size of the content.
-    pub size: Option<Pixels>,
-    /// Line height of the content.
-    pub line_height: text::LineHeight,
-    /// The shaping strategy of the icon.
-    pub shaping: text::Shaping,
 }
 
 /// The possible status of a [`PickList`].

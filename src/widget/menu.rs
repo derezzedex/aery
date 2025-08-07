@@ -1,7 +1,6 @@
 //! Build and show dropdown menus.
 use iced::advanced::layout::{self, Layout};
 use iced::advanced::renderer;
-use iced::advanced::text;
 use iced::advanced::widget::tree::{self, Tree};
 use iced::advanced::{Clipboard, Shell, Widget};
 use iced::border::{self, Border};
@@ -10,30 +9,23 @@ use iced::overlay;
 use iced::touch;
 use iced::widget::scrollable::{self, Scrollable};
 use iced::window;
-use iced::{
-    Background, Color, Element, Event, Length, Padding, Pixels, Point, Rectangle, Size, Theme,
-    Vector,
-};
+use iced::{Background, Color, Element, Event, Length, Point, Rectangle, Size, Theme, Vector};
 
 /// A list of selectable options.
 #[allow(missing_debug_implementations)]
 pub struct Menu<'a, 'b, T, Message, Theme = iced::Theme, Renderer = iced::Renderer>
 where
     Theme: Catalog,
-    Renderer: text::Renderer,
+    Renderer: iced::advanced::Renderer,
     'b: 'a,
 {
     state: &'a mut State,
     options: &'a [T],
+    contents: &'a [Element<'a, Message, Theme, Renderer>],
     hovered_option: &'a mut Option<usize>,
     on_selected: Box<dyn FnMut(T) -> Message + 'a>,
     on_option_hovered: Option<&'a dyn Fn(T) -> Message>,
     width: f32,
-    padding: Padding,
-    text_size: Option<Pixels>,
-    text_line_height: text::LineHeight,
-    text_shaping: text::Shaping,
-    font: Option<Renderer::Font>,
     class: &'a <Theme as Catalog>::Class<'b>,
 }
 
@@ -42,7 +34,7 @@ where
     T: Clone,
     Message: 'a,
     Theme: Catalog + 'a,
-    Renderer: text::Renderer + 'a,
+    Renderer: iced::advanced::Renderer + 'a,
     'b: 'a,
 {
     /// Creates a new [`Menu`] with the given [`State`], a list of options,
@@ -50,6 +42,7 @@ where
     pub fn new(
         state: &'a mut State,
         options: &'a [T],
+        contents: &'a [Element<'a, Message, Theme, Renderer>],
         hovered_option: &'a mut Option<usize>,
         on_selected: impl FnMut(T) -> Message + 'a,
         on_option_hovered: Option<&'a dyn Fn(T) -> Message>,
@@ -58,15 +51,11 @@ where
         Menu {
             state,
             options,
+            contents,
             hovered_option,
             on_selected: Box::new(on_selected),
             on_option_hovered,
             width: 0.0,
-            padding: Padding::ZERO,
-            text_size: None,
-            text_line_height: text::LineHeight::default(),
-            text_shaping: text::Shaping::Basic,
-            font: None,
             class,
         }
     }
@@ -74,30 +63,6 @@ where
     /// Sets the width of the [`Menu`].
     pub fn width(mut self, width: f32) -> Self {
         self.width = width;
-        self
-    }
-
-    /// Sets the [`Padding`] of the [`Menu`].
-    pub fn padding<P: Into<Padding>>(mut self, padding: P) -> Self {
-        self.padding = padding.into();
-        self
-    }
-
-    /// Sets the text size of the [`Menu`].
-    pub fn text_size(mut self, text_size: impl Into<Pixels>) -> Self {
-        self.text_size = Some(text_size.into());
-        self
-    }
-
-    /// Sets the [`text::Shaping`] strategy of the [`Menu`].
-    pub fn text_shaping(mut self, shaping: text::Shaping) -> Self {
-        self.text_shaping = shaping;
-        self
-    }
-
-    /// Sets the font of the [`Menu`].
-    pub fn font(mut self, font: impl Into<Renderer::Font>) -> Self {
-        self.font = Some(font.into());
         self
     }
 
@@ -161,7 +126,7 @@ impl<'a, 'b, Message, Theme, Renderer> Overlay<'a, 'b, Message, Theme, Renderer>
 where
     Message: 'a,
     Theme: Catalog + scrollable::Catalog + 'a,
-    Renderer: text::Renderer + 'a,
+    Renderer: iced::advanced::Renderer + 'a,
     'b: 'a,
 {
     pub fn new<T>(
@@ -176,28 +141,20 @@ where
         let Menu {
             state,
             options,
+            contents,
             hovered_option,
             on_selected,
             on_option_hovered,
             width,
-            padding,
-            font,
-            text_size,
-            text_line_height,
-            text_shaping,
             class,
         } = menu;
 
         let list = Scrollable::new(List {
             options,
+            contents,
             hovered_option,
             on_selected,
             on_option_hovered,
-            font,
-            text_size,
-            text_line_height,
-            text_shaping,
-            padding,
             class,
         });
 
@@ -219,7 +176,7 @@ impl<Message, Theme, Renderer> iced::advanced::Overlay<Message, Theme, Renderer>
     for Overlay<'_, '_, Message, Theme, Renderer>
 where
     Theme: Catalog,
-    Renderer: text::Renderer,
+    Renderer: iced::advanced::Renderer,
 {
     fn layout(&mut self, renderer: &Renderer, bounds: Size) -> layout::Node {
         let space_below = bounds.height - (self.position.y + self.target_height);
@@ -286,35 +243,33 @@ where
 
         let style = Catalog::style(theme, self.class);
 
-        renderer.fill_quad(
-            renderer::Quad {
-                bounds,
-                border: style.border,
-                ..renderer::Quad::default()
-            },
-            style.background,
-        );
+        renderer.with_layer(bounds, |renderer| {
+            renderer.fill_quad(
+                renderer::Quad {
+                    bounds,
+                    border: style.border,
+                    ..renderer::Quad::default()
+                },
+                style.background,
+            );
 
-        self.list.draw(
-            self.state, renderer, theme, defaults, layout, cursor, &bounds,
-        );
+            self.list.draw(
+                self.state, renderer, theme, defaults, layout, cursor, &bounds,
+            );
+        });
     }
 }
 
 struct List<'a, 'b, T, Message, Theme, Renderer>
 where
     Theme: Catalog,
-    Renderer: text::Renderer,
+    Renderer: iced::advanced::Renderer,
 {
     options: &'a [T],
+    contents: &'a [Element<'a, Message, Theme, Renderer>],
     hovered_option: &'a mut Option<usize>,
     on_selected: Box<dyn FnMut(T) -> Message + 'a>,
     on_option_hovered: Option<&'a dyn Fn(T) -> Message>,
-    padding: Padding,
-    text_size: Option<Pixels>,
-    text_line_height: text::LineHeight,
-    text_shaping: text::Shaping,
-    font: Option<Renderer::Font>,
     class: &'a <Theme as Catalog>::Class<'b>,
 }
 
@@ -327,7 +282,7 @@ impl<T, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
 where
     T: Clone,
     Theme: Catalog,
-    Renderer: text::Renderer,
+    Renderer: iced::advanced::Renderer,
 {
     fn tag(&self) -> tree::Tag {
         tree::Tag::of::<Option<bool>>()
@@ -335,6 +290,14 @@ where
 
     fn state(&self) -> tree::State {
         tree::State::new(ListState { is_hovered: None })
+    }
+
+    fn children(&self) -> Vec<Tree> {
+        self.contents.iter().map(Tree::new).collect()
+    }
+
+    fn diff(&self, tree: &mut Tree) {
+        tree.diff_children(self.contents);
     }
 
     fn size(&self) -> Size<Length> {
@@ -346,26 +309,41 @@ where
 
     fn layout(
         &self,
-        _tree: &mut Tree,
+        tree: &mut Tree,
         renderer: &Renderer,
         limits: &layout::Limits,
     ) -> layout::Node {
-        use std::f32;
+        if self.contents.is_empty() {
+            return layout::Node::new(limits.resolve(Length::Fill, Length::Shrink, Size::ZERO));
+        }
 
-        let text_size = self.text_size.unwrap_or_else(|| renderer.default_size());
+        let base = self
+            .contents
+            .iter()
+            .zip(tree.children.iter_mut())
+            .map(|(el, tree)| el.as_widget().layout(tree, renderer, limits).size())
+            .max_by(|a, b| a.width.total_cmp(&b.width))
+            .unwrap();
 
-        let text_line_height = self.text_line_height.to_absolute(text_size);
+        let size = limits.resolve(Length::Fill, Length::Shrink, base);
+        let limits = layout::Limits::new(Size::ZERO, size);
 
-        let size = {
-            let intrinsic = Size::new(
-                0.0,
-                (f32::from(text_line_height) + self.padding.vertical()) * self.options.len() as f32,
-            );
+        let nodes = self
+            .contents
+            .iter()
+            .enumerate()
+            .zip(&mut tree.children)
+            .map(|((i, layer), tree)| {
+                layer
+                    .as_widget()
+                    .layout(tree, renderer, &limits)
+                    .translate(Size::new(0.0, i as f32 * base.height))
+            })
+            .collect();
 
-            limits.resolve(Length::Fill, Length::Shrink, intrinsic)
-        };
+        let total_size = Size::new(size.width, size.height * self.options.len() as f32);
 
-        layout::Node::new(size)
+        layout::Node::with_children(total_size, nodes)
     }
 
     fn update(
@@ -374,7 +352,7 @@ where
         event: &Event,
         layout: Layout<'_>,
         cursor: mouse::Cursor,
-        renderer: &Renderer,
+        _renderer: &Renderer,
         _clipboard: &mut dyn Clipboard,
         shell: &mut Shell<'_, Message>,
         _viewport: &Rectangle,
@@ -392,12 +370,8 @@ where
             }
             Event::Mouse(mouse::Event::CursorMoved { .. }) => {
                 if let Some(cursor_position) = cursor.position_in(layout.bounds()) {
-                    let text_size = self.text_size.unwrap_or_else(|| renderer.default_size());
-
-                    let option_height = f32::from(self.text_line_height.to_absolute(text_size))
-                        + self.padding.vertical();
-
-                    let new_hovered_option = (cursor_position.y / option_height) as usize;
+                    let option = layout.children().next().unwrap().bounds().size();
+                    let new_hovered_option = (cursor_position.y / option.height) as usize;
 
                     if *self.hovered_option != Some(new_hovered_option) {
                         if let Some(option) = self.options.get(new_hovered_option) {
@@ -414,12 +388,9 @@ where
             }
             Event::Touch(touch::Event::FingerPressed { .. }) => {
                 if let Some(cursor_position) = cursor.position_in(layout.bounds()) {
-                    let text_size = self.text_size.unwrap_or_else(|| renderer.default_size());
+                    let option = layout.children().next().unwrap().bounds().size();
 
-                    let option_height = f32::from(self.text_line_height.to_absolute(text_size))
-                        + self.padding.vertical();
-
-                    *self.hovered_option = Some((cursor_position.y / option_height) as usize);
+                    *self.hovered_option = Some((cursor_position.y / option.height) as usize);
 
                     if let Some(index) = *self.hovered_option {
                         if let Some(option) = self.options.get(index) {
@@ -463,28 +434,31 @@ where
 
     fn draw(
         &self,
-        _state: &Tree,
+        tree: &Tree,
         renderer: &mut Renderer,
         theme: &Theme,
-        _style: &renderer::Style,
+        style: &renderer::Style,
         layout: Layout<'_>,
-        _cursor: mouse::Cursor,
+        cursor: mouse::Cursor,
         viewport: &Rectangle,
     ) {
-        let style = Catalog::style(theme, self.class);
+        let menu_style = Catalog::style(theme, self.class);
         let bounds = layout.bounds();
 
-        let text_size = self.text_size.unwrap_or_else(|| renderer.default_size());
-        let option_height =
-            f32::from(self.text_line_height.to_absolute(text_size)) + self.padding.vertical();
+        let option_height = layout.children().next().unwrap().bounds().size().height;
 
         let offset = viewport.y - bounds.y;
         let start = (offset / option_height) as usize;
         let end = ((offset + viewport.height) / option_height).ceil() as usize;
 
-        let visible_options = &self.options[start..end.min(self.options.len())];
+        let visible_options = &self.contents[start..end.min(self.contents.len())];
 
-        for (i, option) in visible_options.iter().enumerate() {
+        for (i, ((option, layout), tree)) in visible_options
+            .iter()
+            .zip(layout.children())
+            .zip(tree.children.iter())
+            .enumerate()
+        {
             let i = start + i;
             let is_selected = *self.hovered_option == Some(i);
 
@@ -499,16 +473,21 @@ where
                 renderer.fill_quad(
                     renderer::Quad {
                         bounds: Rectangle {
-                            x: bounds.x + style.border.width,
-                            width: bounds.width - style.border.width * 2.0,
+                            x: bounds.x + menu_style.border.width,
+                            width: bounds.width - menu_style.border.width * 2.0,
+                            // width: layout.bounds().width,
                             ..bounds
                         },
-                        border: border::rounded(style.border.radius),
+                        border: border::rounded(menu_style.border.radius),
                         ..renderer::Quad::default()
                     },
-                    style.selected_background,
+                    menu_style.selected_background,
                 );
             }
+
+            option
+                .as_widget()
+                .draw(tree, renderer, theme, style, layout, cursor, &bounds);
         }
     }
 }
@@ -519,7 +498,7 @@ where
     T: Clone,
     Message: 'a,
     Theme: 'a + Catalog,
-    Renderer: 'a + text::Renderer,
+    Renderer: 'a + iced::advanced::Renderer,
     'b: 'a,
 {
     fn from(list: List<'a, 'b, T, Message, Theme, Renderer>) -> Self {
