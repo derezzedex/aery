@@ -451,12 +451,13 @@ where
         let start = (offset / option_height) as usize;
         let end = ((offset + viewport.height) / option_height).ceil() as usize;
 
-        let visible_options = &self.contents[start..end.min(self.contents.len())];
-
-        for (i, ((option, layout), tree)) in visible_options
+        for (i, ((option, layout), tree)) in self
+            .contents
             .iter()
             .zip(layout.children())
             .zip(tree.children.iter())
+            .skip(start)
+            .take(end.min(self.contents.len()))
             .enumerate()
         {
             let i = start + i;
@@ -495,7 +496,7 @@ where
 
             option
                 .as_widget()
-                .draw(tree, renderer, theme, &style, layout, cursor, &bounds);
+                .draw(tree, renderer, theme, &style, layout, cursor, viewport);
         }
     }
 }
