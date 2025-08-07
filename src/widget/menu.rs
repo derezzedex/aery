@@ -437,7 +437,7 @@ where
         tree: &Tree,
         renderer: &mut Renderer,
         theme: &Theme,
-        style: &renderer::Style,
+        _style: &renderer::Style,
         layout: Layout<'_>,
         cursor: mouse::Cursor,
         viewport: &Rectangle,
@@ -485,9 +485,17 @@ where
                 );
             }
 
+            let style = is_selected
+                .then_some(renderer::Style {
+                    text_color: menu_style.selected_text_color,
+                })
+                .unwrap_or(renderer::Style {
+                    text_color: menu_style.text_color,
+                });
+
             option
                 .as_widget()
-                .draw(tree, renderer, theme, style, layout, cursor, &bounds);
+                .draw(tree, renderer, theme, &style, layout, cursor, &bounds);
         }
     }
 }

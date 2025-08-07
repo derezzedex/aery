@@ -45,7 +45,7 @@ bytes = "1.10"
 lz4_flex = { version = "0.11", default-features = false }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-iced = { git = "https://github.com/iced-rs/iced", rev = "d4f8e1902322b239be9580b3afb936c99ec49b79", features = [
+iced = { git = "https://github.com/iced-rs/iced", rev = "f350db7c8c54cf9e0f11862f0a7518b57557bb84", features = [
   "image",
   "advanced",
   "tokio",
@@ -55,7 +55,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 time = "0.3"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-iced = { git = "https://github.com/iced-rs/iced", rev = "d4f8e1902322b239be9580b3afb936c99ec49b79", features = [
+iced = { git = "https://github.com/iced-rs/iced", rev = "f350db7c8c54cf9e0f11862f0a7518b57557bb84", features = [
   "image",
   "advanced",
   "svg",

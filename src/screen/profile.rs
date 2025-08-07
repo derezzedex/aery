@@ -18,7 +18,8 @@ use crate::widget;
 pub use core::summoner::Data;
 
 use iced::widget::{
-    button, column, container, horizontal_space, pick_list, row, scrollable, text, vertical_space,
+    button, column, container, horizontal_space, pick_list, row, scrollable, text, themer,
+    vertical_space,
 };
 use iced::{Alignment, Element, Length, Task, Theme};
 use iced::{border, padding};
@@ -249,10 +250,8 @@ impl Profile {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        let pick_list = widget::pick_list(Theme::ALL, Some(&self.theme), |theme| {
-            container(text(theme.to_string())).padding(4).into()
-        })
-        .on_select(Message::ThemeChanged);
+        let pick_list = widget::pick_list(Theme::ALL, Some(&self.theme), theme_picker)
+            .on_select(Message::ThemeChanged);
         // .style(|theme, status| theme::queue_picklist(false, theme, status))
         // .menu_style(theme::region_menu),
 
@@ -300,6 +299,34 @@ impl Profile {
     pub fn theme(&self) -> Theme {
         self.theme.clone()
     }
+}
+
+fn theme_picker<'a>(theme: &'a Theme) -> Element<'a, Message> {
+    let colors = column![
+        row![
+            container(vertical_space().width(8).height(8)).style(container::primary),
+            container(vertical_space().width(8).height(8)).style(container::secondary),
+        ]
+        .spacing(2),
+        row![
+            container(vertical_space().width(8).height(8)).style(container::success),
+            container(vertical_space().width(8).height(8)).style(container::danger),
+        ]
+        .spacing(2),
+    ]
+    .padding(2)
+    .spacing(2);
+
+    let content = row![
+        themer(
+            theme.clone(),
+            container(colors).style(container::rounded_box)
+        ),
+        text(theme.to_string())
+    ]
+    .spacing(4);
+
+    container(content).padding(4).into()
 }
 
 fn filter_bar<'a>(selected: QueueFilter) -> Element<'a, Message> {
