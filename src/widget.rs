@@ -24,7 +24,7 @@ where
     T: PartialEq + Clone + 'a,
     Message: Clone + 'a,
     Theme: pick_list::Catalog + menu::Catalog + 'a,
-    Renderer: iced::advanced::Renderer + 'a,
+    Renderer: iced::advanced::Renderer + iced_blur::Renderer + 'a,
 {
     PickList::new(options, selected, view)
 }

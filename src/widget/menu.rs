@@ -34,7 +34,7 @@ where
     T: Clone,
     Message: 'a,
     Theme: Catalog + 'a,
-    Renderer: iced::advanced::Renderer + 'a,
+    Renderer: iced::advanced::Renderer + iced_blur::Renderer + 'a,
     'b: 'a,
 {
     /// Creates a new [`Menu`] with the given [`State`], a list of options,
@@ -91,20 +91,16 @@ where
 #[derive(Debug)]
 pub struct State {
     tree: Tree,
+    blur: Tree,
 }
 
 impl State {
     /// Creates a new [`State`] for a [`Menu`].
-    pub fn new() -> Self {
+    pub fn new(blur: Tree) -> Self {
         Self {
             tree: Tree::empty(),
+            blur,
         }
-    }
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -116,6 +112,7 @@ where
     position: Point,
     viewport: Rectangle,
     state: &'a mut Tree,
+    blur: &'a mut Tree,
     list: Scrollable<'a, Message, Theme, Renderer>,
     width: f32,
     target_height: f32,
@@ -126,7 +123,7 @@ impl<'a, 'b, Message, Theme, Renderer> Overlay<'a, 'b, Message, Theme, Renderer>
 where
     Message: 'a,
     Theme: Catalog + scrollable::Catalog + 'a,
-    Renderer: iced::advanced::Renderer + 'a,
+    Renderer: iced::advanced::Renderer + iced_blur::Renderer + 'a,
     'b: 'a,
 {
     pub fn new<T>(
@@ -164,6 +161,7 @@ where
             position,
             viewport,
             state: &mut state.tree,
+            blur: &mut state.blur,
             list,
             width,
             target_height,
@@ -176,7 +174,7 @@ impl<Message, Theme, Renderer> iced::advanced::Overlay<Message, Theme, Renderer>
     for Overlay<'_, '_, Message, Theme, Renderer>
 where
     Theme: Catalog,
-    Renderer: iced::advanced::Renderer,
+    Renderer: iced::advanced::Renderer + iced_blur::Renderer,
 {
     fn layout(&mut self, renderer: &Renderer, bounds: Size) -> layout::Node {
         let space_below = bounds.height - (self.position.y + self.target_height);
@@ -247,15 +245,28 @@ where
             renderer.fill_quad(
                 renderer::Quad {
                     bounds,
-                    border: style.border,
                     ..renderer::Quad::default()
                 },
-                style.background,
+                style.background.scale_alpha(0.7),
             );
 
-            self.list.draw(
-                self.state, renderer, theme, defaults, layout, cursor, &bounds,
+            iced_blur::blur::<Message>(5).draw(
+                self.blur, renderer, theme, defaults, layout, cursor, &bounds,
             );
+
+            renderer.with_layer(bounds, |renderer| {
+                self.list.draw(
+                    self.state, renderer, theme, defaults, layout, cursor, &bounds,
+                );
+                renderer.fill_quad(
+                    renderer::Quad {
+                        bounds,
+                        border: style.border.color(style.border.color.scale_alpha(0.5)),
+                        ..renderer::Quad::default()
+                    },
+                    Background::Color(iced::Color::TRANSPARENT),
+                );
+            });
         });
     }
 }
@@ -570,8 +581,8 @@ pub fn default(theme: &Theme) -> Style {
         background: palette.background.weak.color.into(),
         border: Border {
             width: 1.0,
-            radius: 0.0.into(),
-            color: palette.background.strong.color,
+            radius: 2.0.into(),
+            color: palette.secondary.strong.color,
         },
         text_color: palette.background.weak.text,
         selected_text_color: palette.primary.strong.text,

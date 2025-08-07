@@ -36,6 +36,7 @@ where
     placeholder: Option<&'a T>,
     selected: Option<&'a T>,
     contents: Vec<Element<'a, Message, Theme, Renderer>>,
+    blur: Element<'a, Message, Theme, Renderer>,
     width: Length,
     padding: Padding,
     class: <Theme as Catalog>::Class<'a>,
@@ -48,7 +49,7 @@ where
     T: PartialEq + Clone,
     Message: Clone + 'a,
     Theme: Catalog + 'a,
-    Renderer: iced::advanced::Renderer + 'a,
+    Renderer: iced::advanced::Renderer + iced_blur::Renderer + 'a,
 {
     /// Creates a new [`PickList`] with the given list of options, the current
     /// selected value, and the message to produce when an option is selected.
@@ -58,12 +59,14 @@ where
         view: impl Fn(&'a T) -> Element<'a, Message, Theme, Renderer>,
     ) -> Self {
         let contents = options.iter().map(view).collect();
+        let blur = iced_blur::blur(5).into();
 
         Self {
             on_select: None,
             on_open: None,
             on_close: None,
             options,
+            blur,
             placeholder: None,
             selected,
             contents,
@@ -160,14 +163,14 @@ where
     T: Clone + PartialEq,
     Message: Clone + 'a,
     Theme: Catalog + 'a,
-    Renderer: iced::advanced::Renderer + 'a,
+    Renderer: iced::advanced::Renderer + iced_blur::Renderer + 'a,
 {
     fn tag(&self) -> tree::Tag {
         tree::Tag::of::<State>()
     }
 
     fn state(&self) -> tree::State {
-        tree::State::new(State::new())
+        tree::State::new(State::new(Tree::new(&self.blur)))
     }
 
     fn children(&self) -> Vec<Tree> {
@@ -428,7 +431,7 @@ where
     T: Clone + PartialEq,
     Message: Clone + 'a,
     Theme: Catalog + 'a,
-    Renderer: iced::advanced::Renderer + 'a,
+    Renderer: iced::advanced::Renderer + iced_blur::Renderer + 'a,
 {
     fn from(pick_list: PickList<'a, T, Message, Theme, Renderer>) -> Self {
         Self::new(pick_list)
@@ -445,19 +448,13 @@ struct State {
 
 impl State {
     /// Creates a new [`State`] for a [`PickList`].
-    fn new() -> Self {
+    fn new(blur: Tree) -> Self {
         Self {
-            menu: menu::State::default(),
+            menu: menu::State::new(blur),
             keyboard_modifiers: keyboard::Modifiers::default(),
             is_open: bool::default(),
             hovered_option: Option::default(),
         }
-    }
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
